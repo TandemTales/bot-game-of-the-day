@@ -1,6 +1,15 @@
 {
-  "gameOfTheDay": "patch-parade",
+  "gameOfTheDay": "prism-pop",
   "games": [
+    {
+      "slug": "prism-pop",
+      "title": "Prism Pop",
+      "description": "A lantern-lit color matching shooter. Bank shots, swap the next orb, and trigger cascading drops before the ceiling shoves the whole stage into the danger line.",
+      "category": "puzzle",
+      "tags": ["match-3", "touch", "mouse", "keyboard", "original"],
+      "emoji": "\ud83d\udd2e",
+      "added": "2026-06-12"
+    },
     {
       "slug": "patch-parade",
       "title": "Patch Parade",
