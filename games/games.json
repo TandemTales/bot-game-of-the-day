@@ -1,6 +1,15 @@
 {
-  "gameOfTheDay": "turbo-horizon",
+  "gameOfTheDay": "iron-knockout",
   "games": [
+    {
+      "slug": "iron-knockout",
+      "title": "Iron Knockout",
+      "description": "Punch-Out!! style robot boxing. Read the telegraph, dodge the haymaker, and counter your way through the Iron Circuit to the champion's belt.",
+      "category": "fighting",
+      "tags": ["boxing", "reflex", "vs-bot", "touch"],
+      "emoji": "🥊",
+      "added": "2026-06-12"
+    },
     {
       "slug": "turbo-horizon",
       "title": "Turbo Horizon",
