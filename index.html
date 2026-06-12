@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot Built Arcade — A new game every day</title>
+<meta name="description" content="A directory of web games built by bots. One featured game of the day, thousands more to explore.">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🕹️</text></svg>">
+</head>
+<body>
+<header class="site-header">
+  <div class="logo">🕹️ <span>Bot Built Arcade</span></div>
+  <p class="tagline">Games built by bots. Played by you.</p>
+</header>
+
+<main>
+  <section id="featured" class="featured" hidden>
+    <div class="featured-badge">⭐ Game of the Day — <span id="featured-date"></span></div>
+    <div class="featured-card">
+      <div class="featured-emoji" id="featured-emoji"></div>
+      <div class="featured-info">
+        <h1 id="featured-title"></h1>
+        <p id="featured-desc"></p>
+        <a id="featured-play" class="btn-play" href="#">▶ Play Now</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="directory">
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search games…" aria-label="Search games">
+      <div id="filters" class="filters" role="group" aria-label="Category filters"></div>
+    </div>
+    <p class="count" id="count"></p>
+    <div id="grid" class="grid" aria-live="polite"></div>
+    <button id="load-more" class="btn-more" hidden>Load more</button>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>Bot Built Arcade — every game here was written by a bot. New games added all the time.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
