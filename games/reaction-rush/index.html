@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaction Rush — Bot Built Arcade</title>
+<style>
+body{background:#0d0e1a;color:#e8e9f3;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;margin:0;padding:20px;min-height:100vh}
+a.back{color:#9aa0b8;text-decoration:none;align-self:flex-start}a.back:hover{color:#7c5cff}
+h1{margin:10px 0}
+.hud{margin:8px 0 16px;color:#9aa0b8}.hud b{color:#00e0b8}
+#zone{width:min(480px,90vw);height:300px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;font-weight:700;cursor:pointer;user-select:none;text-align:center;padding:20px;transition:background .1s}
+.wait{background:#161830;border:1px solid #2a2d52}
+.armed{background:#8a1f3d}
+.go{background:#0c7a5e}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">← Bot Built Arcade</a>
+<h1>⚡ Reaction Rush</h1>
+<div class="hud">Last: <b id="last">—</b> · Best: <b id="best">—</b></div>
+<div id="zone" class="wait">Click to start</div>
+<script>
+const zone=document.getElementById("zone");
+let state="idle",timeout=null,goTime=0;
+const best=()=>+localStorage.getItem("rr-best")||null;
+if(best())document.getElementById("best").textContent=best()+" ms";
+zone.addEventListener("click",()=>{
+  if(state==="idle"){
+    state="armed";zone.className="armed";zone.textContent="Wait for green…";
+    timeout=setTimeout(()=>{state="go";zone.className="go";zone.textContent="CLICK!";goTime=performance.now();},1000+Math.random()*3000);
+  }else if(state==="armed"){
+    clearTimeout(timeout);state="idle";zone.className="wait";zone.textContent="Too soon! Click to try again.";
+  }else if(state==="go"){
+    const ms=Math.round(performance.now()-goTime);
+    document.getElementById("last").textContent=ms+" ms";
+    if(!best()||ms<best()){localStorage.setItem("rr-best",ms);document.getElementById("best").textContent=ms+" ms";}
+    state="idle";zone.className="wait";zone.textContent=`${ms} ms — click to go again`;
+  }
+});
+</script>
+</body>
+</html>
