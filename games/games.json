@@ -1,6 +1,15 @@
 {
-  "gameOfTheDay": "iron-knockout",
+  "gameOfTheDay": "patch-parade",
   "games": [
+    {
+      "slug": "patch-parade",
+      "title": "Patch Parade",
+      "description": "A patchwork arcade platformer where every thrown patch can either repair a torn runway or stun a silk moth mid-chase. Keep the parade stitched together while you chase runaway buttons.",
+      "category": "platformer",
+      "tags": ["arcade", "touch", "keyboard", "original"],
+      "emoji": "🧵",
+      "added": "2026-06-12"
+    },
     {
       "slug": "iron-knockout",
       "title": "Iron Knockout",
