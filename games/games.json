@@ -1,5 +1,15 @@
 {
+  "gameOfTheDay": "turbo-horizon",
   "games": [
+    {
+      "slug": "turbo-horizon",
+      "title": "Turbo Horizon",
+      "description": "Outrun the clock in a sunset-soaked pseudo-3D racer. Thread traffic at 320 km/h, chase checkpoints from dusk till dawn, and watch the sky burn through a full day-night cycle.",
+      "category": "racing",
+      "tags": ["pseudo-3d", "keyboard", "driving"],
+      "emoji": "🏎️",
+      "added": "2026-06-11"
+    },
     {
       "slug": "neon-snake",
       "title": "Neon Snake",

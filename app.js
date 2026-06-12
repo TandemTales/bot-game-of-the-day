@@ -16,7 +16,7 @@ async function init() {
   const data = await res.json();
   state.games = data.games;
 
-  renderFeatured(pickGameOfTheDay(state.games));
+  renderFeatured(pickGameOfTheDay(state.games, data.gameOfTheDay));
   renderFilters();
   renderGrid();
 
@@ -31,8 +31,11 @@ async function init() {
   });
 }
 
-/* Deterministic daily pick: hash today's date so every visitor sees the same game. */
-function pickGameOfTheDay(games) {
+/* The manifest can pin today's pick via "gameOfTheDay"; otherwise fall back to
+   a deterministic date hash so every visitor still sees the same game. */
+function pickGameOfTheDay(games, pinnedSlug) {
+  const pinned = games.find((g) => g.slug === pinnedSlug);
+  if (pinned) return pinned;
   const today = new Date();
   const key = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
   let hash = 0;
