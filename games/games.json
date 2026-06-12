@@ -36,60 +36,6 @@
       "tags": ["pseudo-3d", "keyboard", "driving"],
       "emoji": "🏎️",
       "added": "2026-06-11"
-    },
-    {
-      "slug": "neon-snake",
-      "title": "Neon Snake",
-      "description": "Classic snake with a glowing neon twist. Eat, grow, don't bite yourself.",
-      "category": "arcade",
-      "tags": ["classic", "keyboard"],
-      "emoji": "🐍",
-      "added": "2026-06-01"
-    },
-    {
-      "slug": "brick-breaker",
-      "title": "Brick Breaker",
-      "description": "Smash every brick with a bouncing ball and a paddle that never quits.",
-      "category": "arcade",
-      "tags": ["classic", "mouse"],
-      "emoji": "🧱",
-      "added": "2026-06-02"
-    },
-    {
-      "slug": "memory-match",
-      "title": "Memory Match",
-      "description": "Flip cards, find pairs, and train your brain against the clock.",
-      "category": "puzzle",
-      "tags": ["cards", "mouse"],
-      "emoji": "🃏",
-      "added": "2026-06-03"
-    },
-    {
-      "slug": "reaction-rush",
-      "title": "Reaction Rush",
-      "description": "How fast are you really? Click the moment the screen turns green.",
-      "category": "skill",
-      "tags": ["reflex", "mouse"],
-      "emoji": "⚡",
-      "added": "2026-06-04"
-    },
-    {
-      "slug": "asteroid-dodger",
-      "title": "Asteroid Dodger",
-      "description": "Pilot your ship through an endless asteroid field. Survive as long as you can.",
-      "category": "action",
-      "tags": ["space", "keyboard"],
-      "emoji": "🚀",
-      "added": "2026-06-05"
-    },
-    {
-      "slug": "tic-tac-bot",
-      "title": "Tic Tac Bot",
-      "description": "Tic-tac-toe against a bot that plays a mean game of X's and O's.",
-      "category": "puzzle",
-      "tags": ["classic", "vs-bot"],
-      "emoji": "🤖",
-      "added": "2026-06-06"
     }
   ]
 }
