@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astral Sling - Bot Built Arcade</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>%F0%9F%8C%A0</text></svg>">
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 78% 8%,rgba(255,196,120,.16),transparent 34%),
+    radial-gradient(circle at 14% 18%,rgba(120,150,255,.18),transparent 30%),
+    radial-gradient(circle at 60% 88%,rgba(214,110,255,.14),transparent 36%),
+    linear-gradient(180deg,#13112a 0%,#070611 100%);
+  color:#eef1ff;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:18px 16px 24px;
+}
+a.back{align-self:flex-start;color:#b4bbe0;text-decoration:none;margin-bottom:8px}
+a.back:hover{color:#ffd86b}
+h1{
+  margin:4px 0 6px;
+  font-size:clamp(2.1rem,5vw,3.35rem);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  background:linear-gradient(90deg,#8fd6ff,#ffd86b 60%,#ff9ad1);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.intro{
+  width:min(900px,100%);
+  max-width:900px;
+  margin:0 0 16px;
+  text-align:center;
+  color:#cdd2ee;
+  line-height:1.5;
+}
+.intro b{color:#ffd86b}
+.shell{
+  width:min(1040px,100%);
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 270px;
+  gap:16px;
+  align-items:start;
+}
+.stage{
+  min-width:0;
+  position:relative;
+  border-radius:24px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(8,9,20,.72);
+  box-shadow:0 28px 80px rgba(0,0,0,.42);
+}
+canvas{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:19/26;
+  max-height:82vh;
+  touch-action:none;
+  background:#070611;
+  cursor:pointer;
+}
+#mute{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:44px;
+  height:40px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(12,14,28,.68);
+  color:#eef1ff;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+#mute:hover{border-color:#ffd86b}
+.sidebar{
+  min-width:0;
+  display:grid;
+  gap:14px;
+}
+.panel{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;
+  padding:14px;
+  backdrop-filter:blur(10px);
+}
+.panel h2{
+  margin:0 0 10px;
+  font-size:.95rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#ffd86b;
+}
+.panel p,.panel li{
+  margin:0;
+  color:#d4d8ee;
+  line-height:1.45;
+  font-size:.95rem;
+}
+.panel ul{
+  margin:0;
+  padding-left:18px;
+  display:grid;
+  gap:8px;
+}
+#sling{
+  width:100%;
+  min-height:64px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(143,214,255,.22),rgba(255,154,209,.1));
+  color:#fff;
+  font-weight:800;
+  font-size:1.1rem;
+  letter-spacing:.06em;
+  cursor:pointer;
+  user-select:none;
+}
+#sling:active,#sling.active{
+  transform:translateY(1px) scale(.99);
+  border-color:#ffd86b;
+  background:linear-gradient(180deg,rgba(255,216,107,.34),rgba(255,154,209,.18));
+}
+.footer-note{
+  margin-top:14px;
+  color:#9a9ec2;
+  font-size:.88rem;
+  text-align:center;
+}
+@media (max-width:920px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sidebar .full{grid-column:span 2}
+}
+@media (max-width:640px){
+  body{padding:12px 10px 18px}
+  .sidebar{grid-template-columns:1fr}
+  .sidebar .full{grid-column:auto}
+  .panel{padding:12px}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<h1>Astral Sling</h1>
+<p class="intro"><b>Orbit</b> a star, then <b>tap or press Space</b> to sling free at exactly the right moment. Curve through gravity, get caught by the next star, and chain hops across an endless galaxy. One button — pure orbital timing.</p>
+<div class="shell">
+  <div class="stage">
+    <canvas id="game" width="760" height="1040" aria-label="Astral Sling game canvas"></canvas>
+    <button id="mute" type="button" aria-label="Toggle sound">SND</button>
+  </div>
+  <aside class="sidebar">
+    <section class="panel">
+      <h2>How To Play</h2>
+      <ul>
+        <li>Your craft circles the glowing star it is locked to.</li>
+        <li>Release when the dashed arc points at the next star.</li>
+        <li>Land in a star's pull to lock on and score a hop.</li>
+        <li>Sweep up stardust mid-flight for bonus points.</li>
+        <li>Chain quick hops to build a score multiplier.</li>
+        <li>Fly into empty space and you're lost — game over.</li>
+      </ul>
+    </section>
+    <section class="panel">
+      <h2>Controls</h2>
+      <p>Desktop: click, Space, or Enter to sling. P pauses. M mutes.</p>
+      <p>Mobile: tap the stage or the Sling button below.</p>
+    </section>
+    <section class="panel full">
+      <h2>Touch</h2>
+      <button id="sling" type="button">SLING ⟶</button>
+    </section>
+  </aside>
+</div>
+<p class="footer-note">Original code, art, and audio. Responsive on desktop and mobile browsers.</p>
+<script>
+"use strict";
+const cv=document.getElementById("game"),ctx=cv.getContext("2d");
+const W=cv.width,H=cv.height,TAU=Math.PI*2;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const sign=v=>v<0?-1:1;
+const bestKey="astral-sling-best";
+
+/* ---- tuning ---- */
+const LAUNCH_SPEED=330;     // tangential speed kept constant for predictable slings
+const G=150000;             // gravity strength of other stars during flight
+const CAPTURE_BAND=48;      // how close to a star's surface counts as a lock-on
+const FLIGHT_TIMEOUT=2.7;   // seconds adrift before you are declared lost
+const DEATH_FAR=1180;       // distance from every star that means escape
+const MAX_DRIFT=1700;       // hard cap on a single flight's travel
+const MOTE_R=11;
+
+const state={
+  mode:"title",            // title | play | paused | gameover
+  time:0,
+  score:0,
+  best:+localStorage.getItem(bestKey)||0,
+  hops:0,
+  combo:0,
+  mult:1,
+  lastHop:-99,
+  anchor:null,             // star currently orbited
+  launchAnchor:null,       // star just left (ignored until escaped)
+  angle:0,
+  spin:1,
+  orbitR:80,
+  flight:null,             // {time,dist} while airborne
+  craft:{x:0,y:0,vx:0,vy:0,r:9},
+  trail:[],
+  cam:{x:0,y:0},
+  shake:0,
+  flash:0,
+  hint:1,
+  message:"",
+  messageTimer:0,
+  muted:localStorage.getItem("astral-sling-muted")==="1",
+};
+let stars=[];
+let motes=[];
+let particles=[];
+let bg=[];                 // parallax dust layers
+let frontier={x:0,y:0,dir:0};
+
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+
+/* ---- world generation ---- */
+let starId=0;
+const STAR_HUES=[42,196,320,265,150];
+function makeStar(x,y,r){
+  return{id:starId++,x,y,r,mass:r,hue:STAR_HUES[(Math.random()*STAR_HUES.length)|0],
+    pulse:rand(0,TAU),visited:false};
+}
+function currentGap(){
+  const t=clamp(state.hops/34,0,1);
+  return lerp(300,470,t)*rand(.86,1.12);
+}
+function currentStarR(){
+  const t=clamp(state.hops/34,0,1);
+  return clamp(lerp(46,30,t)+rand(-4,7),22,50);
+}
+function spawnMote(x,y){motes.push({x,y,r:MOTE_R,phase:rand(0,TAU),got:false});}
+
+/* Keep a meandering chain of stars stretching ahead of the craft so a route
+   always exists; the player supplies the timing. */
+function ensureRoute(){
+  let guard=0;
+  while(guard++<40){
+    const dx=frontier.x-state.craft.x,dy=frontier.y-state.craft.y;
+    const ahead=dx*Math.cos(frontier.dir)+dy*Math.sin(frontier.dir);
+    if(ahead>1750)break;
+    frontier.dir+=rand(-.55,.55);
+    const gap=currentGap();
+    const px=frontier.x,py=frontier.y;
+    frontier.x+=Math.cos(frontier.dir)*gap;
+    frontier.y+=Math.sin(frontier.dir)*gap;
+    stars.push(makeStar(frontier.x,frontier.y,currentStarR()));
+    // scatter stardust along the leg
+    const n=(Math.random()*2|0)+1;
+    for(let i=0;i<n;i++){
+      const t=rand(.3,.75);
+      const off=rand(-46,46);
+      const nx=-Math.sin(frontier.dir)*off,ny=Math.cos(frontier.dir)*off;
+      spawnMote(lerp(px,frontier.x,t)+nx,lerp(py,frontier.y,t)+ny);
+    }
+  }
+}
+function cullBehind(){
+  const dir=state.travelDir||0;
+  const cx=state.craft.x,cy=state.craft.y;
+  const keep=s=>{
+    if(s===state.anchor||s===state.launchAnchor)return true;
+    const dx=s.x-cx,dy=s.y-cy;
+    const ahead=dx*Math.cos(dir)+dy*Math.sin(dir);
+    return!(ahead<-820&&Math.hypot(dx,dy)>980);
+  };
+  if(stars.length>14)stars=stars.filter(keep);
+  if(motes.length>0)motes=motes.filter(m=>{
+    const dx=m.x-cx,dy=m.y-cy;
+    const ahead=dx*Math.cos(dir)+dy*Math.sin(dir);
+    return!(m.got)&&!(ahead<-700&&Math.hypot(dx,dy)>900);
+  });
+}
+
+function buildWorld(){
+  starId=0;stars=[];motes=[];particles=[];state.trail=[];
+  const first=makeStar(0,0,46);
+  stars.push(first);
+  state.anchor=first;
+  state.launchAnchor=null;
+  state.flight=null;
+  state.orbitR=first.r+44;
+  state.spin=1;
+  state.angle=-Math.PI*0.5;
+  state.travelDir=-Math.PI*0.28;     // initial flow up-and-right
+  frontier={x:0,y:0,dir:state.travelDir};
+  ensureRoute();
+  state.craft.x=first.x+Math.cos(state.angle)*state.orbitR;
+  state.craft.y=first.y+Math.sin(state.angle)*state.orbitR;
+  state.cam.x=first.x;state.cam.y=first.y;
+}
+
+function makeParallax(){
+  bg=[];
+  for(let layer=0;layer<3;layer++){
+    const arr=[];
+    const count=[46,34,22][layer];
+    for(let i=0;i<count;i++)arr.push({x:rand(0,W),y:rand(0,H),s:rand(.5,1.7)+layer*.4,
+      tw:rand(0,TAU)});
+    bg.push({depth:[.18,.36,.62][layer],stars:arr});
+  }
+}
+
+/* ---- gravity shared by flight + trajectory preview ---- */
+function gravityAt(x,y,skip){
+  let ax=0,ay=0;
+  for(const s of stars){
+    if(s===skip)continue;
+    const dx=s.x-x,dy=s.y-y;
+    let d2=dx*dx+dy*dy;
+    const minD=s.r*0.85;
+    if(d2<minD*minD)d2=minD*minD;
+    const d=Math.sqrt(d2);
+    const a=G*s.mass/d2;
+    ax+=a*dx/d;ay+=a*dy/d;
+  }
+  return{ax,ay};
+}
+
+/* current launch velocity = the craft's tangential motion on its orbit */
+function launchVel(){
+  const w=(LAUNCH_SPEED/state.orbitR)*state.spin;
+  return{
+    vx:-Math.sin(state.angle)*state.orbitR*w,
+    vy:Math.cos(state.angle)*state.orbitR*w
+  };
+}
+
+/* Preview steps with the exact same timestep + substeps as live flight so a
+   "green" arc is a faithful promise that you will be caught. */
+function predictPath(){
+  if(!state.anchor||state.flight)return null;
+  let x=state.craft.x,y=state.craft.y;
+  const lv=launchVel();let vx=lv.vx,vy=lv.vy;
+  const pts=[{x,y}];
+  const h=1/60,sub=3,steps=Math.ceil(FLIGHT_TIMEOUT*60);
+  const la=state.anchor;let skip=la;
+  let captured=false,nearest=1e9;
+  for(let i=0;i<steps;i++){
+    for(let k=0;k<sub;k++){
+      const g=gravityAt(x,y,skip);
+      vx+=g.ax*(h/sub);vy+=g.ay*(h/sub);
+      x+=vx*(h/sub);y+=vy*(h/sub);
+    }
+    if(skip&&Math.hypot(la.x-x,la.y-y)>la.r+CAPTURE_BAND+60)skip=null;
+    if((i&1)===0)pts.push({x,y});   // store every other point — plenty for a smooth line
+    for(const s of stars){
+      if(s===skip)continue;
+      const d=Math.hypot(s.x-x,s.y-y);
+      if(d<nearest)nearest=d;
+      if(d<s.r+CAPTURE_BAND){captured=true;break;}
+    }
+    if(captured)break;
+  }
+  pts.push({x,y});
+  return{pts,captured};
+}
+
+/* ---- actions ---- */
+function pressSling(){
+  audio.start();
+  if(state.mode==="title"||state.mode==="gameover"){startGame();return;}
+  if(state.mode==="paused"){state.mode="play";return;}
+  if(state.mode==="play"&&state.anchor&&!state.flight)doLaunch();
+}
+function startGame(){
+  state.score=0;state.hops=0;state.combo=0;state.mult=1;state.lastHop=-99;
+  state.shake=0;state.flash=0;state.hint=1;state.message="";state.messageTimer=0;
+  buildWorld();
+  state.mode="play";
+  audio.start();
+}
+function doLaunch(){
+  const lv=launchVel();
+  state.craft.vx=lv.vx;state.craft.vy=lv.vy;
+  state.launchAnchor=state.anchor;
+  state.anchor=null;
+  state.flight={time:0,dist:0};
+  state.hint=0;
+  audio.whoosh();
+  for(let i=0;i<10;i++)spark(state.craft.x,state.craft.y,
+    Math.atan2(lv.vy,lv.vx)+rand(-.5,.5),rand(60,200),"#bfe9ff",rand(.2,.5));
+}
+function capture(star){
+  const dx=state.craft.x-star.x,dy=state.craft.y-star.y;
+  const dist=Math.hypot(dx,dy)||1;
+  const cross=dx*state.craft.vy-dy*state.craft.vx;
+  state.spin=sign(cross);
+  state.angle=Math.atan2(dy,dx);
+  state.orbitR=clamp(dist,star.r+26,star.r+82);
+  state.anchor=star;
+  state.launchAnchor=null;
+  state.flight=null;
+  state.travelDir=Math.atan2(state.craft.vy,state.craft.vx);
+  star.visited=true;
+
+  state.hops++;
+  if(state.time-state.lastHop<2.6)state.combo++;else state.combo=0;
+  state.lastHop=state.time;
+  state.mult=Math.min(1+state.combo,9);
+  const gained=Math.round(100*state.mult);
+  state.score+=gained;
+  if(state.mult>1)floatText(state.craft.x,state.craft.y-24,"x"+state.mult,"#ffd86b");
+  state.flash=Math.min(.5,.18+state.combo*.04);
+  audio.capture(state.combo);
+  for(let i=0;i<22;i++)spark(state.craft.x,state.craft.y,rand(0,TAU),rand(60,260),
+    "hsl("+star.hue+",90%,72%)",rand(.25,.7));
+  // re-aim the route in the new direction of travel and extend it
+  const fdx=frontier.x-state.craft.x,fdy=frontier.y-state.craft.y;
+  const ahead=fdx*Math.cos(state.travelDir)+fdy*Math.sin(state.travelDir);
+  if(ahead<320){frontier.x=state.craft.x;frontier.y=state.craft.y;frontier.dir=state.travelDir;}
+  ensureRoute();
+  cullBehind();
+}
+function die(reason){
+  if(state.mode!=="play")return;
+  state.mode="gameover";
+  state.shake=18;state.flash=.6;
+  if(state.score>state.best){state.best=state.score;localStorage.setItem(bestKey,state.best);}
+  audio.die();
+  for(let i=0;i<46;i++)spark(state.craft.x,state.craft.y,rand(0,TAU),rand(80,420),
+    i%2?"#ff9ad1":"#8fd6ff",rand(.4,1));
+  state.deathReason=reason;
+}
+
+/* ---- particles ---- */
+function spark(x,y,ang,sp,color,life){
+  particles.push({x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,
+    life,max:life,size:rand(2,5),color,type:"spark"});
+}
+function floatText(x,y,text,color){
+  particles.push({x,y,vx:0,vy:-46,life:1.0,max:1.0,size:0,color,text,type:"text"});
+}
+
+/* ---- update ---- */
+function update(dt){
+  state.time+=dt;
+  if(state.messageTimer>0)state.messageTimer-=dt;
+  state.shake*=Math.pow(.0017,dt);
+  state.flash*=Math.pow(.02,dt);
+  if(state.hint>0&&state.mode==="play"&&!state.flight)state.hint=Math.min(1,state.hint+dt);
+
+  for(const m of motes)m.phase+=dt*3;
+  for(const s of stars)s.pulse+=dt*2;
+
+  // particles
+  for(const p of particles){
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    if(p.type==="spark"){p.vx*=Math.pow(.06,dt);p.vy*=Math.pow(.06,dt);}
+    p.life-=dt;
+  }
+  if(particles.length)particles=particles.filter(p=>p.life>0);
+
+  const playing=state.mode==="play"||state.mode==="title";
+
+  if(playing&&state.anchor&&!state.flight){
+    // orbit motion
+    const w=(LAUNCH_SPEED/state.orbitR)*state.spin;
+    state.angle+=w*dt;
+    state.craft.x=state.anchor.x+Math.cos(state.angle)*state.orbitR;
+    state.craft.y=state.anchor.y+Math.sin(state.angle)*state.orbitR;
+    const lv=launchVel();state.craft.vx=lv.vx;state.craft.vy=lv.vy;
+    pushTrail();
+  }else if(state.mode==="play"&&state.flight){
+    // integrate flight with substeps for stability
+    const sub=3,h=dt/sub;
+    for(let k=0;k<sub;k++){
+      const g=gravityAt(state.craft.x,state.craft.y,state.launchAnchor);
+      state.craft.vx+=g.ax*h;state.craft.vy+=g.ay*h;
+      const ox=state.craft.x,oy=state.craft.y;
+      state.craft.x+=state.craft.vx*h;
+      state.craft.y+=state.craft.vy*h;
+      state.flight.dist+=Math.hypot(state.craft.x-ox,state.craft.y-oy);
+    }
+    state.flight.time+=dt;
+    pushTrail();
+
+    // leaving the launch anchor's pull makes it eligible again
+    if(state.launchAnchor){
+      const la=state.launchAnchor;
+      if(Math.hypot(la.x-state.craft.x,la.y-state.craft.y)>la.r+CAPTURE_BAND+60)
+        state.launchAnchor=null;
+    }
+
+    // collect stardust
+    for(const m of motes){
+      if(m.got)continue;
+      if(Math.hypot(m.x-state.craft.x,m.y-state.craft.y)<m.r+state.craft.r+4){
+        m.got=true;state.score+=25;
+        floatText(m.x,m.y-10,"+25","#ffe9a8");
+        for(let i=0;i<8;i++)spark(m.x,m.y,rand(0,TAU),rand(40,150),"#ffe9a8",rand(.2,.5));
+        audio.mote();
+        if(state.time-state.lastHop<2.6)state.lastHop=state.time; // keep the chain warm
+      }
+    }
+
+    // capture check
+    let nearest=1e9;
+    for(const s of stars){
+      if(s===state.launchAnchor)continue;
+      const d=Math.hypot(s.x-state.craft.x,s.y-state.craft.y);
+      if(d<nearest)nearest=d;
+      if(d<s.r+CAPTURE_BAND){capture(s);break;}
+    }
+    // death conditions
+    if(state.flight){
+      if(state.flight.time>FLIGHT_TIMEOUT)die("Adrift too long");
+      else if(nearest>DEATH_FAR)die("Lost in deep space");
+      else if(state.flight.dist>MAX_DRIFT)die("Escaped the galaxy");
+    }
+  }
+
+  // camera follows craft with a little velocity lead
+  const lead=state.flight?0.16:0.05;
+  const tx=state.craft.x+state.craft.vx*lead;
+  const ty=state.craft.y+state.craft.vy*lead;
+  const f=1-Math.pow(.0009,dt);
+  state.cam.x=lerp(state.cam.x,tx,f);
+  state.cam.y=lerp(state.cam.y,ty,f);
+}
+function pushTrail(){
+  state.trail.push({x:state.craft.x,y:state.craft.y});
+  if(state.trail.length>26)state.trail.shift();
+}
+
+/* ---- render ---- */
+function sx(x){return x-state.cam.x+W/2;}
+function sy(y){return y-state.cam.y+H/2;}
+
+function drawBackground(){
+  ctx.fillStyle="#070611";
+  ctx.fillRect(0,0,W,H);
+  // soft nebula clouds anchored loosely to the world
+  const nb=[[0.22,0.3,"rgba(120,150,255,.10)"],[0.8,0.2,"rgba(255,176,110,.08)"],
+            [0.6,0.85,"rgba(214,110,255,.09)"]];
+  for(const[fx,fy,col]of nb){
+    const cx=((-state.cam.x*0.04)%W+W)%W;
+    const gx=(fx*W+cx)%W,gy=fy*H;
+    const g=ctx.createRadialGradient(gx,gy,0,gx,gy,520);
+    g.addColorStop(0,col);g.addColorStop(1,"transparent");
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  }
+  // parallax dust
+  for(const layer of bg){
+    for(const st of layer.stars){
+      let px=(st.x-state.cam.x*layer.depth)%W;if(px<0)px+=W;
+      let py=(st.y-state.cam.y*layer.depth)%H;if(py<0)py+=H;
+      const tw=.5+.5*Math.sin(state.time*2+st.tw);
+      ctx.globalAlpha=.25+.55*tw*layer.depth;
+      ctx.fillStyle="#cdd6ff";
+      ctx.fillRect(px,py,st.s,st.s);
+    }
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawStar(s){
+  const x=sx(s.x),y=sy(s.y);
+  if(x<-120||x>W+120||y<-120||y>H+120)return;
+  const pulse=1+0.06*Math.sin(s.pulse);
+  const r=s.r*pulse;
+  const h=s.hue;
+  // gravity-well rings
+  ctx.strokeStyle="hsla("+h+",80%,70%,.07)";
+  ctx.lineWidth=1.5;
+  for(let i=1;i<=3;i++){ctx.beginPath();ctx.arc(x,y,r+i*22,0,TAU);ctx.stroke();}
+  // glow
+  const g=ctx.createRadialGradient(x,y,0,x,y,r*2.7);
+  g.addColorStop(0,"hsla("+h+",95%,72%,.95)");
+  g.addColorStop(.4,"hsla("+h+",90%,60%,.45)");
+  g.addColorStop(1,"transparent");
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*2.7,0,TAU);ctx.fill();
+  // core
+  const core=ctx.createRadialGradient(x-r*.3,y-r*.3,r*.2,x,y,r);
+  core.addColorStop(0,"#fffdf4");
+  core.addColorStop(.5,"hsl("+h+",95%,72%)");
+  core.addColorStop(1,"hsl("+h+",85%,48%)");
+  ctx.fillStyle=core;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();
+  if(s===state.anchor){
+    ctx.strokeStyle="hsla("+h+",95%,80%,.55)";
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(x,y,state.orbitR,0,TAU);ctx.stroke();
+  }
+}
+
+function drawMotes(){
+  for(const m of motes){
+    if(m.got)continue;
+    const x=sx(m.x),y=sy(m.y);
+    if(x<-30||x>W+30||y<-30||y>H+30)continue;
+    const p=.6+.4*Math.sin(m.phase);
+    const g=ctx.createRadialGradient(x,y,0,x,y,m.r*2.2);
+    g.addColorStop(0,"rgba(255,233,168,"+(.7*p+.3)+")");
+    g.addColorStop(1,"transparent");
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,m.r*2.2,0,TAU);ctx.fill();
+    ctx.fillStyle="#fff6d8";
+    ctx.beginPath();ctx.arc(x,y,3.2,0,TAU);ctx.fill();
+  }
+}
+
+function drawTrajectory(){
+  const pred=predictPath();
+  if(!pred)return;
+  const col=pred.captured?"#9affc0":"#ffcaa0";
+  ctx.save();
+  ctx.setLineDash([7,9]);
+  ctx.lineWidth=2.4;
+  ctx.lineDashOffset=-state.time*40;
+  ctx.beginPath();
+  for(let i=0;i<pred.pts.length;i++){
+    const p=pred.pts[i];const X=sx(p.x),Y=sy(p.y);
+    if(i===0)ctx.moveTo(X,Y);else ctx.lineTo(X,Y);
+  }
+  ctx.globalAlpha=.85;
+  ctx.strokeStyle=col;ctx.stroke();
+  ctx.restore();
+  // arrowhead at the end of the preview
+  const a=pred.pts[pred.pts.length-1],b=pred.pts[pred.pts.length-2]||a;
+  const ang=Math.atan2(a.y-b.y,a.x-b.x);
+  const ex=sx(a.x),ey=sy(a.y);
+  ctx.fillStyle=col;ctx.globalAlpha=.9;
+  ctx.beginPath();
+  ctx.moveTo(ex+Math.cos(ang)*10,ey+Math.sin(ang)*10);
+  ctx.lineTo(ex+Math.cos(ang+2.5)*9,ey+Math.sin(ang+2.5)*9);
+  ctx.lineTo(ex+Math.cos(ang-2.5)*9,ey+Math.sin(ang-2.5)*9);
+  ctx.closePath();ctx.fill();
+  ctx.globalAlpha=1;
+}
+
+function drawCraft(){
+  // trail
+  for(let i=0;i<state.trail.length;i++){
+    const t=state.trail[i];const a=i/state.trail.length;
+    ctx.globalAlpha=a*.5;
+    ctx.fillStyle="#8fd6ff";
+    const r=a*4.5;
+    ctx.beginPath();ctx.arc(sx(t.x),sy(t.y),r,0,TAU);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  const x=sx(state.craft.x),y=sy(state.craft.y);
+  const ang=Math.atan2(state.craft.vy,state.craft.vx);
+  // flight timeout ring
+  if(state.flight){
+    const left=clamp(1-state.flight.time/FLIGHT_TIMEOUT,0,1);
+    ctx.strokeStyle=left<.35?"#ff7a9c":"#9bdcff";
+    ctx.lineWidth=2.6;
+    ctx.beginPath();ctx.arc(x,y,15,-Math.PI/2,-Math.PI/2+TAU*left);ctx.stroke();
+  }
+  const glow=ctx.createRadialGradient(x,y,0,x,y,16);
+  glow.addColorStop(0,"rgba(190,233,255,.95)");
+  glow.addColorStop(1,"transparent");
+  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,16,0,TAU);ctx.fill();
+  ctx.save();
+  ctx.translate(x,y);ctx.rotate(ang);
+  ctx.fillStyle="#ffffff";
+  ctx.beginPath();
+  ctx.moveTo(9,0);ctx.lineTo(-6,5.5);ctx.lineTo(-3,0);ctx.lineTo(-6,-5.5);
+  ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+
+function drawHud(){
+  ctx.textAlign="left";
+  ctx.fillStyle="rgba(8,9,20,.42)";
+  roundRect(ctx,16,14,W-32,58,16);ctx.fill();
+
+  ctx.fillStyle="#aeb6dd";ctx.font="bold 14px system-ui";
+  ctx.fillText("SCORE",30,36);
+  ctx.fillStyle="#ffffff";ctx.font="bold 30px Consolas,monospace";
+  ctx.fillText(String(state.score).padStart(6,"0"),30,64);
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#aeb6dd";ctx.font="bold 14px system-ui";
+  ctx.fillText("HOPS",W/2,36);
+  ctx.fillStyle="#8fd6ff";ctx.font="bold 30px Consolas,monospace";
+  ctx.fillText(String(state.hops),W/2,64);
+
+  ctx.textAlign="right";
+  ctx.fillStyle="#aeb6dd";ctx.font="bold 14px system-ui";
+  ctx.fillText("BEST",W-72,36);
+  ctx.fillStyle="#ffd86b";ctx.font="bold 30px Consolas,monospace";
+  ctx.fillText(String(state.best).padStart(6,"0"),W-72,64);
+
+  if(state.mult>1){
+    ctx.textAlign="center";
+    const a=clamp(1-(state.time-state.lastHop)/2.6,0,1);
+    ctx.globalAlpha=.5+.5*a;
+    ctx.fillStyle="#ffd86b";ctx.font="900 24px system-ui";
+    ctx.fillText("x"+state.mult+" CHAIN",W/2,98);
+    ctx.globalAlpha=1;
+  }
+}
+
+function drawParticles(){
+  for(const p of particles){
+    const a=clamp(p.life/p.max,0,1);
+    if(p.type==="text"){
+      ctx.globalAlpha=a;ctx.textAlign="center";ctx.font="900 26px system-ui";
+      ctx.fillStyle="#0a0814";ctx.fillText(p.text,sx(p.x)+2,sy(p.y)+2);
+      ctx.fillStyle=p.color;ctx.fillText(p.text,sx(p.x),sy(p.y));
+      ctx.globalAlpha=1;
+    }else{
+      ctx.globalAlpha=a;ctx.fillStyle=p.color;
+      ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),p.size,0,TAU);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+}
+
+function drawOverlays(){
+  ctx.textAlign="center";
+  if(state.mode==="title"){
+    ctx.fillStyle="rgba(7,7,18,.5)";ctx.fillRect(0,0,W,H);
+    const g=ctx.createLinearGradient(0,300,0,420);
+    g.addColorStop(0,"#8fd6ff");g.addColorStop(.5,"#ffd86b");g.addColorStop(1,"#ff9ad1");
+    ctx.fillStyle=g;ctx.font="900 78px system-ui";
+    ctx.fillText("ASTRAL SLING",W/2,360);
+    ctx.fillStyle="#dfe4ff";ctx.font="23px system-ui";
+    ctx.fillText("Time your release. Curve through gravity.",W/2,418);
+    ctx.fillText("Catch the next star — chain hops forever.",W/2,452);
+    if(Math.sin(state.time*5)>-.2){
+      ctx.fillStyle="#ffd86b";ctx.font="bold 30px system-ui";
+      ctx.fillText("Tap / Click / Space to Launch",W/2,540);
+    }
+    ctx.fillStyle="#aab0d6";ctx.font="17px system-ui";
+    ctx.fillText("A green arc means you'll be caught. Amber means you'll drift.",W/2,600);
+  }else if(state.mode==="paused"){
+    ctx.fillStyle="rgba(7,7,18,.55)";ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#ffd86b";ctx.font="900 70px system-ui";
+    ctx.fillText("PAUSED",W/2,H/2-10);
+    ctx.fillStyle="#d4d8ee";ctx.font="22px system-ui";
+    ctx.fillText("Press P to resume",W/2,H/2+42);
+  }else if(state.mode==="gameover"){
+    ctx.fillStyle="rgba(7,7,18,.62)";ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#ff9ad1";ctx.font="900 70px system-ui";
+    ctx.fillText("LOST IN SPACE",W/2,380);
+    ctx.fillStyle="#bfc5e6";ctx.font="22px system-ui";
+    ctx.fillText(state.deathReason||"Adrift",W/2,422);
+    ctx.fillStyle="#ffe9a8";ctx.font="bold 32px system-ui";
+    ctx.fillText("Score "+state.score+"   •   "+state.hops+" hops",W/2,486);
+    ctx.fillStyle="#ffd86b";ctx.font="bold 24px system-ui";
+    ctx.fillText("Best "+state.best,W/2,524);
+    if(Math.sin(state.time*5)>-.2){
+      ctx.fillStyle="#dfe4ff";ctx.font="22px system-ui";
+      ctx.fillText("Tap / Space to sling again",W/2,590);
+    }
+  }
+  // first-run hint
+  if(state.mode==="play"&&state.hops===0&&!state.flight&&state.hint>.3){
+    ctx.globalAlpha=clamp(state.hint,0,1)*(.7+.3*Math.sin(state.time*4));
+    ctx.fillStyle="#ffd86b";ctx.font="bold 24px system-ui";
+    ctx.fillText("Release when the arc points at a star",W/2,H-70);
+    ctx.globalAlpha=1;
+  }
+}
+
+function render(){
+  ctx.save();
+  if(state.shake>0.5)ctx.translate(rand(-state.shake,state.shake),rand(-state.shake,state.shake));
+  drawBackground();
+  for(const s of stars)drawStar(s);
+  drawMotes();
+  if((state.mode==="play"||state.mode==="title")&&state.anchor&&!state.flight)drawTrajectory();
+  drawParticles();
+  drawCraft();
+  if(state.flash>0.01){
+    ctx.fillStyle="rgba(200,230,255,"+(state.flash*.5)+")";
+    ctx.fillRect(0,0,W,H);
+  }
+  drawHud();
+  drawOverlays();
+  ctx.restore();
+}
+
+/* ---- audio ---- */
+const audio={
+  ctx:null,master:null,pad:null,sfx:null,muted:state.muted,started:false,
+  ensure(){
+    if(this.ctx)return;
+    try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+    this.master=this.ctx.createGain();
+    this.master.gain.value=this.muted?0:1;
+    this.master.connect(this.ctx.destination);
+    this.pad=this.ctx.createGain();this.pad.gain.value=.12;this.pad.connect(this.master);
+    this.sfx=this.ctx.createGain();this.sfx.gain.value=.4;this.sfx.connect(this.master);
+    // gentle ambient drone: two detuned saws through a slow lowpass sweep
+    const f=this.ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=520;
+    f.connect(this.pad);
+    const lfo=this.ctx.createOscillator(),lg=this.ctx.createGain();
+    lfo.frequency.value=.05;lg.gain.value=240;lfo.connect(lg);lg.connect(f.frequency);lfo.start();
+    [110,110.7,164.8].forEach((fr,i)=>{
+      const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+      o.type=i===2?"sine":"sawtooth";o.frequency.value=fr;
+      g.gain.value=i===2?.06:.05;o.connect(g);g.connect(f);o.start();
+    });
+    // soft noise buffer for whooshes
+    const buf=this.ctx.createBuffer(1,this.ctx.sampleRate*1,this.ctx.sampleRate);
+    const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    this.noiseBuf=buf;
+  },
+  start(){this.ensure();if(this.ctx&&this.ctx.state==="suspended")this.ctx.resume();this.started=true;},
+  blip(freq,dur,type,gain,slide){
+    if(!this.ctx||this.muted)return;
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type=type||"triangle";o.frequency.setValueAtTime(freq,t);
+    if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+    g.gain.setValueAtTime(gain||.18,t);
+    g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+    o.connect(g);g.connect(this.sfx);o.start(t);o.stop(t+dur+.04);
+  },
+  whoosh(){
+    if(!this.ctx||this.muted)return;
+    const t=this.ctx.currentTime;
+    const src=this.ctx.createBufferSource();src.buffer=this.noiseBuf;
+    const f=this.ctx.createBiquadFilter();f.type="bandpass";
+    f.frequency.setValueAtTime(1400,t);f.frequency.exponentialRampToValueAtTime(280,t+.32);
+    f.Q.value=1.2;
+    const g=this.ctx.createGain();g.gain.setValueAtTime(.4,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+.34);
+    src.connect(f);f.connect(g);g.connect(this.sfx);src.start(t);src.stop(t+.36);
+  },
+  capture(combo){
+    const base=440*Math.pow(2,Math.min(combo,9)/12);
+    this.blip(base,.16,"triangle",.2,base*1.5);
+    this.blip(base*2,.22,"sine",.12,base*3);
+  },
+  mote(){this.blip(880,.08,"square",.08,1320);},
+  die(){
+    this.blip(330,.5,"sawtooth",.25,70);
+    this.blip(160,.6,"triangle",.18,50);
+  },
+};
+
+/* ---- input ---- */
+cv.addEventListener("pointerdown",e=>{e.preventDefault();pressSling();});
+const slingBtn=document.getElementById("sling");
+slingBtn.addEventListener("pointerdown",e=>{e.preventDefault();slingBtn.classList.add("active");pressSling();});
+slingBtn.addEventListener("pointerup",()=>slingBtn.classList.remove("active"));
+slingBtn.addEventListener("pointerleave",()=>slingBtn.classList.remove("active"));
+window.addEventListener("keydown",e=>{
+  if(e.code==="Space"||e.code==="Enter"){e.preventDefault();pressSling();}
+  else if(e.key==="p"||e.key==="P"){
+    if(state.mode==="play")state.mode="paused";else if(state.mode==="paused")state.mode="play";
+  }else if(e.key==="m"||e.key==="M"){toggleMute();}
+});
+const muteBtn=document.getElementById("mute");
+function toggleMute(){
+  state.muted=!state.muted;audio.muted=state.muted;
+  if(audio.master)audio.master.gain.value=state.muted?0:1;
+  localStorage.setItem("astral-sling-muted",state.muted?"1":"0");
+  muteBtn.textContent=state.muted?"OFF":"SND";
+}
+muteBtn.addEventListener("click",e=>{e.stopPropagation();toggleMute();});
+muteBtn.textContent=state.muted?"OFF":"SND";
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden&&state.mode==="play")state.mode="paused";
+});
+
+/* ---- loop ---- */
+let last=performance.now();
+function loop(now){
+  let dt=(now-last)/1000;last=now;
+  if(dt>0.05)dt=0.05;            // clamp big gaps (tab switches)
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+makeParallax();
+buildWorld();
+state.mode="title";
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
