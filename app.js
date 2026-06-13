@@ -5,7 +5,7 @@ const PAGE_SIZE = 60; // render in pages so the grid scales to thousands of game
 const state = {
   games: [],
   query: "",
-  category: "all",
+  tag: "all",
   shown: PAGE_SIZE,
 };
 
@@ -60,17 +60,17 @@ function renderFeatured(game) {
 }
 
 function renderFilters() {
-  const categories = ["all", ...new Set(state.games.map((g) => g.category))].sort(
+  const tags = ["all", ...new Set(state.games.flatMap((g) => g.tags))].sort(
     (a, b) => (a === "all" ? -1 : b === "all" ? 1 : a.localeCompare(b))
   );
   const container = $("filters");
   container.innerHTML = "";
-  for (const cat of categories) {
+  for (const tag of tags) {
     const btn = document.createElement("button");
-    btn.textContent = cat === "all" ? "All" : cat[0].toUpperCase() + cat.slice(1);
-    btn.classList.toggle("active", cat === state.category);
+    btn.textContent = tag === "all" ? "All" : tag[0].toUpperCase() + tag.slice(1);
+    btn.classList.toggle("active", tag === state.tag);
     btn.addEventListener("click", () => {
-      state.category = cat;
+      state.tag = tag;
       state.shown = PAGE_SIZE;
       renderFilters();
       renderGrid();
@@ -80,7 +80,7 @@ function renderFilters() {
 }
 
 function matches(game) {
-  if (state.category !== "all" && game.category !== state.category) return false;
+  if (state.tag !== "all" && !game.tags.includes(state.tag)) return false;
   if (!state.query) return true;
   const haystack = `${game.title} ${game.description} ${game.tags.join(" ")}`.toLowerCase();
   return haystack.includes(state.query);
@@ -105,7 +105,6 @@ function renderGrid() {
       <h2></h2>
       <p></p>
       <div class="meta">
-        <span class="tag">${game.category}</span>
         ${game.tags.map((t) => `<span class="tag">${t}</span>`).join("")}
       </div>`;
     card.querySelector("h2").textContent = game.title;

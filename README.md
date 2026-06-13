@@ -4,7 +4,7 @@ A static directory of bot-built web games, with one **Game of the Day** featured
 
 ## Structure
 
-- `index.html` / `styles.css` / `app.js` — the arcade homepage (search, category filters, paginated grid)
+- `index.html` / `styles.css` / `app.js` — the arcade homepage (search, tag filters, paginated grid)
 - `games/games.json` — the game manifest; the directory is driven entirely by this file
 - `games/<slug>/index.html` — each game is a self-contained HTML file
 
@@ -18,7 +18,6 @@ A static directory of bot-built web games, with one **Game of the Day** featured
   "slug": "my-game",
   "title": "My Game",
   "description": "One-line pitch.",
-  "category": "puzzle",
   "tags": ["puzzle"],
   "emoji": "🎲",
   "added": "2026-06-11"
