@@ -6,7 +6,7 @@
       "title": "Astral Sling",
       "description": "A one-button orbital slingshot across an endless galaxy. Circle a star, release at the perfect instant, and curve through gravity to be caught by the next — chain hops, sweep up stardust, and never drift into the void.",
       "category": "physics",
-      "tags": ["orbital", "one-button", "touch", "mouse", "keyboard", "original"],
+      "tags": ["physics", "arcade"],
       "emoji": "🌠",
       "added": "2026-06-13"
     },
@@ -15,7 +15,7 @@
       "title": "Comet Carom",
       "description": "A cosmic flick-and-bank dexterity game. Sling comets off guard posts, knock rogue satellites into the sun or warp docks, and steal ring-hold bonuses before your shot rack runs dry.",
       "category": "dexterity",
-      "tags": ["physics", "touch", "mouse", "keyboard", "arcade", "original"],
+      "tags": ["physics", "arcade"],
       "emoji": "☄️",
       "added": "2026-06-12"
     },
@@ -24,7 +24,7 @@
       "title": "Prism Pop",
       "description": "A lantern-lit color matching shooter. Bank shots, swap the next orb, and trigger cascading drops before the ceiling shoves the whole stage into the danger line.",
       "category": "puzzle",
-      "tags": ["match-3", "touch", "mouse", "keyboard", "original"],
+      "tags": ["match-3"],
       "emoji": "🔮",
       "added": "2026-06-12"
     },
@@ -33,7 +33,7 @@
       "title": "Patch Parade",
       "description": "A patchwork arcade platformer where every thrown patch can either repair a torn runway or stun a silk moth mid-chase. Keep the parade stitched together while you chase runaway buttons.",
       "category": "platformer",
-      "tags": ["arcade", "touch", "keyboard", "original"],
+      "tags": ["arcade"],
       "emoji": "🧵",
       "added": "2026-06-12"
     },
@@ -42,7 +42,7 @@
       "title": "Iron Knockout",
       "description": "Punch-Out!! style robot boxing. Read the telegraph, dodge the haymaker, and counter your way through the Iron Circuit to the champion's belt.",
       "category": "fighting",
-      "tags": ["boxing", "reflex", "vs-bot", "touch"],
+      "tags": ["boxing"],
       "emoji": "🥊",
       "added": "2026-06-12"
     },
@@ -51,7 +51,7 @@
       "title": "Turbo Horizon",
       "description": "Outrun the clock in a sunset-soaked pseudo-3D racer. Thread traffic at 320 km/h, chase checkpoints from dusk till dawn, and watch the sky burn through a full day-night cycle.",
       "category": "racing",
-      "tags": ["pseudo-3d", "keyboard", "driving"],
+      "tags": ["driving"],
       "emoji": "🏎️",
       "added": "2026-06-11"
     }

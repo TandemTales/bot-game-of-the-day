@@ -19,7 +19,7 @@ A static directory of bot-built web games, with one **Game of the Day** featured
   "title": "My Game",
   "description": "One-line pitch.",
   "category": "puzzle",
-  "tags": ["mouse"],
+  "tags": ["puzzle"],
   "emoji": "🎲",
   "added": "2026-06-11"
 }
