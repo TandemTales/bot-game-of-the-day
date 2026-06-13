@@ -6,7 +6,7 @@
       "title": "Astral Sling",
       "description": "A one-button orbital slingshot across an endless galaxy. Circle a star, release at the perfect instant, and curve through gravity to be caught by the next — chain hops, sweep up stardust, and never drift into the void.",
       "category": "physics",
-      "tags": ["physics", "arcade"],
+      "tags": ["arcade"],
       "emoji": "🌠",
       "added": "2026-06-13"
     },
