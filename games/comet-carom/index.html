@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comet Carom - Bot Built Arcade</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>%E2%98%84%EF%B8%8F</text></svg>">
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top,rgba(129,188,255,.2),transparent 30%),
+    radial-gradient(circle at 15% 18%,rgba(255,184,108,.12),transparent 24%),
+    linear-gradient(180deg,#0b1223 0%,#070a14 100%);
+  color:#edf2ff;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:18px 16px 24px;
+}
+a.back{align-self:flex-start;color:#abc2e8;text-decoration:none;margin-bottom:8px}
+a.back:hover{color:#ffe0a3}
+h1{
+  margin:4px 0 8px;
+  font-size:clamp(2rem,4.8vw,3.2rem);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.intro{
+  width:min(980px,100%);
+  margin:0 0 16px;
+  text-align:center;
+  color:#c9d7f0;
+  line-height:1.5;
+}
+.intro b{color:#ffe0a3}
+.shell{
+  width:min(1080px,100%);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 290px;
+  gap:16px;
+  align-items:start;
+}
+.stage{
+  position:relative;
+  min-width:0;
+  border-radius:24px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(9,14,28,.72);
+  box-shadow:0 26px 80px rgba(0,0,0,.38);
+}
+canvas{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:3/4;
+  max-height:82vh;
+  background:#05070e;
+  touch-action:none;
+}
+.stage-actions{
+  position:absolute;
+  top:14px;
+  right:14px;
+  display:flex;
+  gap:10px;
+}
+.chrome-btn{
+  width:46px;
+  height:40px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(10,15,26,.72);
+  color:#edf2ff;
+  font-size:16px;
+  cursor:pointer;
+}
+.chrome-btn:hover{border-color:#ffe0a3}
+.sidebar{
+  display:grid;
+  gap:14px;
+}
+.panel{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;
+  padding:14px;
+  backdrop-filter:blur(10px);
+}
+.panel h2{
+  margin:0 0 10px;
+  font-size:.95rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#ffe0a3;
+}
+.panel p,.panel li{
+  margin:0;
+  color:#d8e0f3;
+  line-height:1.45;
+  font-size:.95rem;
+}
+.panel ul{
+  margin:0;
+  padding-left:18px;
+  display:grid;
+  gap:8px;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.stat{
+  border-radius:14px;
+  background:rgba(7,11,22,.56);
+  border:1px solid rgba(255,255,255,.08);
+  padding:10px;
+}
+.stat-label{
+  display:block;
+  color:#9eb1d4;
+  font-size:.75rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.stat-value{
+  display:block;
+  margin-top:4px;
+  color:#f6fbff;
+  font-size:1.2rem;
+  font-weight:800;
+}
+.sidebar button{
+  width:100%;
+  min-height:50px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05));
+  color:#fdf4db;
+  font-weight:800;
+  font-size:1rem;
+  cursor:pointer;
+}
+.sidebar button:hover{border-color:#ffe0a3}
+.button-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.footer-note{
+  margin-top:14px;
+  color:#93a1be;
+  font-size:.88rem;
+  text-align:center;
+}
+@media (max-width:920px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  body{padding:12px 10px 18px}
+  .sidebar{grid-template-columns:1fr}
+  .panel{padding:12px}
+  .stage-actions{display:none}
+  .chrome-btn{width:42px;height:36px}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<h1>Comet Carom</h1>
+<p class="intro"><b>Drag</b> from the launch comet to aim and set power, then <b>release</b> to flick. Clear every rogue satellite before you run out of shots. Desktop backup controls: <b>Left/Right</b> aim, <b>Up/Down</b> power, <b>Space</b> fire, <b>P</b> pause, <b>R</b> restart.</p>
+<div class="shell">
+  <div class="stage">
+    <canvas id="game" width="900" height="1200" aria-label="Comet Carom game canvas"></canvas>
+    <div class="stage-actions">
+      <button class="chrome-btn" id="restart" type="button" aria-label="Restart game">RST</button>
+      <button class="chrome-btn" id="mute" type="button" aria-label="Toggle sound">SND</button>
+    </div>
+  </div>
+  <aside class="sidebar">
+    <section class="panel">
+      <h2>How To Play</h2>
+      <ul>
+        <li>Sink rogue satellites into the glowing sun or knock them through the four warp docks on the rim.</li>
+        <li>Your shot only earns a vortex bonus after it has touched at least one target, so reckless center dives waste tempo.</li>
+        <li>If your comet survives the shot, it scores a ring bonus where it settles before the next launch.</li>
+      </ul>
+    </section>
+    <section class="panel">
+      <h2>Run Stats</h2>
+      <div class="stats">
+        <div class="stat"><span class="stat-label">Best</span><span class="stat-value" id="best-stat">0</span></div>
+        <div class="stat"><span class="stat-label">Wave</span><span class="stat-value" id="wave-stat">1</span></div>
+        <div class="stat"><span class="stat-label">Score</span><span class="stat-value" id="score-stat">0</span></div>
+        <div class="stat"><span class="stat-label">Shots</span><span class="stat-value" id="shots-stat">8</span></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Keyboard Assist</h2>
+      <p>Arrow keys aim and trim power even while the pointer is idle. Space launches. Enter starts from the title or replays from game over.</p>
+    </section>
+    <section class="panel">
+      <div class="button-row">
+        <button id="start-btn" type="button">Start New Run</button>
+        <button id="sidebar-mute" type="button">Toggle Sound</button>
+      </div>
+    </section>
+  </aside>
+</div>
+<p class="footer-note">Original game, code, art, and audio. Built as an arcade riff on disk-flicking board games and shuffle-scoring tables.</p>
+<script>
+"use strict";
+const cv=document.getElementById("game"),ctx=cv.getContext("2d");
+const W=cv.width,H=cv.height,TAU=Math.PI*2;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const easeOut=t=>1-Math.pow(1-t,3);
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+const bestKey="comet-carom-best";
+const CENTER={x:W/2,y:560};
+const OUTER_R=308,HOLE_R=48,DISC_R=22,POST_R=20;
+const LAUNCH={x:W/2,y:972};
+const POCKET_ARCS=[-2.36,-.78,.78,2.36];
+const POCKET_WIDTH=.22;
+const RINGS=[
+  {r:118,score:75,color:"#ffe39e",stroke:"rgba(255,227,158,.18)"},
+  {r:188,score:45,color:"#9fe6ff",stroke:"rgba(159,230,255,.18)"},
+  {r:262,score:24,color:"#d2c0ff",stroke:"rgba(210,192,255,.18)"}
+];
+const POSTS=[
+  {x:CENTER.x-92,y:CENTER.y-88},
+  {x:CENTER.x+92,y:CENTER.y-88},
+  {x:CENTER.x-92,y:CENTER.y+88},
+  {x:CENTER.x+92,y:CENTER.y+88}
+];
+const state={
+  mode:"title",
+  time:0,
+  score:0,
+  wave:1,
+  shotsLeft:8,
+  best:+localStorage.getItem(bestKey)||0,
+  message:"",
+  messageTimer:0,
+  pauseBlink:0,
+  flash:0,
+  shake:0,
+  pointer:{x:LAUNCH.x,y:LAUNCH.y,active:false,dragging:false},
+  aimAngle:0,
+  aimPower:720,
+  currentDrag:0,
+  shotActive:false,
+  shotCombo:0,
+  shotClears:0,
+  restTimer:0,
+  settled:false,
+  muted:localStorage.getItem("comet-carom-muted")==="1",
+};
+const world={
+  player:null,
+  targets:[],
+  particles:[],
+  stars:Array.from({length:120},()=>({x:Math.random()*W,y:Math.random()*H,s:rand(.5,2),a:rand(.15,.95)})),
+  nebulae:Array.from({length:7},(_,i)=>({x:rand(80,W-80),y:rand(80,H-80),r:rand(90,220),h:i})),
+};
+
+function say(text,seconds){
+  state.message=text;
+  state.messageTimer=seconds||1.3;
+}
+function addParticle(x,y,color,count,kind){
+  for(let i=0;i<count;i++){
+    const a=rand(0,TAU),s=rand(kind==="trail"?28:80,kind==="trail"?76:220);
+    world.particles.push({
+      x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-(kind==="spark"?30:0),
+      life:rand(.28,.9),max:1,size:rand(2,7),color,kind:kind||"spark"
+    });
+  }
+}
+function addText(x,y,text,color,big){
+  world.particles.push({
+    x,y,vx:0,vy:-28,life:1.1,max:1.1,size:0,color,text,kind:big?"bigtext":"text"
+  });
+}
+function updateStats(){
+  document.getElementById("best-stat").textContent=state.best;
+  document.getElementById("wave-stat").textContent=state.wave;
+  document.getElementById("score-stat").textContent=state.score;
+  document.getElementById("shots-stat").textContent=state.shotsLeft;
+}
+function angleWrap(a){
+  while(a<=-Math.PI)a+=TAU;
+  while(a>Math.PI)a-=TAU;
+  return a;
+}
+function clearBoard(){
+  world.targets.length=0;
+  world.player=null;
+  state.shotActive=false;
+  state.shotCombo=0;
+  state.shotClears=0;
+  state.restTimer=0;
+}
+function makeDisc(type,x,y){
+  return{
+    type,x,y,vx:0,vy:0,r:DISC_R,
+    hitTarget:false,dead:false,trail:0,pulse:rand(0,TAU)
+  };
+}
+function randomBoardPoint(radiusPad){
+  const a=rand(0,TAU),r=rand(HOLE_R+112,OUTER_R-(radiusPad||54));
+  return{x:CENTER.x+Math.cos(a)*r,y:CENTER.y+Math.sin(a)*r};
+}
+function overlapsAny(x,y,r,items,pad){
+  for(const item of items){
+    if(Math.hypot(x-item.x,y-item.y)<r+item.r+(pad||0))return true;
+  }
+  for(const post of POSTS){
+    if(Math.hypot(x-post.x,y-post.y)<r+POST_R+14)return true;
+  }
+  return Math.hypot(x-CENTER.x,y-CENTER.y)<r+HOLE_R+42;
+}
+function spawnWaveTargets(count){
+  world.targets.length=0;
+  let guard=0;
+  while(world.targets.length<count&&guard<4000){
+    guard++;
+    const p=randomBoardPoint(52);
+    if(overlapsAny(p.x,p.y,DISC_R,world.targets,18))continue;
+    world.targets.push(makeDisc("target",p.x,p.y));
+  }
+}
+function configureWave(wave){
+  state.wave=wave;
+  state.shotsLeft=Math.max(6,8-Math.floor((wave-1)/4));
+  state.currentDrag=0;
+  state.aimAngle=0;
+  state.aimPower=720;
+  clearBoard();
+  spawnWaveTargets(Math.min(4+wave,10));
+  say("Wave "+wave,1.5);
+  updateStats();
+}
+function startRun(){
+  state.mode="playing";
+  state.score=0;
+  state.flash=0;
+  state.shake=0;
+  world.particles.length=0;
+  configureWave(1);
+  audio.start();
+}
+function award(points,label,color){
+  state.score+=points;
+  addText(CENTER.x,CENTER.y-OUTER_R-54,"+"+points,color||"#fff2bb");
+  if(label)addText(CENTER.x,CENTER.y-OUTER_R-92,label,color||"#9fe6ff",true);
+  state.flash=Math.min(.24,state.flash+.06);
+  updateStats();
+}
+function nextWave(){
+  const bonus=state.shotsLeft*55+state.wave*90;
+  state.score+=bonus;
+  addText(CENTER.x,CENTER.y,"Wave Clear","#ffe39e",true);
+  addText(CENTER.x,CENTER.y+38,"+"+bonus+" bonus","#9fe6ff");
+  state.flash=.3;
+  state.shake=11;
+  audio.wave();
+  configureWave(state.wave+1);
+}
+function finishGame(reason){
+  state.mode="gameover";
+  state.best=Math.max(state.best,state.score);
+  localStorage.setItem(bestKey,String(state.best));
+  say(reason||"Signal Lost",2.3);
+  audio.fail();
+  updateStats();
+}
+function pocketForDisc(disc){
+  const dx=disc.x-CENTER.x,dy=disc.y-CENTER.y;
+  const dist=Math.hypot(dx,dy);
+  if(dist<HOLE_R-disc.r*.28)return{type:"sun"};
+  const ang=Math.atan2(dy,dx);
+  if(dist>OUTER_R-disc.r*.28){
+    for(const base of POCKET_ARCS){
+      if(Math.abs(angleWrap(ang-base))<POCKET_WIDTH)return{type:"dock",angle:base};
+    }
+  }
+  return null;
+}
+function startShotFromAim(){
+  if(state.mode!=="playing"||state.shotActive||state.shotsLeft<=0)return;
+  state.shotActive=true;
+  state.shotCombo=0;
+  state.shotClears=0;
+  state.restTimer=0;
+  state.pointer.dragging=false;
+  state.currentDrag=0;
+  const disc=makeDisc("player",LAUNCH.x,LAUNCH.y);
+  disc.vx=Math.sin(state.aimAngle)*state.aimPower;
+  disc.vy=-Math.cos(state.aimAngle)*state.aimPower;
+  world.player=disc;
+  state.shotsLeft--;
+  addParticle(LAUNCH.x,LAUNCH.y,"#b8edff",18,"trail");
+  audio.fire();
+  updateStats();
+}
+function setAimFromPointer(x,y){
+  const dx=LAUNCH.x-x,dy=LAUNCH.y-y;
+  const power=clamp(Math.hypot(dx,dy),36,220);
+  const angle=clamp(Math.atan2(dx,dy),-1.15,1.15);
+  state.aimAngle=angle;
+  state.aimPower=420+(power-36)/(220-36)*650;
+  state.currentDrag=power;
+}
+function resolveDiscCollision(a,b){
+  if(a.dead||b.dead)return;
+  const dx=b.x-a.x,dy=b.y-a.y;
+  const dist=Math.hypot(dx,dy);
+  const minDist=a.r+b.r;
+  if(!dist||dist>=minDist)return;
+  const nx=dx/dist,ny=dy/dist;
+  const overlap=minDist-dist;
+  a.x-=nx*overlap*.5;
+  a.y-=ny*overlap*.5;
+  b.x+=nx*overlap*.5;
+  b.y+=ny*overlap*.5;
+  const rvx=b.vx-a.vx,rvy=b.vy-a.vy;
+  const vel=rvx*nx+rvy*ny;
+  if(vel>0)return;
+  const impulse=-(1.02)*vel*.5;
+  a.vx-=impulse*nx;
+  a.vy-=impulse*ny;
+  b.vx+=impulse*nx;
+  b.vy+=impulse*ny;
+  if((a.type==="player"&&b.type==="target")||(a.type==="target"&&b.type==="player")){
+    if(a.type==="player")a.hitTarget=true;
+    if(b.type==="player")b.hitTarget=true;
+  }
+  addParticle((a.x+b.x)/2,(a.y+b.y)/2,"rgba(215,242,255,.9)",5,"trail");
+  audio.bump();
+}
+function resolvePostCollision(disc,post){
+  const dx=disc.x-post.x,dy=disc.y-post.y;
+  const dist=Math.hypot(dx,dy);
+  const minDist=disc.r+POST_R;
+  if(!dist||dist>=minDist)return;
+  const nx=dx/dist,ny=dy/dist;
+  disc.x=post.x+nx*minDist;
+  disc.y=post.y+ny*minDist;
+  const dot=disc.vx*nx+disc.vy*ny;
+  disc.vx-=2*dot*nx;
+  disc.vy-=2*dot*ny;
+  disc.vx*=.88;
+  disc.vy*=.88;
+  addParticle(disc.x,disc.y,"rgba(255,227,158,.85)",6,"trail");
+  audio.bump();
+}
+function resolveOuterWall(disc){
+  const dx=disc.x-CENTER.x,dy=disc.y-CENTER.y;
+  const dist=Math.hypot(dx,dy);
+  if(dist<=OUTER_R-disc.r)return;
+  const pocket=pocketForDisc(disc);
+  if(pocket){
+    captureDisc(disc,pocket.type==="sun"?"sun":"dock");
+    return;
+  }
+  const nx=dx/dist,ny=dy/dist;
+  disc.x=CENTER.x+nx*(OUTER_R-disc.r);
+  disc.y=CENTER.y+ny*(OUTER_R-disc.r);
+  const dot=disc.vx*nx+disc.vy*ny;
+  disc.vx-=2*dot*nx;
+  disc.vy-=2*dot*ny;
+  disc.vx*=.9;
+  disc.vy*=.9;
+  addParticle(disc.x,disc.y,"rgba(160,227,255,.75)",4,"trail");
+  audio.bump();
+}
+function captureDisc(disc,target){
+  if(disc.dead)return;
+  disc.dead=true;
+  const hitColor=disc.type==="target"?"#ffe39e":"#9fe6ff";
+  addParticle(disc.x,disc.y,hitColor,disc.type==="target"?18:12,"spark");
+  if(disc.type==="target"){
+    state.shotCombo++;
+    state.shotClears++;
+    const points=(target==="sun"?140:92)*state.shotCombo;
+    state.shake=Math.min(16,state.shake+5);
+    award(points,target==="sun"?"Solar Sink":"Warp Dock",target==="sun"?"#ffe39e":"#9fe6ff");
+    audio.clear(target==="sun");
+  }else if(disc.type==="player"){
+    if(disc.hitTarget){
+      const points=target==="sun"?72:32;
+      award(points,target==="sun"?"Style Sink":"Drift Bonus",target==="sun"?"#ffe39e":"#d2c0ff");
+      audio.style();
+    }else{
+      addText(disc.x,disc.y,target==="sun"?"Dry Sink":"Wild Exit","#94a7cb");
+      audio.foul();
+    }
+  }
+}
+function ringBonusForPlayer(){
+  const disc=world.player;
+  if(!disc||disc.dead)return;
+  const dist=Math.hypot(disc.x-CENTER.x,disc.y-CENTER.y);
+  const ring=RINGS.find(r=>dist<r.r);
+  if(ring){
+    state.score+=ring.score;
+    addText(disc.x,disc.y-24,"+"+ring.score,ring.color);
+    addText(disc.x,disc.y-52,"Ring Hold",ring.color);
+    audio.hold();
+    updateStats();
+  }else{
+    addText(disc.x,disc.y-18,"Safe Orbit","#93a1be");
+  }
+}
+function endShot(){
+  ringBonusForPlayer();
+  world.player=null;
+  state.shotActive=false;
+  state.restTimer=0;
+  if(world.targets.length===0){
+    nextWave();
+  }else if(state.shotsLeft<=0){
+    finishGame("Satellites Escaped");
+  }
+}
+function allDiscs(){
+  return world.player?[world.player,...world.targets]:world.targets.slice();
+}
+function anyMotion(){
+  for(const disc of allDiscs()){
+    if(Math.hypot(disc.vx,disc.vy)>18)return true;
+  }
+  return false;
+}
+function updatePhysics(dt){
+  const discs=allDiscs();
+  const damping=Math.pow(.19,dt);
+  for(const disc of discs){
+    if(disc.dead)continue;
+    disc.x+=disc.vx*dt;
+    disc.y+=disc.vy*dt;
+    disc.vx*=damping;
+    disc.vy*=damping;
+    if(Math.hypot(disc.vx,disc.vy)<4){disc.vx=0;disc.vy=0;}
+    disc.trail+=dt;
+    disc.pulse+=dt*2.4;
+  }
+  for(let i=0;i<discs.length;i++){
+    for(let j=i+1;j<discs.length;j++)resolveDiscCollision(discs[i],discs[j]);
+  }
+  for(const disc of discs){
+    if(disc.dead)continue;
+    for(const post of POSTS)resolvePostCollision(disc,post);
+    const pocket=pocketForDisc(disc);
+    if(pocket)captureDisc(disc,pocket.type);
+    if(!disc.dead)resolveOuterWall(disc);
+  }
+  world.targets=world.targets.filter(d=>!d.dead);
+  if(world.player&&world.player.dead)world.player=null;
+  if(world.player&&world.player.trail>.018){
+    world.player.trail=0;
+    addParticle(world.player.x,world.player.y,"rgba(184,237,255,.8)",2,"trail");
+  }
+  if(state.shotActive){
+    if(!anyMotion())state.restTimer+=dt;
+    else state.restTimer=0;
+    if(state.restTimer>.32)endShot();
+  }
+}
+function updateEffects(dt){
+  state.flash=Math.max(0,state.flash-dt*1.5);
+  state.shake=Math.max(0,state.shake-dt*26);
+  state.messageTimer=Math.max(0,state.messageTimer-dt);
+  state.pauseBlink+=dt;
+  for(const p of world.particles){
+    p.life-=dt;
+    p.x+=p.vx*dt;
+    p.y+=p.vy*dt;
+    if(p.kind==="spark"||p.kind==="trail")p.vy+=dt*(p.kind==="trail"?70:280);
+  }
+  world.particles=world.particles.filter(p=>p.life>0);
+}
+function update(dt){
+  state.time+=dt;
+  if(state.mode==="playing")updatePhysics(dt);
+  updateEffects(dt);
+}
+function drawBackground(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#091121");
+  g.addColorStop(.5,"#060b16");
+  g.addColorStop(1,"#04070e");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,H);
+  for(const nebula of world.nebulae){
+    const hue=["rgba(99,197,255,.11)","rgba(255,186,120,.08)","rgba(189,143,255,.08)"][nebula.h%3];
+    const pulse=nebula.r*(.92+.08*Math.sin(state.time*.4+nebula.h));
+    const rg=ctx.createRadialGradient(nebula.x,nebula.y,0,nebula.x,nebula.y,pulse);
+    rg.addColorStop(0,hue);
+    rg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=rg;
+    ctx.fillRect(0,0,W,H);
+  }
+  for(const star of world.stars){
+    ctx.fillStyle="rgba(255,255,255,"+(star.a*(.55+.45*Math.sin(state.time*1.7+star.x)))+")";
+    ctx.fillRect(star.x,star.y,star.s,star.s);
+  }
+}
+function roundRect(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y);
+  g.arcTo(x+w,y,x+w,y+h,r);
+  g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r);
+  g.arcTo(x,y,x+w,y,r);
+  g.closePath();
+}
+function drawBoard(){
+  const board=ctx.createRadialGradient(CENTER.x,CENTER.y,90,CENTER.x,CENTER.y,OUTER_R+40);
+  board.addColorStop(0,"#102040");
+  board.addColorStop(.56,"#0b1630");
+  board.addColorStop(1,"#09101f");
+  ctx.fillStyle=board;
+  ctx.beginPath();
+  ctx.arc(CENTER.x,CENTER.y,OUTER_R+24,0,TAU);
+  ctx.fill();
+  ctx.strokeStyle="rgba(255,255,255,.08)";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.arc(CENTER.x,CENTER.y,OUTER_R,0,TAU);
+  ctx.stroke();
+
+  for(const ring of RINGS){
+    ctx.strokeStyle=ring.stroke;
+    ctx.lineWidth=28;
+    ctx.beginPath();
+    ctx.arc(CENTER.x,CENTER.y,ring.r,0,TAU);
+    ctx.stroke();
+  }
+  for(const base of POCKET_ARCS){
+    ctx.save();
+    ctx.translate(CENTER.x,CENTER.y);
+    ctx.rotate(base);
+    ctx.strokeStyle="rgba(159,230,255,.75)";
+    ctx.lineWidth=20;
+    ctx.lineCap="round";
+    ctx.beginPath();
+    ctx.arc(0,0,OUTER_R,.44,.88);
+    ctx.stroke();
+    ctx.fillStyle="rgba(159,230,255,.15)";
+    ctx.beginPath();
+    ctx.moveTo((OUTER_R+14)*Math.cos(.44),(OUTER_R+14)*Math.sin(.44));
+    ctx.arc(0,0,OUTER_R+30,.44,.88);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  for(const post of POSTS){
+    const glow=ctx.createRadialGradient(post.x-4,post.y-4,2,post.x,post.y,POST_R+18);
+    glow.addColorStop(0,"rgba(255,227,158,.55)");
+    glow.addColorStop(1,"rgba(255,227,158,0)");
+    ctx.fillStyle=glow;
+    ctx.beginPath();
+    ctx.arc(post.x,post.y,POST_R+20,0,TAU);
+    ctx.fill();
+    ctx.fillStyle="#ffe39e";
+    ctx.beginPath();
+    ctx.arc(post.x,post.y,POST_R,0,TAU);
+    ctx.fill();
+    ctx.fillStyle="#8d6533";
+    ctx.beginPath();
+    ctx.arc(post.x,post.y,POST_R-7,0,TAU);
+    ctx.fill();
+  }
+  const sun=ctx.createRadialGradient(CENTER.x-10,CENTER.y-12,4,CENTER.x,CENTER.y,HOLE_R+54);
+  sun.addColorStop(0,"rgba(255,245,186,.98)");
+  sun.addColorStop(.35,"rgba(255,215,117,.86)");
+  sun.addColorStop(.7,"rgba(255,150,70,.26)");
+  sun.addColorStop(1,"rgba(255,150,70,0)");
+  ctx.fillStyle=sun;
+  ctx.beginPath();
+  ctx.arc(CENTER.x,CENTER.y,HOLE_R+52,0,TAU);
+  ctx.fill();
+  ctx.fillStyle="#090a12";
+  ctx.beginPath();
+  ctx.arc(CENTER.x,CENTER.y,HOLE_R,0,TAU);
+  ctx.fill();
+}
+function drawDisc(disc){
+  const isPlayer=disc.type==="player";
+  const core=isPlayer?"#b8edff":"#ffcf77";
+  const rim=isPlayer?"#effbff":"#fff4d8";
+  const body=ctx.createRadialGradient(disc.x-8,disc.y-10,4,disc.x,disc.y,disc.r+8);
+  body.addColorStop(0,rim);
+  body.addColorStop(.35,core);
+  body.addColorStop(1,isPlayer?"#264d7d":"#7e4f1d");
+  ctx.fillStyle=body;
+  ctx.beginPath();
+  ctx.arc(disc.x,disc.y,disc.r,0,TAU);
+  ctx.fill();
+  ctx.strokeStyle="rgba(255,255,255,.38)";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.arc(disc.x,disc.y,disc.r-1,0,TAU);
+  ctx.stroke();
+  ctx.fillStyle="rgba(255,255,255,.36)";
+  ctx.beginPath();
+  ctx.ellipse(disc.x-8,disc.y-10,7,5,-.4,0,TAU);
+  ctx.fill();
+  if(!isPlayer){
+    ctx.fillStyle="rgba(34,23,8,.45)";
+    ctx.beginPath();
+    ctx.arc(disc.x,disc.y,6+Math.sin(disc.pulse*2)*1.5,0,TAU);
+    ctx.fill();
+  }
+}
+function drawLauncher(){
+  ctx.fillStyle="rgba(8,12,24,.8)";
+  roundRect(ctx,LAUNCH.x-126,LAUNCH.y-42,252,84,28);
+  ctx.fill();
+  ctx.strokeStyle="rgba(255,255,255,.08)";
+  ctx.lineWidth=2;
+  roundRect(ctx,LAUNCH.x-126,LAUNCH.y-42,252,84,28);
+  ctx.stroke();
+
+  const gauge=clamp((state.aimPower-420)/650,0,1);
+  ctx.fillStyle="rgba(255,255,255,.12)";
+  roundRect(ctx,LAUNCH.x-100,LAUNCH.y+22,200,10,5);
+  ctx.fill();
+  const gg=ctx.createLinearGradient(LAUNCH.x-100,0,LAUNCH.x+100,0);
+  gg.addColorStop(0,"#8fe4ff");
+  gg.addColorStop(1,"#ffe39e");
+  ctx.fillStyle=gg;
+  roundRect(ctx,LAUNCH.x-100,LAUNCH.y+22,200*gauge,10,5);
+  ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.18)";
+  ctx.font="bold 14px system-ui";
+  ctx.textAlign="center";
+  ctx.fillText("PWR",LAUNCH.x,LAUNCH.y+14);
+
+  if(state.mode!=="playing"||state.shotActive||state.shotsLeft<=0)return;
+  const previewLen=clamp((state.aimPower-420)/650,0,1)*190+80;
+  const px=LAUNCH.x+Math.sin(state.aimAngle)*previewLen;
+  const py=LAUNCH.y-Math.cos(state.aimAngle)*previewLen;
+  ctx.strokeStyle="rgba(184,237,255,.34)";
+  ctx.lineWidth=5;
+  ctx.setLineDash([14,12]);
+  ctx.beginPath();
+  ctx.moveTo(LAUNCH.x,LAUNCH.y);
+  ctx.lineTo(px,py);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  drawDisc({type:"player",x:LAUNCH.x,y:LAUNCH.y,r:DISC_R,pulse:state.time});
+}
+function drawHud(){
+  ctx.fillStyle="rgba(6,9,18,.58)";
+  roundRect(ctx,18,18,220,86,18);ctx.fill();
+  roundRect(ctx,252,18,186,86,18);ctx.fill();
+  roundRect(ctx,452,18,186,86,18);ctx.fill();
+  roundRect(ctx,652,18,230,86,18);ctx.fill();
+  ctx.textAlign="left";
+  ctx.fillStyle="#b8c6e2";
+  ctx.font="bold 13px system-ui";
+  ctx.fillText("SCORE",34,42);
+  ctx.fillStyle="#ffe39e";
+  ctx.font="bold 30px Consolas,monospace";
+  ctx.fillText(String(state.score).padStart(5,"0"),34,76);
+  ctx.fillStyle="#b8c6e2";
+  ctx.font="bold 13px system-ui";
+  ctx.fillText("WAVE",268,42);
+  ctx.fillStyle="#8fe4ff";
+  ctx.font="bold 30px Consolas,monospace";
+  ctx.fillText(String(state.wave).padStart(2,"0"),268,76);
+  ctx.fillStyle="#b8c6e2";
+  ctx.font="bold 13px system-ui";
+  ctx.fillText("SHOTS",468,42);
+  ctx.fillStyle="#d2c0ff";
+  ctx.font="bold 30px Consolas,monospace";
+  ctx.fillText(String(state.shotsLeft).padStart(2,"0"),468,76);
+  ctx.fillStyle="#b8c6e2";
+  ctx.font="bold 13px system-ui";
+  ctx.fillText("TARGETS",668,42);
+  ctx.fillStyle="#f3f6ff";
+  ctx.font="bold 30px Consolas,monospace";
+  ctx.fillText(String(world.targets.length).padStart(2,"0"),668,76);
+  ctx.textAlign="right";
+  ctx.fillStyle="#9db0d0";
+  ctx.font="13px system-ui";
+  ctx.fillText("BEST "+String(state.best).padStart(5,"0"),864,76);
+}
+function drawParticles(){
+  for(const p of world.particles){
+    const alpha=clamp(p.life/p.max,0,1);
+    if(p.kind==="text"||p.kind==="bigtext"){
+      ctx.globalAlpha=alpha;
+      ctx.textAlign="center";
+      ctx.font=(p.kind==="bigtext"?"bold 28px":"bold 24px")+" system-ui";
+      ctx.fillStyle="#08101d";
+      ctx.fillText(p.text,p.x+2,p.y+2);
+      ctx.fillStyle=p.color;
+      ctx.fillText(p.text,p.x,p.y);
+      ctx.globalAlpha=1;
+    }else{
+      ctx.globalAlpha=alpha;
+      ctx.fillStyle=p.color;
+      ctx.fillRect(p.x-p.size*.5,p.y-p.size*.5,p.size,p.size);
+      ctx.globalAlpha=1;
+    }
+  }
+}
+function drawOverlay(){
+  if(state.mode==="title"){
+    ctx.fillStyle="rgba(5,8,15,.58)";
+    ctx.fillRect(0,0,W,H);
+    ctx.textAlign="center";
+    const g=ctx.createLinearGradient(0,150,0,280);
+    g.addColorStop(0,"#fff0bf");
+    g.addColorStop(1,"#8fe4ff");
+    ctx.fillStyle=g;
+    ctx.font="900 78px system-ui";
+    ctx.fillText("COMET CAROM",W/2,216);
+    ctx.fillStyle="#e7eefc";
+    ctx.font="24px system-ui";
+    ctx.fillText("Flick the board clean with bank shots, warp docks, and one hot little sun.",W/2,276);
+    if(Math.sin(state.time*5)>-.2){
+      ctx.fillStyle="#ffe39e";
+      ctx.font="bold 30px system-ui";
+      ctx.fillText("Press Enter or drag to start",W/2,384);
+    }
+    ctx.fillStyle="#b9c6df";
+    ctx.font="20px system-ui";
+    ctx.fillText("Clear every satellite before the shot rack runs dry. Hold the inner rings for extra points.",W/2,438);
+  }else if(state.mode==="paused"){
+    ctx.fillStyle="rgba(5,8,15,.6)";
+    ctx.fillRect(0,0,W,H);
+    ctx.textAlign="center";
+    ctx.fillStyle="#fff0bf";
+    ctx.font="bold 72px system-ui";
+    ctx.fillText("PAUSED",W/2,H/2-20);
+    ctx.fillStyle="#c2cee5";
+    ctx.font="22px system-ui";
+    ctx.fillText("Press P to resume",W/2,H/2+34);
+  }else if(state.mode==="gameover"){
+    ctx.fillStyle="rgba(5,8,15,.64)";
+    ctx.fillRect(0,0,W,H);
+    ctx.textAlign="center";
+    ctx.fillStyle="#ffb89a";
+    ctx.font="900 70px system-ui";
+    ctx.fillText("SIGNAL LOST",W/2,250);
+    ctx.fillStyle="#fff0bf";
+    ctx.font="bold 32px system-ui";
+    ctx.fillText("Score "+state.score+"   Best "+state.best+"   Wave "+state.wave,W/2,320);
+    ctx.fillStyle="#d2dbea";
+    ctx.font="22px system-ui";
+    ctx.fillText("Press Enter, tap restart, or drag from the launcher for a new run.",W/2,380);
+  }
+  if(state.messageTimer>0&&state.mode!=="title"){
+    ctx.fillStyle="rgba(8,12,24,.56)";
+    roundRect(ctx,W/2-136,126,272,46,16);ctx.fill();
+    ctx.textAlign="center";
+    ctx.fillStyle="#fff0bf";
+    ctx.font="bold 28px system-ui";
+    ctx.fillText(state.message,W/2,156);
+  }
+}
+function render(){
+  ctx.save();
+  if(state.shake>0)ctx.translate(rand(-state.shake,state.shake),rand(-state.shake,state.shake));
+  drawBackground();
+  drawBoard();
+  for(const target of world.targets)drawDisc(target);
+  if(world.player)drawDisc(world.player);
+  drawParticles();
+  drawLauncher();
+  drawHud();
+  drawOverlay();
+  if(state.flash>0){
+    ctx.fillStyle="rgba(255,244,211,"+(state.flash*.42)+")";
+    ctx.fillRect(0,0,W,H);
+  }
+  ctx.restore();
+}
+
+const audio={
+  ctx:null,master:null,music:null,sfx:null,muted:state.muted,nextBeat:0,step:0,
+  ensure(){
+    if(this.ctx)return;
+    try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+    this.master=this.ctx.createGain();
+    this.master.gain.value=this.muted?0:1;
+    this.master.connect(this.ctx.destination);
+    this.music=this.ctx.createGain();this.music.gain.value=.13;this.music.connect(this.master);
+    this.sfx=this.ctx.createGain();this.sfx.gain.value=.38;this.sfx.connect(this.master);
+    this.nextBeat=this.ctx.currentTime+.06;
+    setInterval(()=>this.tick(),110);
+  },
+  start(){this.ensure();if(this.ctx&&this.ctx.state==="suspended")this.ctx.resume();},
+  tone(freq,dur,type,gain,slide,toMusic){
+    if(!this.ctx||this.muted)return;
+    const t=toMusic?this.nextBeat:this.ctx.currentTime;
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain(),f=this.ctx.createBiquadFilter();
+    o.type=type||"triangle";
+    o.frequency.setValueAtTime(freq,t);
+    if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,slide),t+dur);
+    f.type="lowpass";
+    f.frequency.value=1800;
+    g.gain.setValueAtTime(gain||.08,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(f);f.connect(g);g.connect(toMusic?this.music:this.sfx);
+    o.start(t);o.stop(t+dur+.05);
+  },
+  tick(){
+    if(!this.ctx||this.ctx.state!=="running")return;
+    const stepDur=60/118/2;
+    const chords=[[196,246.94,293.66],[174.61,220,261.63],[220,277.18,329.63],[164.81,207.65,246.94]];
+    while(this.nextBeat<this.ctx.currentTime+.24){
+      const chord=chords[Math.floor(this.step/8)%chords.length];
+      if(this.step%4===0)this.tone(chord[0],.25,"triangle",.028,null,true);
+      if(this.step%2===0)this.tone(chord[this.step%3]*2,.09,"square",.02,null,true);
+      if(this.step%8===6)this.tone(chord[2]*2.5,.06,"sine",.018,null,true);
+      this.step++;
+      this.nextBeat+=stepDur;
+    }
+  },
+  fire(){this.tone(240,.09,"sawtooth",.12,580);},
+  bump(){this.tone(180,.05,"square",.05,240);},
+  clear(sun){
+    this.tone(sun?540:440,.11,"triangle",.13,sun?780:620);
+    if(sun)setTimeout(()=>this.tone(760,.14,"sine",.12),55);
+  },
+  hold(){this.tone(420,.08,"triangle",.1);},
+  style(){this.tone(640,.1,"square",.11);setTimeout(()=>this.tone(860,.12,"triangle",.11),70);},
+  foul(){this.tone(150,.14,"sawtooth",.12,80);},
+  wave(){[392,523.25,659.25].forEach((f,i)=>setTimeout(()=>this.tone(f,.16,"triangle",.12),i*90));},
+  fail(){[220,185,155].forEach((f,i)=>setTimeout(()=>this.tone(f,.2,"square",.1),i*120));},
+  setMuted(muted){
+    this.muted=muted;
+    state.muted=muted;
+    localStorage.setItem("comet-carom-muted",muted?"1":"0");
+    syncMuteButtons();
+    if(this.master)this.master.gain.linearRampToValueAtTime(muted?0:1,this.ctx.currentTime+.08);
+  }
+};
+
+function syncMuteButtons(){
+  document.getElementById("mute").textContent=state.muted?"MUT":"SND";
+  document.getElementById("sidebar-mute").textContent=state.muted?"Sound Off":"Sound On";
+}
+document.getElementById("mute").addEventListener("click",e=>{
+  e.stopPropagation();
+  audio.start();
+  audio.setMuted(!state.muted);
+});
+document.getElementById("restart").addEventListener("click",()=>{
+  audio.start();
+  startRun();
+});
+document.getElementById("start-btn").addEventListener("click",()=>{
+  audio.start();
+  startRun();
+});
+document.getElementById("sidebar-mute").addEventListener("click",()=>{
+  audio.start();
+  audio.setMuted(!state.muted);
+});
+
+function pointerPos(ev){
+  const r=cv.getBoundingClientRect();
+  return{x:(ev.clientX-r.left)*(W/r.width),y:(ev.clientY-r.top)*(H/r.height)};
+}
+function beginPointer(pos){
+  audio.start();
+  state.pointer={x:pos.x,y:pos.y,active:true,dragging:false};
+  if(state.mode==="title"||state.mode==="gameover"){
+    startRun();
+  }
+  if(state.mode!=="playing"||state.shotActive||state.shotsLeft<=0)return;
+  if(Math.hypot(pos.x-LAUNCH.x,pos.y-LAUNCH.y)<86){
+    state.pointer.dragging=true;
+    setAimFromPointer(pos.x,pos.y);
+  }
+}
+function movePointer(pos){
+  state.pointer.x=pos.x;
+  state.pointer.y=pos.y;
+  state.pointer.active=true;
+  if(state.pointer.dragging&&!state.shotActive&&state.mode==="playing")setAimFromPointer(pos.x,pos.y);
+}
+function endPointer(){
+  if(state.pointer.dragging&&state.mode==="playing"&&!state.shotActive&&state.shotsLeft>0){
+    startShotFromAim();
+  }
+  state.pointer.dragging=false;
+}
+cv.addEventListener("pointerdown",e=>{
+  beginPointer(pointerPos(e));
+});
+cv.addEventListener("pointermove",e=>{
+  movePointer(pointerPos(e));
+});
+cv.addEventListener("pointerup",()=>{
+  endPointer();
+});
+cv.addEventListener("pointercancel",()=>{
+  endPointer();
+});
+cv.addEventListener("pointerleave",()=>{
+  state.pointer.active=false;
+  endPointer();
+});
+
+addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();
+  if(["arrowleft","arrowright","arrowup","arrowdown"," ","enter","p","r"].includes(k))e.preventDefault();
+  if(k==="enter"){
+    audio.start();
+    if(state.mode==="title"||state.mode==="gameover")startRun();
+  }
+  if(k==="p"){
+    if(state.mode==="playing")state.mode="paused";
+    else if(state.mode==="paused")state.mode="playing";
+  }
+  if(k==="r"){
+    audio.start();
+    startRun();
+  }
+  if(state.mode!=="playing"||state.shotActive)return;
+  if(k==="arrowleft")state.aimAngle=clamp(state.aimAngle-.06,-1.15,1.15);
+  if(k==="arrowright")state.aimAngle=clamp(state.aimAngle+.06,-1.15,1.15);
+  if(k==="arrowup")state.aimPower=clamp(state.aimPower+28,420,1070);
+  if(k==="arrowdown")state.aimPower=clamp(state.aimPower-28,420,1070);
+  if(k===" ")startShotFromAim();
+});
+
+updateStats();
+syncMuteButtons();
+const params=new URLSearchParams(location.search);
+if(params.get("autostart")==="1")startRun();
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.033,(now-last)/1000);
+  last=now;
+  if(state.mode!=="paused")update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const cometCaromApi={
+  getState:()=>({
+    mode:state.mode,
+    score:state.score,
+    wave:state.wave,
+    shotsLeft:state.shotsLeft,
+    targets:world.targets.length,
+    targetPositions:world.targets.map(t=>({x:t.x,y:t.y,vx:t.vx,vy:t.vy})),
+    shotActive:state.shotActive,
+    aimAngle:state.aimAngle,
+    aimPower:state.aimPower,
+    launch:{x:LAUNCH.x,y:LAUNCH.y},
+    center:{x:CENTER.x,y:CENTER.y},
+    player:world.player?{x:world.player.x,y:world.player.y,vx:world.player.vx,vy:world.player.vy,hitTarget:world.player.hitTarget}:null
+  }),
+  startRun,
+  setAim:(angle,power)=>{
+    state.aimAngle=clamp(angle,-1.15,1.15);
+    state.aimPower=clamp(power,420,1070);
+  },
+  fire:()=>startShotFromAim()
+};
+try{globalThis.__COMET_CAROM__=cometCaromApi;}catch(e){}
+try{window.__COMET_CAROM__=cometCaromApi;}catch(e){}
+try{self.__COMET_CAROM__=cometCaromApi;}catch(e){}
+try{document.defaultView.__COMET_CAROM__=cometCaromApi;}catch(e){}
+</script>
+</body>
+</html>

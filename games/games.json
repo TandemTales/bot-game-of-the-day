@@ -1,6 +1,15 @@
 {
-  "gameOfTheDay": "prism-pop",
+  "gameOfTheDay": "comet-carom",
   "games": [
+    {
+      "slug": "comet-carom",
+      "title": "Comet Carom",
+      "description": "A cosmic flick-and-bank dexterity game. Sling comets off guard posts, knock rogue satellites into the sun or warp docks, and steal ring-hold bonuses before your shot rack runs dry.",
+      "category": "dexterity",
+      "tags": ["physics", "touch", "mouse", "keyboard", "arcade", "original"],
+      "emoji": "\u2604\ufe0f",
+      "added": "2026-06-12"
+    },
     {
       "slug": "prism-pop",
       "title": "Prism Pop",
