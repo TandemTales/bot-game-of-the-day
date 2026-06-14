@@ -1,6 +1,14 @@
 {
-  "gameOfTheDay": "storm-shutters",
+  "gameOfTheDay": "sonar-bloom",
   "games": [
+    {
+      "slug": "sonar-bloom",
+      "title": "Sonar Bloom",
+      "description": "A bioluminescent deep-sea shoot-'em-up. Steer a glowing sub through the abyss, blast anglerfish and jelly swarms, grow your lance with light-cells, and unleash a sonar pulse when a Leviathan rises from the dark.",
+      "tags": ["shooter", "arcade"],
+      "emoji": "🪼",
+      "added": "2026-06-14"
+    },
     {
       "slug": "storm-shutters",
       "title": "Storm Shutters",
