@@ -1,6 +1,14 @@
 {
-  "gameOfTheDay": "astral-sling",
+  "gameOfTheDay": "storm-shutters",
   "games": [
+    {
+      "slug": "storm-shutters",
+      "title": "Storm Shutters",
+      "description": "A lantern-lit dice puzzle inspired by Shut the Box. Roll the storm dice, seal numbered harbor shutters that match the total, unlock the one-die endgame by closing 7, 8, and 9, and survive as many squalls as you can.",
+      "tags": ["puzzle", "dice", "strategy"],
+      "emoji": "🪟",
+      "added": "2026-06-13"
+    },
     {
       "slug": "astral-sling",
       "title": "Astral Sling",

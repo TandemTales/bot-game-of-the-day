@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storm Shutters - Bot Built Arcade</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>%F0%9F%AA%9F</text></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --bg-0:#07111d;
+  --bg-1:#0d1e30;
+  --bg-2:#13314a;
+  --panel:rgba(10,22,36,.82);
+  --panel-border:rgba(173,222,255,.16);
+  --tile-face:#ecd39d;
+  --tile-face-2:#d6ae69;
+  --tile-shadow:#8f6a37;
+  --tile-closed:#32526c;
+  --tile-closed-2:#203749;
+  --ink:#112336;
+  --text:#eef7ff;
+  --text-dim:#9ab6cb;
+  --sea:#64d3ff;
+  --foam:#d7fbff;
+  --warn:#ff9d7a;
+  --gold:#ffd36a;
+  --success:#8af0c3;
+  --danger:#ff7d8a;
+  --radius:22px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 20% 10%,rgba(100,211,255,.16),transparent 26%),
+    radial-gradient(circle at 78% 14%,rgba(255,211,106,.12),transparent 22%),
+    radial-gradient(circle at 50% 110%,rgba(28,78,122,.5),transparent 34%),
+    linear-gradient(180deg,#12253b 0%,#0b1725 34%,#07111d 100%);
+  color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:18px 16px 28px;
+}
+a.back{
+  align-self:flex-start;
+  color:#adcfe8;
+  text-decoration:none;
+  margin-bottom:8px;
+}
+a.back:hover{color:var(--gold)}
+h1{
+  margin:4px 0 6px;
+  font-size:clamp(2.3rem,5vw,3.7rem);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.intro{
+  width:min(1080px,100%);
+  margin:0 0 18px;
+  text-align:center;
+  color:#c4d9e8;
+  line-height:1.55;
+}
+.intro b{color:var(--gold)}
+.shell{
+  width:min(1120px,100%);
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) 320px;
+  gap:16px;
+  align-items:start;
+}
+.stage,.panel{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius);
+  box-shadow:0 18px 48px rgba(0,0,0,.28);
+  backdrop-filter:blur(10px);
+}
+.stage{
+  overflow:hidden;
+  position:relative;
+}
+.storm-sky{
+  position:relative;
+  padding:20px;
+  overflow:hidden;
+}
+.storm-sky::before,
+.storm-sky::after{
+  content:"";
+  position:absolute;
+  inset:auto;
+  border-radius:999px;
+  pointer-events:none;
+}
+.storm-sky::before{
+  width:240px;
+  height:240px;
+  right:-40px;
+  top:-60px;
+  background:radial-gradient(circle,rgba(255,214,138,.26),rgba(255,214,138,0));
+}
+.storm-sky::after{
+  width:440px;
+  height:220px;
+  left:-120px;
+  bottom:-90px;
+  background:radial-gradient(circle,rgba(100,211,255,.14),rgba(100,211,255,0));
+}
+.hud-row{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.stat{
+  border-radius:18px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  padding:12px 14px;
+}
+.stat-label{
+  display:block;
+  color:var(--text-dim);
+  font-size:.74rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.stat-value{
+  display:block;
+  margin-top:6px;
+  font-size:1.5rem;
+  font-weight:800;
+}
+.main-grid{
+  position:relative;
+  z-index:1;
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 250px;
+  gap:16px;
+  align-items:start;
+}
+.board{
+  position:relative;
+  border-radius:26px;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),
+    linear-gradient(180deg,#12334d,#0d2439 70%,#0a1b2b);
+  border:1px solid rgba(255,255,255,.08);
+  padding:18px;
+}
+.board::before{
+  content:"";
+  position:absolute;
+  inset:14px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.06);
+  pointer-events:none;
+}
+.board-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+.board-top h2{
+  margin:0;
+  font-size:1rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#d7ebf8;
+}
+.board-note{
+  color:var(--text-dim);
+  font-size:.9rem;
+}
+.tiles{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.tile{
+  min-height:110px;
+  border:none;
+  border-radius:22px 22px 14px 14px;
+  cursor:pointer;
+  color:var(--ink);
+  background:
+    linear-gradient(180deg,var(--tile-face) 0%,#e1bd7b 58%,var(--tile-face-2) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.36),
+    inset 0 -5px 0 rgba(143,106,55,.55),
+    0 10px 0 rgba(12,21,34,.32);
+  position:relative;
+  transition:transform .14s ease,box-shadow .14s ease,filter .14s ease,background .14s ease;
+  font:900 clamp(1.8rem,4vw,2.5rem)/1 system-ui;
+  user-select:none;
+}
+.tile::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:18px;
+  height:6px;
+  border-radius:999px;
+  background:rgba(17,35,54,.15);
+}
+.tile:hover:not(:disabled){transform:translateY(-2px)}
+.tile:active:not(:disabled){transform:translateY(2px);box-shadow:inset 0 2px 0 rgba(255,255,255,.24),inset 0 -2px 0 rgba(143,106,55,.5),0 4px 0 rgba(12,21,34,.28)}
+.tile.selected{
+  filter:saturate(1.08);
+  box-shadow:
+    0 0 0 3px rgba(138,240,195,.38),
+    inset 0 2px 0 rgba(255,255,255,.42),
+    inset 0 -5px 0 rgba(143,106,55,.55),
+    0 10px 0 rgba(12,21,34,.32);
+}
+.tile.closed{
+  color:#d7ecfa;
+  background:
+    linear-gradient(180deg,var(--tile-closed) 0%,#2b475e 54%,var(--tile-closed-2) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.14),
+    inset 0 -4px 0 rgba(7,15,22,.45),
+    0 7px 0 rgba(7,15,22,.28);
+}
+.tile.closed::before{
+  content:"SEALED";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:16px;
+  font-size:.7rem;
+  letter-spacing:.16em;
+  color:#a2cde6;
+}
+.tile.closed::after{background:rgba(255,255,255,.08)}
+.tile:disabled{cursor:default}
+.control-well{
+  display:grid;
+  gap:14px;
+}
+.dice-panel,.action-panel,.meta-panel{
+  border-radius:22px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  padding:14px;
+}
+.section-label{
+  margin:0 0 10px;
+  color:var(--text-dim);
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.dice-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.die{
+  aspect-ratio:1;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg,#f8fbff,#dbeffc);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.86),0 10px 24px rgba(0,0,0,.18);
+  display:grid;
+  place-items:center;
+  position:relative;
+}
+.die.ghost{
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));
+  box-shadow:none;
+}
+.die-face{
+  width:74%;
+  height:74%;
+  position:relative;
+}
+.pip{
+  position:absolute;
+  width:14px;
+  height:14px;
+  border-radius:999px;
+  background:#153048;
+  box-shadow:0 1px 0 rgba(255,255,255,.28);
+}
+.ghost .pip{background:rgba(230,245,255,.16)}
+.pip.tl{left:0;top:0}
+.pip.tc{left:50%;top:0;transform:translateX(-50%)}
+.pip.tr{right:0;top:0}
+.pip.ml{left:0;top:50%;transform:translateY(-50%)}
+.pip.mc{left:50%;top:50%;transform:translate(-50%,-50%)}
+.pip.mr{right:0;top:50%;transform:translateY(-50%)}
+.pip.bl{left:0;bottom:0}
+.pip.bc{left:50%;bottom:0;transform:translateX(-50%)}
+.pip.br{right:0;bottom:0}
+.rolling .die:not(.ghost){animation:shimmy .18s linear infinite}
+@keyframes shimmy{
+  0%{transform:translate(0,0) rotate(-2deg)}
+  33%{transform:translate(1px,-2px) rotate(2deg)}
+  66%{transform:translate(-1px,2px) rotate(-1deg)}
+  100%{transform:translate(0,0) rotate(1deg)}
+}
+.roll-total{
+  margin-top:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  font-size:.96rem;
+  color:#daedf9;
+}
+.roll-total strong{
+  font-size:1.6rem;
+  color:var(--foam);
+}
+.action-panel{
+  display:grid;
+  gap:10px;
+}
+.primary,.secondary,.toggle-btn{
+  min-height:52px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  font:800 1rem/1 system-ui;
+  cursor:pointer;
+  transition:transform .14s ease,filter .14s ease,border-color .14s ease,background .14s ease;
+}
+.primary{
+  background:linear-gradient(180deg,#8af0c3,#3dc0a0);
+  color:#09211c;
+}
+.primary.alt{background:linear-gradient(180deg,#ffd36a,#e6a33a);color:#251603}
+.secondary{
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.05));
+  color:var(--text);
+}
+.toggle-btn{
+  background:linear-gradient(180deg,rgba(100,211,255,.14),rgba(100,211,255,.06));
+  color:#dff7ff;
+}
+.toggle-btn.active{
+  border-color:rgba(138,240,195,.42);
+  background:linear-gradient(180deg,rgba(138,240,195,.28),rgba(61,192,160,.12));
+}
+.primary:hover,.secondary:hover,.toggle-btn:hover{transform:translateY(-1px)}
+.primary:active,.secondary:active,.toggle-btn:active{transform:translateY(1px)}
+.primary:disabled,.secondary:disabled,.toggle-btn:disabled{
+  opacity:.5;
+  cursor:default;
+  transform:none;
+}
+.button-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.meta-list{
+  display:grid;
+  gap:8px;
+  color:#d9edf9;
+  font-size:.95rem;
+}
+.meta-item{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+.meta-item span:last-child{color:#fff;font-weight:700}
+.sidebar{
+  display:grid;
+  gap:14px;
+}
+.panel{
+  padding:14px;
+}
+.panel h2{
+  margin:0 0 10px;
+  color:var(--gold);
+  font-size:.94rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.panel p,.panel li{
+  margin:0;
+  color:#d2e6f3;
+  line-height:1.48;
+  font-size:.95rem;
+}
+.panel ul{
+  margin:0;
+  padding-left:18px;
+  display:grid;
+  gap:8px;
+}
+.combo-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.combo-chip{
+  min-height:40px;
+  padding:0 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:#f4fbff;
+  font:700 .92rem/1 system-ui;
+  cursor:pointer;
+}
+.combo-chip:hover{border-color:rgba(100,211,255,.4)}
+.combo-chip.best{
+  border-color:rgba(255,211,106,.35);
+  background:rgba(255,211,106,.12);
+}
+.combo-chip:disabled{
+  opacity:.45;
+  cursor:default;
+}
+.status-card{
+  border-radius:18px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);
+}
+.status-card strong{
+  display:block;
+  margin-bottom:6px;
+  font-size:1.08rem;
+}
+.status-card.warn strong{color:var(--warn)}
+.status-card.good strong{color:var(--success)}
+.status-card.end strong{color:var(--gold)}
+.touch-strip{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.touch-strip button{
+  min-height:48px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.05));
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+  user-select:none;
+}
+.touch-strip button:active,
+.touch-strip button.active{
+  transform:translateY(1px);
+  border-color:rgba(255,211,106,.42);
+}
+.footer-note{
+  width:min(1120px,100%);
+  margin-top:14px;
+  color:#91adc1;
+  text-align:center;
+  font-size:.88rem;
+}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  body{padding:12px 10px 18px}
+  .hud-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .main-grid{grid-template-columns:1fr}
+  .control-well{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .tiles{gap:10px}
+  .tile{min-height:88px}
+  .storm-sky{padding:14px}
+  .sidebar{grid-template-columns:1fr}
+  .control-well{grid-template-columns:1fr}
+  .button-row{grid-template-columns:1fr}
+  .touch-strip{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<h1>Storm Shutters</h1>
+<p class="intro"><b>Roll</b> the harbor dice, <b>tap numbered shutters</b> that add up to the total, and keep the storm outside for as many lantern-lit rounds as you can. This is an original arcade score-chase built on the old pub game idea of <b>Shut the Box</b>: once 7, 8, and 9 are sealed, you may switch to a single die for tighter endgame control.</p>
+
+<div class="shell">
+  <section class="stage">
+    <div class="storm-sky">
+      <div class="hud-row">
+        <div class="stat"><span class="stat-label">Score</span><span class="stat-value" id="score-stat">0</span></div>
+        <div class="stat"><span class="stat-label">Best</span><span class="stat-value" id="best-stat">0</span></div>
+        <div class="stat"><span class="stat-label">Round</span><span class="stat-value" id="round-stat">1</span></div>
+        <div class="stat"><span class="stat-label">Lanterns</span><span class="stat-value" id="lives-stat">3</span></div>
+      </div>
+
+      <div class="main-grid">
+        <div class="board">
+          <div class="board-top">
+            <div>
+              <h2 id="board-title">Harbor Board</h2>
+              <div class="board-note" id="board-note">Start a run to seal the numbered shutters before the storm breaks through.</div>
+            </div>
+            <div class="board-note" id="selection-note">No roll yet</div>
+          </div>
+          <div class="tiles" id="tiles" aria-label="Storm shutter tiles"></div>
+        </div>
+
+        <div class="control-well">
+          <div class="dice-panel" id="dice-panel">
+            <p class="section-label">Storm Dice</p>
+            <div class="dice-row">
+              <div class="die ghost" id="die-1" aria-label="First die"></div>
+              <div class="die ghost" id="die-2" aria-label="Second die"></div>
+            </div>
+            <div class="roll-total">
+              <span id="dice-mode-label">2 dice required</span>
+              <strong id="roll-total">--</strong>
+            </div>
+          </div>
+
+          <div class="action-panel">
+            <p class="section-label">Actions</p>
+            <button class="toggle-btn" id="dice-toggle" type="button">Use 2 Dice</button>
+            <button class="primary alt" id="roll-btn" type="button">Start Run</button>
+            <div class="button-row">
+              <button class="primary" id="commit-btn" type="button" disabled>Seal Selected</button>
+              <button class="secondary" id="clear-btn" type="button" disabled>Clear Pick</button>
+            </div>
+            <div class="button-row">
+              <button class="secondary" id="mute-btn" type="button">Sound On</button>
+              <button class="secondary" id="restart-btn" type="button">Restart</button>
+            </div>
+          </div>
+
+          <div class="meta-panel">
+            <p class="section-label">Storm Readout</p>
+            <div class="meta-list">
+              <div class="meta-item"><span>Open Sum</span><span id="open-sum-stat">45</span></div>
+              <div class="meta-item"><span>Chain Bonus</span><span id="chain-stat">x1</span></div>
+              <div class="meta-item"><span>Bust Risk</span><span id="risk-stat">--</span></div>
+              <div class="meta-item"><span>Round Points</span><span id="round-points-stat">0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <section class="panel">
+      <h2>How To Play</h2>
+      <ul>
+        <li>Roll, then close any open combination of shutters that adds up to the dice total.</li>
+        <li>Once 7, 8, and 9 are sealed, you may toggle down to one die for classic endgame control.</li>
+        <li>If a roll has no legal combination, the round floods and you lose one lantern.</li>
+        <li>Shut all nine numbers for a full-clear bonus and an extra lantern.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Controls</h2>
+      <p>Desktop: number keys 1-9 select shutters, <b>R</b> or <b>Space</b> rolls, <b>Enter</b> seals, <b>Backspace</b> clears, <b>D</b> changes dice count, <b>M</b> mutes.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Best Moves</h2>
+      <div class="combo-list" id="combo-list" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Round State</h2>
+      <div class="status-card" id="status-card">
+        <strong>Harbor quiet</strong>
+        <p id="status-text">Start a run, then roll the dice to see which shutters you can batten down.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Touch Shortcuts</h2>
+      <div class="touch-strip">
+        <button type="button" data-touch="roll">Roll / Continue</button>
+        <button type="button" data-touch="commit">Seal Pick</button>
+        <button type="button" data-touch="clear">Clear Pick</button>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<p class="footer-note">Original code, art direction, and audio. Built as a storm-lashed arcade adaptation of the traditional dice game Shut the Box.</p>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const TILE_VALUES = [1,2,3,4,5,6,7,8,9];
+const BEST_KEY = "storm-shutters-best";
+const MUTED_KEY = "storm-shutters-muted";
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const sum = (arr) => arr.reduce((acc, value) => acc + value, 0);
+const sortNums = (arr) => arr.slice().sort((a, b) => a - b);
+const hasReducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const state = {
+  mode: "title",
+  score: 0,
+  best: +localStorage.getItem(BEST_KEY) || 0,
+  round: 1,
+  lives: 3,
+  roundPoints: 0,
+  chain: 0,
+  fullClears: 0,
+  tiles: TILE_VALUES.map((value) => ({ value, closed: false })),
+  selected: [],
+  combos: [],
+  roll: null,
+  rollTotal: 0,
+  diceCount: 2,
+  canUseOneDie: false,
+  rolling: false,
+  muted: localStorage.getItem(MUTED_KEY) === "1",
+  message: "Start a run, then roll the dice to see which shutters you can batten down.",
+  status: "Harbor quiet",
+  statusTone: "neutral",
+  rngSeed: 0,
+  rng: Math.random,
+  debugQueue: [],
+  lastRoundLeftover: 0,
+};
+
+const ui = {
+  tiles: $("tiles"),
+  score: $("score-stat"),
+  best: $("best-stat"),
+  round: $("round-stat"),
+  lives: $("lives-stat"),
+  openSum: $("open-sum-stat"),
+  chain: $("chain-stat"),
+  risk: $("risk-stat"),
+  roundPoints: $("round-points-stat"),
+  boardTitle: $("board-title"),
+  boardNote: $("board-note"),
+  selectionNote: $("selection-note"),
+  rollTotal: $("roll-total"),
+  dicePanel: $("dice-panel"),
+  diceModeLabel: $("dice-mode-label"),
+  rollBtn: $("roll-btn"),
+  commitBtn: $("commit-btn"),
+  clearBtn: $("clear-btn"),
+  diceToggle: $("dice-toggle"),
+  comboList: $("combo-list"),
+  statusCard: $("status-card"),
+  statusText: $("status-text"),
+  muteBtn: $("mute-btn"),
+  restartBtn: $("restart-btn"),
+};
+
+const dieNodes = [$("die-1"), $("die-2")];
+
+const audio = {
+  ctx: null,
+  master: null,
+  music: null,
+  sfx: null,
+  pulseNext: 0,
+  pulseStep: 0,
+  ensure() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      return;
+    }
+    this.master = this.ctx.createGain();
+    this.master.gain.value = state.muted ? 0 : 1;
+    this.master.connect(this.ctx.destination);
+    this.music = this.ctx.createGain();
+    this.music.gain.value = 0.12;
+    this.music.connect(this.master);
+    this.sfx = this.ctx.createGain();
+    this.sfx.gain.value = 0.42;
+    this.sfx.connect(this.master);
+    this.pulseNext = this.ctx.currentTime + 0.08;
+    setInterval(() => this.tick(), 120);
+  },
+  start() {
+    this.ensure();
+    if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+  },
+  tone(freq, dur, type, gain, slide, target) {
+    if (!this.ctx || state.muted) return;
+    const when = target || this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    osc.type = type || "triangle";
+    osc.frequency.setValueAtTime(freq, when);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(40, slide), when + dur);
+    filter.type = "lowpass";
+    filter.frequency.value = 1800;
+    g.gain.setValueAtTime(gain || 0.08, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    osc.connect(filter);
+    filter.connect(g);
+    g.connect(this.sfx);
+    osc.start(when);
+    osc.stop(when + dur + 0.05);
+  },
+  noise(dur, gain, cutoff) {
+    if (!this.ctx || state.muted) return;
+    const length = Math.ceil(this.ctx.sampleRate * dur);
+    const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    const source = this.ctx.createBufferSource();
+    const filter = this.ctx.createBiquadFilter();
+    const g = this.ctx.createGain();
+    source.buffer = buffer;
+    filter.type = "lowpass";
+    filter.frequency.value = cutoff || 1200;
+    g.gain.value = gain || 0.2;
+    source.connect(filter);
+    filter.connect(g);
+    g.connect(this.sfx);
+    source.start(this.ctx.currentTime);
+  },
+  tick() {
+    if (!this.ctx || this.ctx.state !== "running" || state.muted) return;
+    const stepDur = 60 / 102 / 2;
+    const chords = [
+      [196, 246.94, 293.66],
+      [174.61, 220, 261.63],
+      [146.83, 196, 233.08],
+      [164.81, 207.65, 246.94]
+    ];
+    while (this.pulseNext < this.ctx.currentTime + 0.2) {
+      const chord = chords[Math.floor(this.pulseStep / 8) % chords.length];
+      if (this.pulseStep % 4 === 0) this.tone(chord[0], 0.26, "triangle", 0.028, null, this.pulseNext);
+      if (this.pulseStep % 2 === 0) this.tone(chord[this.pulseStep % 3] * 2, 0.08, "square", 0.018, null, this.pulseNext);
+      if (this.pulseStep % 8 === 6) this.tone(chord[2] * 2.5, 0.07, "sine", 0.016, null, this.pulseNext);
+      this.pulseStep++;
+      this.pulseNext += stepDur;
+    }
+  },
+  roll() {
+    this.noise(0.12, 0.16, 2400);
+    this.tone(180, 0.09, "square", 0.08, 240);
+  },
+  pick() {
+    this.tone(340, 0.07, "triangle", 0.1, 500);
+  },
+  clear() {
+    this.tone(210, 0.08, "triangle", 0.08, 140);
+  },
+  seal(strength) {
+    const base = 360 + strength * 24;
+    this.tone(base, 0.09, "triangle", 0.13, base * 1.45);
+    setTimeout(() => this.tone(base * 1.5, 0.12, "sine", 0.07), 55);
+  },
+  bust() {
+    this.tone(160, 0.18, "sawtooth", 0.18, 70);
+    this.noise(0.18, 0.18, 600);
+  },
+  clearRound() {
+    [392, 523.25, 659.25].forEach((freq, index) => {
+      setTimeout(() => this.tone(freq, 0.14, "triangle", 0.12), index * 90);
+    });
+  },
+  gameOver() {
+    [293.66, 246.94, 196].forEach((freq, index) => {
+      setTimeout(() => this.tone(freq, 0.18, "square", 0.1), index * 110);
+    });
+  },
+  toggleMuted(muted) {
+    state.muted = muted;
+    localStorage.setItem(MUTED_KEY, muted ? "1" : "0");
+    if (this.master) this.master.gain.linearRampToValueAtTime(muted ? 0 : 1, this.ctx.currentTime + 0.08);
+  }
+};
+
+function openValues() {
+  return state.tiles.filter((tile) => !tile.closed).map((tile) => tile.value);
+}
+
+function openSum() {
+  return sum(openValues());
+}
+
+function oneDieUnlocked() {
+  return state.tiles.find((tile) => tile.value === 7)?.closed &&
+    state.tiles.find((tile) => tile.value === 8)?.closed &&
+    state.tiles.find((tile) => tile.value === 9)?.closed;
+}
+
+function frequenciesForDice(count) {
+  if (count === 1) return new Map([[1,1],[2,1],[3,1],[4,1],[5,1],[6,1]]);
+  const map = new Map();
+  for (let a = 1; a <= 6; a++) {
+    for (let b = 1; b <= 6; b++) {
+      const total = a + b;
+      map.set(total, (map.get(total) || 0) + 1);
+    }
+  }
+  return map;
+}
+
+function combinationsForTarget(target) {
+  const values = openValues().sort((a, b) => a - b);
+  const results = [];
+  function walk(start, remaining, picked) {
+    if (remaining === 0) {
+      results.push(picked.slice());
+      return;
+    }
+    for (let i = start; i < values.length; i++) {
+      const value = values[i];
+      if (value > remaining) break;
+      picked.push(value);
+      walk(i + 1, remaining - value, picked);
+      picked.pop();
+    }
+  }
+  walk(0, target, []);
+  return results.sort((left, right) => {
+    if (left.length !== right.length) return left.length - right.length;
+    return sum(right) - sum(left);
+  });
+}
+
+function bestComboForTarget(target) {
+  const combos = combinationsForTarget(target);
+  return combos[0] || null;
+}
+
+function bustRiskPercent(diceCount) {
+  const frequencies = frequenciesForDice(diceCount);
+  let total = 0;
+  let bust = 0;
+  for (const [roll, frequency] of frequencies.entries()) {
+    total += frequency;
+    if (combinationsForTarget(roll).length === 0) bust += frequency;
+  }
+  if (!total) return 0;
+  return Math.round((bust / total) * 100);
+}
+
+function currentSeed() {
+  const urlSeed = new URLSearchParams(location.search).get("seed");
+  if (urlSeed) return Number(urlSeed) || hashString(urlSeed);
+  return Date.now() >>> 0;
+}
+
+function hashString(text) {
+  let hash = 2166136261 >>> 0;
+  for (const char of text) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function resetBoard() {
+  state.tiles = TILE_VALUES.map((value) => ({ value, closed: false }));
+  state.selected = [];
+  state.roll = null;
+  state.rollTotal = 0;
+  state.combos = [];
+  state.roundPoints = 0;
+  state.chain = 0;
+  state.canUseOneDie = false;
+  state.diceCount = 2;
+  state.rolling = false;
+}
+
+function beginRun() {
+  state.score = 0;
+  state.round = 1;
+  state.lives = 3;
+  state.fullClears = 0;
+  state.lastRoundLeftover = 0;
+  state.mode = "playing";
+  state.rngSeed = currentSeed();
+  state.rng = mulberry32(state.rngSeed);
+  state.debugQueue = [];
+  resetBoard();
+  setStatus("Harbor watch", "Roll the storm dice, then seal any open combination that matches the total.", "neutral");
+  audio.start();
+  render();
+}
+
+function startNextRound() {
+  state.round++;
+  resetBoard();
+  state.mode = "playing";
+  setStatus("Fresh squall", "New shutters are up. Roll again before the next wave comes in.", "neutral");
+  render();
+}
+
+function setStatus(title, text, tone) {
+  state.status = title;
+  state.message = text;
+  state.statusTone = tone || "neutral";
+}
+
+function queueDebugRoll(values) {
+  const normalized = Array.isArray(values) ? values.slice() : [values];
+  state.debugQueue.push(normalized);
+}
+
+function drawDie(node, value, active) {
+  if (!active) {
+    node.className = "die ghost";
+    node.innerHTML = '<div class="die-face"></div>';
+    return;
+  }
+  const faces = {
+    1:["mc"],
+    2:["tl","br"],
+    3:["tl","mc","br"],
+    4:["tl","tr","bl","br"],
+    5:["tl","tr","mc","bl","br"],
+    6:["tl","tr","ml","mr","bl","br"],
+  };
+  node.className = "die";
+  node.innerHTML = `<div class="die-face">${faces[value].map((pip) => `<span class="pip ${pip}"></span>`).join("")}</div>`;
+}
+
+function availableRoll() {
+  if (state.debugQueue.length) {
+    const queued = state.debugQueue.shift().slice();
+    if (state.diceCount === 1 && queued.length === 2) queued.pop();
+    if (state.diceCount === 2 && queued.length === 1) queued.push(1);
+    return queued;
+  }
+  if (state.diceCount === 1) return [1 + Math.floor(state.rng() * 6)];
+  return [1 + Math.floor(state.rng() * 6), 1 + Math.floor(state.rng() * 6)];
+}
+
+function canRoll() {
+  return state.mode === "playing" && !state.rolling && !state.roll;
+}
+
+function triggerRoll() {
+  if (state.mode === "title") {
+    beginRun();
+    return;
+  }
+  if (state.mode === "round-over") {
+    if (state.lives > 0) startNextRound();
+    return;
+  }
+  if (state.mode === "game-over") {
+    beginRun();
+    return;
+  }
+  if (!canRoll()) return;
+  audio.start();
+  state.rolling = true;
+  state.selected = [];
+  state.combos = [];
+  audio.roll();
+  const duration = hasReducedMotion ? 120 : 420;
+  ui.dicePanel.classList.add("rolling");
+  const interval = setInterval(() => {
+    drawDie(dieNodes[0], 1 + Math.floor(Math.random() * 6), true);
+    drawDie(dieNodes[1], 1 + Math.floor(Math.random() * 6), state.diceCount === 2);
+  }, 80);
+  setTimeout(() => {
+    clearInterval(interval);
+    ui.dicePanel.classList.remove("rolling");
+    const roll = availableRoll();
+    state.roll = roll;
+    state.rollTotal = sum(roll);
+    state.rolling = false;
+    state.combos = combinationsForTarget(state.rollTotal);
+    if (state.combos.length === 0) {
+      const leftover = openSum();
+      state.lastRoundLeftover = leftover;
+      state.mode = "round-over";
+      state.lives = Math.max(0, state.lives - 1);
+      setStatus(
+        state.lives > 0 ? "Flooded round" : "Harbor lost",
+        state.lives > 0
+          ? `No legal combination for ${state.rollTotal}. ${leftover} points of open shutters slip through the storm.`
+          : `No legal combination for ${state.rollTotal}. The harbor takes ${leftover} damage and the last lantern goes out.`,
+        state.lives > 0 ? "warn" : "end"
+      );
+      audio.bust();
+      updateBest();
+      if (state.lives === 0) {
+        state.mode = "game-over";
+        audio.gameOver();
+      }
+    } else {
+      setStatus(
+        "Choose a seal",
+        `Roll ${state.rollTotal}. Pick any open combination that adds up exactly.`,
+        "good"
+      );
+    }
+    render();
+  }, duration);
+  render();
+}
+
+function tileByValue(value) {
+  return state.tiles.find((tile) => tile.value === value);
+}
+
+function toggleTile(value) {
+  if (state.mode !== "playing" || !state.roll || state.rolling) return;
+  const tile = tileByValue(value);
+  if (!tile || tile.closed) return;
+  const selected = new Set(state.selected);
+  if (selected.has(value)) selected.delete(value);
+  else selected.add(value);
+  const ordered = sortNums([...selected]);
+  const pickedTotal = sum(ordered);
+  if (pickedTotal > state.rollTotal) {
+    audio.clear();
+    return;
+  }
+  state.selected = ordered;
+  audio.pick();
+  render();
+}
+
+function clearSelection() {
+  if (!state.selected.length) return;
+  state.selected = [];
+  audio.clear();
+  render();
+}
+
+function applyCombo(combo) {
+  if (state.mode !== "playing" || !state.roll || state.rolling) return;
+  state.selected = combo.slice();
+  audio.pick();
+  render();
+}
+
+function sealSelection() {
+  if (state.mode !== "playing" || !state.roll || state.rolling) return;
+  if (!state.selected.length) return;
+  const selectedTotal = sum(state.selected);
+  if (selectedTotal !== state.rollTotal) return;
+  for (const value of state.selected) tileByValue(value).closed = true;
+  const pickedCount = state.selected.length;
+  const points = state.rollTotal * 20 + pickedCount * 14 + state.chain * 16;
+  state.score += points;
+  state.roundPoints += points;
+  state.chain++;
+  audio.seal(state.rollTotal);
+  state.selected = [];
+  state.roll = null;
+  state.rollTotal = 0;
+  state.combos = [];
+  state.canUseOneDie = oneDieUnlocked();
+  if (!state.canUseOneDie) state.diceCount = 2;
+  if (openValues().length === 0) {
+    const clearBonus = 520 + state.round * 80 + state.chain * 18;
+    state.score += clearBonus;
+    state.roundPoints += clearBonus;
+    state.fullClears++;
+    state.lives = Math.min(5, state.lives + 1);
+    state.mode = "round-over";
+    setStatus(
+      "Box shut",
+      `Perfect seal. Full-clear bonus +${clearBonus} and one lantern restored.`,
+      "good"
+    );
+    audio.clearRound();
+  } else {
+    setStatus("Shutters sealed", `Good hold. Roll again and keep the chain alive.`, "good");
+  }
+  updateBest();
+  render();
+}
+
+function toggleDiceCount() {
+  if (!state.canUseOneDie || state.rolling || state.roll) return;
+  state.diceCount = state.diceCount === 1 ? 2 : 1;
+  audio.pick();
+  render();
+}
+
+function updateBest() {
+  if (state.score > state.best) {
+    state.best = state.score;
+    localStorage.setItem(BEST_KEY, String(state.best));
+  }
+}
+
+function formatCombo(combo) {
+  return combo.join(" + ");
+}
+
+function renderTiles() {
+  ui.tiles.innerHTML = "";
+  for (const tile of state.tiles) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tile";
+    if (tile.closed) button.classList.add("closed");
+    if (state.selected.includes(tile.value)) button.classList.add("selected");
+    button.disabled = tile.closed || state.mode !== "playing" || !state.roll || state.rolling;
+    button.textContent = String(tile.value);
+    button.setAttribute("aria-label", tile.closed ? `Shutter ${tile.value} sealed` : `Shutter ${tile.value}`);
+    button.addEventListener("click", () => toggleTile(tile.value));
+    ui.tiles.appendChild(button);
+  }
+}
+
+function renderCombos() {
+  ui.comboList.innerHTML = "";
+  if (!state.roll || !state.combos.length) {
+    const empty = document.createElement("p");
+    empty.textContent = state.mode === "title"
+      ? "Roll first, then the safest combinations will appear here."
+      : state.mode === "round-over"
+        ? "Continue to the next round to get a new roll."
+        : state.mode === "playing" && !state.roll
+          ? "Roll first, then the safest combinations will appear here."
+          : "No legal combinations on the board right now.";
+    empty.style.color = "#9ab6cb";
+    empty.style.margin = "0";
+    empty.style.fontSize = ".92rem";
+    ui.comboList.appendChild(empty);
+    return;
+  }
+  state.combos.forEach((combo, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "combo-chip";
+    if (index === 0) button.classList.add("best");
+    button.textContent = formatCombo(combo);
+    button.disabled = state.mode !== "playing" || state.rolling;
+    button.addEventListener("click", () => applyCombo(combo));
+    ui.comboList.appendChild(button);
+  });
+}
+
+function renderStatus() {
+  ui.statusCard.className = "status-card";
+  if (state.statusTone === "warn") ui.statusCard.classList.add("warn");
+  else if (state.statusTone === "good") ui.statusCard.classList.add("good");
+  else if (state.statusTone === "end") ui.statusCard.classList.add("end");
+  ui.statusCard.innerHTML = `<strong>${state.status}</strong><p id="status-text">${state.message}</p>`;
+}
+
+function renderDice() {
+  if (state.rolling) return;
+  if (!state.roll) {
+    drawDie(dieNodes[0], 1, false);
+    drawDie(dieNodes[1], 1, state.diceCount === 2 && state.mode !== "title");
+  } else {
+    drawDie(dieNodes[0], state.roll[0], true);
+    drawDie(dieNodes[1], state.roll[1] || 1, state.diceCount === 2);
+  }
+}
+
+function renderText() {
+  ui.score.textContent = state.score.toLocaleString();
+  ui.best.textContent = state.best.toLocaleString();
+  ui.round.textContent = String(state.round);
+  ui.lives.textContent = String(state.lives);
+  ui.openSum.textContent = String(openSum());
+  ui.chain.textContent = `x${1 + state.chain}`;
+  ui.roundPoints.textContent = state.roundPoints.toLocaleString();
+  ui.boardTitle.textContent = state.mode === "title" ? "Harbor Board" : `Harbor Board - Round ${state.round}`;
+
+  if (state.mode === "title") {
+    ui.boardNote.textContent = "Seal all nine shutters to fully shut the box.";
+    ui.selectionNote.textContent = "No roll yet";
+    ui.rollBtn.textContent = "Start Run";
+  } else if (state.mode === "round-over") {
+    ui.boardNote.textContent = state.lives > 0 ? "This squall is over. Reset the shutters and face the next wave." : "The final lantern is gone.";
+    ui.selectionNote.textContent = state.lastRoundLeftover ? `Left open: ${state.lastRoundLeftover}` : "Round complete";
+    ui.rollBtn.textContent = state.lives > 0 ? "Next Round" : "New Run";
+  } else if (state.mode === "game-over") {
+    ui.boardNote.textContent = "The harbor is dark. Start over and chase a cleaner sequence.";
+    ui.selectionNote.textContent = `Final score ${state.score.toLocaleString()}`;
+    ui.rollBtn.textContent = "New Run";
+  } else {
+    ui.boardNote.textContent = state.canUseOneDie
+      ? "Classic endgame unlocked: switch between one die and two dice before your next roll."
+      : "Seal 7, 8, and 9 to unlock the one-die option.";
+    if (state.roll) {
+      const selectedTotal = sum(state.selected);
+      ui.selectionNote.textContent = state.selected.length
+        ? `${selectedTotal} / ${state.rollTotal} selected`
+        : `Need ${state.rollTotal}`;
+    } else if (state.rolling) {
+      ui.selectionNote.textContent = "Rolling...";
+    } else {
+      ui.selectionNote.textContent = "Ready to roll";
+    }
+    ui.rollBtn.textContent = state.roll ? "Awaiting Seal" : "Roll Storm Dice";
+  }
+
+  ui.rollTotal.textContent = state.roll ? String(state.rollTotal) : "--";
+  if (state.mode === "title") ui.diceModeLabel.textContent = "2 dice required";
+  else if (state.canUseOneDie) ui.diceModeLabel.textContent = state.diceCount === 1 ? "1 die selected" : "2 dice selected";
+  else ui.diceModeLabel.textContent = "2 dice required";
+
+  ui.commitBtn.disabled = !state.roll || state.rolling || sum(state.selected) !== state.rollTotal;
+  ui.clearBtn.disabled = !state.selected.length;
+  ui.diceToggle.disabled = !state.canUseOneDie || state.rolling || !!state.roll || state.mode !== "playing";
+  ui.diceToggle.classList.toggle("active", state.diceCount === 1);
+  ui.diceToggle.textContent = state.diceCount === 1 ? "Use 1 Die" : "Use 2 Dice";
+
+  const risk = state.mode === "playing" && !state.roll
+    ? `${bustRiskPercent(state.diceCount)}%`
+    : "--";
+  ui.risk.textContent = risk;
+  ui.rollBtn.disabled = state.rolling || (state.mode === "playing" && !!state.roll);
+  ui.muteBtn.textContent = state.muted ? "Sound Off" : "Sound On";
+}
+
+function render() {
+  renderTiles();
+  renderDice();
+  renderCombos();
+  renderStatus();
+  renderText();
+}
+
+function handleKeydown(event) {
+  const key = event.key.toLowerCase();
+  if (["1","2","3","4","5","6","7","8","9","r"," ","enter","backspace","d","m"].includes(key)) event.preventDefault();
+  if (key >= "1" && key <= "9") {
+    toggleTile(Number(key));
+    return;
+  }
+  if (key === "r" || key === " ") {
+    triggerRoll();
+    return;
+  }
+  if (key === "enter") {
+    if (state.mode === "title" || state.mode === "round-over" || state.mode === "game-over") triggerRoll();
+    else sealSelection();
+    return;
+  }
+  if (key === "backspace") {
+    clearSelection();
+    return;
+  }
+  if (key === "d") {
+    toggleDiceCount();
+    return;
+  }
+  if (key === "m") {
+    audio.start();
+    audio.toggleMuted(!state.muted);
+    render();
+  }
+}
+
+ui.rollBtn.addEventListener("click", triggerRoll);
+ui.commitBtn.addEventListener("click", sealSelection);
+ui.clearBtn.addEventListener("click", clearSelection);
+ui.diceToggle.addEventListener("click", toggleDiceCount);
+ui.restartBtn.addEventListener("click", beginRun);
+ui.muteBtn.addEventListener("click", () => {
+  audio.start();
+  audio.toggleMuted(!state.muted);
+  render();
+});
+window.addEventListener("keydown", handleKeydown);
+
+document.querySelectorAll("[data-touch]").forEach((button) => {
+  const action = button.dataset.touch;
+  const down = (event) => {
+    event.preventDefault();
+    button.classList.add("active");
+    if (action === "roll") triggerRoll();
+    if (action === "commit") sealSelection();
+    if (action === "clear") clearSelection();
+  };
+  const up = (event) => {
+    event.preventDefault();
+    button.classList.remove("active");
+  };
+  button.addEventListener("pointerdown", down);
+  button.addEventListener("pointerup", up);
+  button.addEventListener("pointercancel", up);
+  button.addEventListener("lostpointercapture", up);
+});
+
+render();
+
+const stormShuttersApi = {
+  getState() {
+    return {
+      mode: state.mode,
+      score: state.score,
+      best: state.best,
+      round: state.round,
+      lives: state.lives,
+      roundPoints: state.roundPoints,
+      chain: state.chain,
+      fullClears: state.fullClears,
+      openValues: openValues(),
+      selected: state.selected.slice(),
+      roll: state.roll ? state.roll.slice() : null,
+      rollTotal: state.rollTotal,
+      diceCount: state.diceCount,
+      canUseOneDie: state.canUseOneDie,
+      combos: state.combos.map((combo) => combo.slice()),
+      risk: state.mode === "playing" && !state.roll ? bustRiskPercent(state.diceCount) : null,
+      status: state.status,
+      message: state.message,
+      lastRoundLeftover: state.lastRoundLeftover,
+    };
+  },
+  startRun: beginRun,
+  queueRoll: (...values) => queueDebugRoll(values.flat()),
+  roll: triggerRoll,
+  select: (...values) => {
+    state.selected = sortNums(values.flat());
+    render();
+  },
+  applyCombo(index) {
+    const combo = state.combos[index];
+    if (combo) applyCombo(combo);
+  },
+  seal: sealSelection,
+  clear: clearSelection,
+  toggleDice: toggleDiceCount,
+};
+try { globalThis.__STORM_SHUTTERS__ = stormShuttersApi; } catch (error) {}
+try { window.__STORM_SHUTTERS__ = stormShuttersApi; } catch (error) {}
+try { self.__STORM_SHUTTERS__ = stormShuttersApi; } catch (error) {}
+try { document.defaultView.__STORM_SHUTTERS__ = stormShuttersApi; } catch (error) {}
+</script>
+</body>
+</html>
