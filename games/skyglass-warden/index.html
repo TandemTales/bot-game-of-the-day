@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Skyglass Warden - Bot Built Arcade</title>
+<meta name="description" content="An original open-world sky archipelago action RPG. Explore floating glass islands, recover skyglass shards, defeat storm sentinels, and restore four ancient beacons.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23091422'/><text x='50' y='63' text-anchor='middle' font-size='38' font-family='Arial' fill='%237ff7ff'>SW</text></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#07101f;
+  --night:#0a1328;
+  --panel:rgba(10,18,36,.78);
+  --panel-2:rgba(15,30,55,.66);
+  --line:rgba(175,224,255,.18);
+  --text:#ecf8ff;
+  --muted:#9db7ca;
+  --gold:#ffd77a;
+  --teal:#7ff7ff;
+  --blue:#6ca8ff;
+  --green:#8df0b2;
+  --red:#ff7988;
+  --radius:18px;
+  --shadow:0 22px 64px rgba(0,0,0,.42);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;overflow-x:hidden}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 12% 12%,rgba(127,247,255,.16),transparent 29%),
+    radial-gradient(circle at 84% 10%,rgba(255,215,122,.12),transparent 25%),
+    radial-gradient(circle at 50% 118%,rgba(108,168,255,.16),transparent 32%),
+    linear-gradient(180deg,#101b39 0%,#07101f 54%,#050913 100%);
+  color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:14px;
+}
+a.back{
+  width:min(1440px,100%);
+  color:#b6d3e5;
+  text-decoration:none;
+  margin:0 0 8px;
+  font-size:.92rem;
+}
+a.back:hover{color:var(--teal)}
+.app{
+  width:min(1440px,100%);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 350px;
+  gap:14px;
+  align-items:start;
+}
+.stage{
+  position:relative;
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01)),
+    rgba(5,10,24,.76);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.canvas-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  min-height:360px;
+  background:#050913;
+}
+canvas{
+  width:100%;
+  height:100%;
+  display:block;
+  touch-action:none;
+  cursor:crosshair;
+}
+.topbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 12px;
+  border-top:1px solid var(--line);
+  background:rgba(4,8,19,.74);
+}
+.hint{
+  color:var(--muted);
+  font-size:.86rem;
+}
+.hint b{color:var(--text)}
+.hud-pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{
+  min-width:92px;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:.82rem;
+  color:var(--muted);
+  text-align:center;
+}
+.pill strong{color:var(--text);font-variant-numeric:tabular-nums}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:6;
+  display:grid;
+  place-items:center;
+  padding:clamp(14px,3vw,30px);
+  background:rgba(4,8,18,.5);
+  backdrop-filter:blur(4px);
+}
+.overlay[hidden]{display:none}
+.title-card{
+  position:relative;
+  width:min(860px,100%);
+  overflow:hidden;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.2);
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
+  background:#091322;
+}
+.title-card img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:saturate(1.05) contrast(1.03);
+}
+.title-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(4,8,18,.88),rgba(4,8,18,.42) 54%,rgba(4,8,18,.1)),
+    linear-gradient(0deg,rgba(4,8,18,.68),transparent 48%);
+}
+.title-copy{
+  position:relative;
+  z-index:1;
+  min-height:min(62vh,520px);
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:clamp(18px,4vw,42px);
+}
+.eyebrow{
+  display:inline-flex;
+  align-self:flex-start;
+  border:1px solid rgba(127,247,255,.38);
+  color:var(--teal);
+  border-radius:999px;
+  padding:6px 12px;
+  font-weight:800;
+  font-size:.72rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  background:rgba(7,16,31,.62);
+}
+h1{
+  margin:14px 0 8px;
+  font-size:clamp(2.5rem,8vw,5.5rem);
+  line-height:.92;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+  text-shadow:0 4px 24px rgba(0,0,0,.6);
+}
+.title-copy p{
+  width:min(560px,100%);
+  color:#d4e4ee;
+  line-height:1.52;
+  margin:0 0 18px;
+}
+.button-row{display:flex;flex-wrap:wrap;gap:10px}
+button{
+  font:800 .95rem/1 system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--text);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:13px;
+  background:rgba(20,36,65,.82);
+  min-height:44px;
+  padding:0 16px;
+  cursor:pointer;
+  transition:transform .12s ease,border-color .12s ease,filter .12s ease,background .12s ease;
+}
+button:hover{border-color:rgba(127,247,255,.7);filter:brightness(1.06)}
+button:active{transform:translateY(1px)}
+button.primary{
+  color:#06101d;
+  background:linear-gradient(135deg,#9dfbff,#ffd77a);
+  border-color:rgba(255,255,255,.4);
+  box-shadow:0 12px 30px rgba(127,247,255,.22);
+}
+button:disabled{opacity:.5;cursor:default;filter:none}
+.loading,.toast{
+  position:absolute;
+  left:14px;
+  right:14px;
+  z-index:8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  pointer-events:none;
+}
+.loading{
+  top:14px;
+  min-height:42px;
+  border-radius:999px;
+  color:#dffaff;
+  background:rgba(5,10,22,.66);
+  border:1px solid rgba(127,247,255,.18);
+  font-size:.88rem;
+}
+.loading[hidden]{display:none}
+.toast{
+  bottom:76px;
+  min-height:48px;
+  padding:10px 16px;
+  border-radius:14px;
+  background:rgba(4,8,18,.82);
+  border:1px solid rgba(255,215,122,.25);
+  color:#ffeec4;
+  transform:translateY(20px);
+  opacity:0;
+  transition:opacity .18s ease,transform .18s ease;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.panel{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:var(--shadow);
+  padding:14px;
+  backdrop-filter:blur(12px);
+}
+.side{
+  display:grid;
+  gap:12px;
+}
+.brand{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.brand h2{
+  margin:0;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:1.32rem;
+}
+.brand p{
+  margin:5px 0 0;
+  color:var(--muted);
+  line-height:1.42;
+  font-size:.9rem;
+}
+.compass{
+  flex:0 0 auto;
+  width:56px;
+  height:56px;
+  border-radius:999px;
+  border:1px solid rgba(127,247,255,.35);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(127,247,255,.34),transparent 28%),
+    conic-gradient(from 20deg,#ffd77a,#7ff7ff,#6ca8ff,#ffd77a);
+  box-shadow:0 0 28px rgba(127,247,255,.22);
+  position:relative;
+}
+.compass::before,.compass::after{
+  content:"";
+  position:absolute;
+  inset:11px;
+  border-radius:999px;
+  border:2px solid rgba(6,16,29,.65);
+}
+.compass::after{
+  inset:22px;
+  background:#06101d;
+  border:none;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.stat{
+  min-width:0;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;
+  padding:10px;
+}
+.stat .k{
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-size:.68rem;
+}
+.stat .v{
+  margin-top:5px;
+  font-size:1.28rem;
+  font-weight:900;
+  font-variant-numeric:tabular-nums;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.meters{
+  display:grid;
+  gap:9px;
+}
+.meter-label{
+  display:flex;
+  justify-content:space-between;
+  color:var(--muted);
+  font-size:.78rem;
+  margin-bottom:5px;
+}
+.bar{
+  height:10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);
+}
+.bar span{
+  display:block;
+  height:100%;
+  width:50%;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--teal),var(--gold));
+}
+#hpBar{background:linear-gradient(90deg,#ff7988,#ffd77a)}
+#xpBar{background:linear-gradient(90deg,#6ca8ff,#8df0b2)}
+.quest h3,.log h3,.controls h3,.mapbox h3{
+  margin:0 0 9px;
+  color:#dffaff;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  font-size:.82rem;
+}
+.quest p,.controls p{
+  margin:0;
+  color:#c5d7e3;
+  line-height:1.47;
+  font-size:.9rem;
+}
+.objectives{
+  display:grid;
+  gap:7px;
+  margin-top:11px;
+}
+.objective{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#cfe2ec;
+  font-size:.84rem;
+}
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:#38546c;
+  box-shadow:0 0 0 3px rgba(255,255,255,.04);
+}
+.objective.done .dot{background:var(--green);box-shadow:0 0 14px rgba(141,240,178,.55)}
+.objective.target .dot{background:var(--gold);box-shadow:0 0 14px rgba(255,215,122,.55)}
+.map{
+  position:relative;
+  height:160px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(127,247,255,.12),transparent 54%),
+    linear-gradient(180deg,#07172c,#050913);
+}
+.map canvas{width:100%;height:100%}
+.log-list{
+  display:grid;
+  gap:7px;
+  max-height:152px;
+  overflow:auto;
+  padding-right:3px;
+}
+.log-list p{
+  margin:0;
+  color:#c5d7e3;
+  line-height:1.36;
+  font-size:.82rem;
+  background:rgba(255,255,255,.045);
+  border-radius:10px;
+  padding:8px 10px;
+}
+.actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.touch{
+  position:fixed;
+  z-index:20;
+  left:0;
+  right:0;
+  bottom:0;
+  display:none;
+  justify-content:space-between;
+  align-items:flex-end;
+  padding:0 12px 12px;
+  pointer-events:none;
+}
+.touch-pad,.touch-actions{
+  pointer-events:auto;
+  display:grid;
+  gap:8px;
+}
+.touch-pad{
+  grid-template-columns:48px 48px 48px;
+  grid-template-rows:48px 48px 48px;
+}
+.touch-pad button,.touch-actions button{
+  min-width:48px;
+  min-height:48px;
+  padding:0;
+  border-radius:14px;
+  background:rgba(6,14,30,.74);
+  backdrop-filter:blur(8px);
+}
+.touch-pad [data-dir="up"]{grid-column:2;grid-row:1}
+.touch-pad [data-dir="left"]{grid-column:1;grid-row:2}
+.touch-pad [data-dir="right"]{grid-column:3;grid-row:2}
+.touch-pad [data-dir="down"]{grid-column:2;grid-row:3}
+.touch-actions{grid-template-columns:60px 60px}
+.touch-actions button{min-width:60px;min-height:60px;border-radius:18px}
+.touch-actions .wide{grid-column:1/3;min-height:44px}
+@media (max-width:1080px){
+  .app{grid-template-columns:1fr}
+  .side{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .panel.brand-panel,.panel.log,.panel.mapbox{grid-column:1/-1}
+}
+@media (max-width:740px){
+  body{padding:8px 8px 86px}
+  .canvas-wrap{min-height:300px}
+  .side{grid-template-columns:1fr}
+  .topbar{padding-bottom:12px}
+  .hint{font-size:.78rem}
+  .hud-pills{width:100%}
+  .pill{flex:1;min-width:0}
+  .title-copy{min-height:560px}
+  .touch{display:flex}
+}
+@media (max-width:430px){
+  .stats{grid-template-columns:1fr 1fr}
+  .actions{grid-template-columns:1fr}
+  .touch-pad{grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px}
+  .touch-actions{grid-template-columns:54px 54px}
+  .touch-actions button{min-width:54px;min-height:54px}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<main class="app">
+  <section class="stage" aria-label="Skyglass Warden game">
+    <div class="canvas-wrap">
+      <canvas id="game" width="1280" height="720" aria-label="Top-down sky archipelago game canvas"></canvas>
+      <div class="loading" id="loading">Loading generated Skyglass key art...</div>
+      <div class="toast" id="toast"></div>
+      <div class="overlay" id="titleOverlay">
+        <div class="title-card">
+          <img id="splash" src="assets/skyglass-splash.png" alt="Generated key art for Skyglass Warden">
+          <div class="title-copy">
+            <span class="eyebrow">Original open-world action RPG</span>
+            <h1>Skyglass Warden</h1>
+            <p>Cross a giant floating archipelago, harvest skyglass shards, duel storm-forged sentinels, and restore four ancient beacons before the islands fall below the cloud line.</p>
+            <div class="button-row">
+              <button class="primary" id="startBtn" type="button">Begin Expedition</button>
+              <button id="loadBtn" type="button">Load Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay" id="endOverlay" hidden>
+        <div class="title-card">
+          <img src="assets/skyglass-splash.png" alt="">
+          <div class="title-copy">
+            <span class="eyebrow">The archipelago holds</span>
+            <h1>Wardens Restored</h1>
+            <p id="endingText">The four beacons are awake. The skyglass compass points beyond the map, and your long patrol can continue.</p>
+            <div class="button-row">
+              <button class="primary" id="continueBtn" type="button">Continue Exploring</button>
+              <button id="newRunBtn" type="button">New World</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="topbar">
+      <div class="hint"><b>Move</b> WASD/Arrows or touch pad. <b>Strike</b> Space/J. <b>Pulse</b> Shift/K. <b>Interact</b> E. <b>Map</b> M.</div>
+      <div class="hud-pills">
+        <div class="pill">Region <strong id="regionHud">Dawnreach</strong></div>
+        <div class="pill">Shards <strong id="shardHud">0</strong></div>
+        <div class="pill">Beacons <strong id="beaconHud">0/4</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="panel brand-panel">
+      <div class="brand">
+        <div>
+          <h2>Skyglass Warden</h2>
+          <p>A long-form browser adventure with a persistent save, a huge procedural archipelago, field combat, harvesting, boss sites, and restoration quests.</p>
+        </div>
+        <div class="compass" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="panel meters">
+      <div>
+        <div class="meter-label"><span>Health</span><span id="hpText">100 / 100</span></div>
+        <div class="bar"><span id="hpBar"></span></div>
+      </div>
+      <div>
+        <div class="meter-label"><span>Energy</span><span id="energyText">100 / 100</span></div>
+        <div class="bar"><span id="energyBar"></span></div>
+      </div>
+      <div>
+        <div class="meter-label"><span>Warden Rank</span><span id="xpText">0 / 100</span></div>
+        <div class="bar"><span id="xpBar"></span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="stats">
+        <div class="stat"><div class="k">Rank</div><div class="v" id="rankStat">1</div></div>
+        <div class="stat"><div class="k">Shards</div><div class="v" id="shardStat">0</div></div>
+        <div class="stat"><div class="k">Relays</div><div class="v" id="relayStat">0</div></div>
+        <div class="stat"><div class="k">Distance</div><div class="v" id="distanceStat">0 km</div></div>
+      </div>
+    </section>
+
+    <section class="panel quest">
+      <h3>Current Charge</h3>
+      <p id="questText">Wake at the Dawn Spire, then follow the compass toward the nearest dark beacon.</p>
+      <div class="objectives" id="objectives"></div>
+    </section>
+
+    <section class="panel mapbox">
+      <h3>Atlas</h3>
+      <div class="map"><canvas id="mapCanvas" width="320" height="160"></canvas></div>
+    </section>
+
+    <section class="panel actions">
+      <button id="saveBtn" type="button">Save</button>
+      <button id="muteBtn" type="button">Sound On</button>
+      <button id="resetBtn" type="button">New Game</button>
+      <button id="centerBtn" type="button">Return Marker</button>
+    </section>
+
+    <section class="panel controls">
+      <h3>Field Notes</h3>
+      <p>Restore each beacon by defeating its sentinel and spending 18 skyglass shards. Shards come from crystal relays and roaming sentinels. Restored beacons heal you and increase your maximum energy.</p>
+    </section>
+
+    <section class="panel log">
+      <h3>Expedition Log</h3>
+      <div class="log-list" id="logList" aria-live="polite"></div>
+    </section>
+  </aside>
+</main>
+
+<div class="touch" aria-label="Touch controls">
+  <div class="touch-pad">
+    <button data-dir="up" type="button">W</button>
+    <button data-dir="left" type="button">A</button>
+    <button data-dir="right" type="button">D</button>
+    <button data-dir="down" type="button">S</button>
+  </div>
+  <div class="touch-actions">
+    <button data-act="attack" type="button">Hit</button>
+    <button data-act="pulse" type="button">Pulse</button>
+    <button class="wide" data-act="interact" type="button">Use</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const canvas = $("game");
+const ctx = canvas.getContext("2d", { alpha: false });
+const mapCanvas = $("mapCanvas");
+const mapCtx = mapCanvas.getContext("2d");
+const splash = $("splash");
+const SAVE_KEY = "skyglass-warden-save-v1";
+const MUTE_KEY = "skyglass-warden-muted";
+const TILE = 42;
+const VIEW_W = 1280;
+const VIEW_H = 720;
+const TAU = Math.PI * 2;
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist = (a, b, c, d) => Math.hypot(a - c, b - d);
+const worldX = (tileX) => tileX * TILE;
+const worldY = (tileY) => tileY * TILE;
+const tileX = (x) => Math.floor(x / TILE);
+const tileY = (y) => Math.floor(y / TILE);
+
+function hash2(x, y) {
+  let n = (x * 374761393 + y * 668265263) | 0;
+  n = (n ^ (n >>> 13)) * 1274126177;
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+}
+function smoothNoise(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const u = fx * fx * (3 - 2 * fx);
+  const v = fy * fy * (3 - 2 * fy);
+  const a = hash2(ix, iy);
+  const b = hash2(ix + 1, iy);
+  const c = hash2(ix, iy + 1);
+  const d = hash2(ix + 1, iy + 1);
+  return lerp(lerp(a, b, u), lerp(c, d, u), v);
+}
+function fbm(x, y) {
+  let amp = 0.56;
+  let freq = 0.055;
+  let sum = 0;
+  for (let i = 0; i < 4; i++) {
+    sum += smoothNoise(x * freq, y * freq) * amp;
+    freq *= 2.07;
+    amp *= 0.5;
+  }
+  return sum;
+}
+
+const regions = [
+  { id:"dawn", name:"Dawnreach", x:0, y:0, r:33, color:"#77dca1", floor:"#275d55", accent:"#9dfbff" },
+  { id:"gale", name:"Gale Aerie", x:62, y:-42, r:30, color:"#78d8ff", floor:"#1c5370", accent:"#9dfbff" },
+  { id:"ember", name:"Emberglass Forge", x:66, y:50, r:29, color:"#ffb36d", floor:"#74402e", accent:"#ffd77a" },
+  { id:"archive", name:"Moon Archive", x:-62, y:46, r:31, color:"#b394ff", floor:"#49356f", accent:"#cbb7ff" },
+  { id:"storm", name:"Stormgrave", x:-70, y:-45, r:32, color:"#839bff", floor:"#273660", accent:"#9fb2ff" }
+];
+const paths = [
+  ["dawn", "gale"],
+  ["dawn", "ember"],
+  ["dawn", "archive"],
+  ["dawn", "storm"],
+  ["storm", "gale"],
+  ["archive", "ember"]
+].map(([a, b]) => [regions.find((r) => r.id === a), regions.find((r) => r.id === b)]);
+const beaconSites = [
+  { id:"gale", name:"Gale Beacon", region:"gale", x:64, y:-43, color:"#9dfbff", boss:"gale-warden" },
+  { id:"ember", name:"Ember Beacon", region:"ember", x:67, y:51, color:"#ffd77a", boss:"ember-warden" },
+  { id:"archive", name:"Moon Archive Beacon", region:"archive", x:-63, y:47, color:"#cbb7ff", boss:"archive-warden" },
+  { id:"storm", name:"Stormgrave Beacon", region:"storm", x:-72, y:-47, color:"#9fb2ff", boss:"storm-warden" }
+];
+const allSites = [
+  { id:"spire", name:"Dawn Spire", region:"dawn", x:0, y:-3, color:"#8df0b2", type:"home" },
+  ...beaconSites.map((s) => ({ ...s, type:"beacon" }))
+];
+
+const state = {
+  mode:"title",
+  started:false,
+  paused:false,
+  showMap:false,
+  ending:false,
+  player:{
+    x:worldX(0) + TILE / 2,
+    y:worldY(0) + TILE / 2,
+    vx:0,
+    vy:0,
+    hp:100,
+    maxHp:100,
+    energy:100,
+    maxEnergy:100,
+    xp:0,
+    rank:1,
+    facing:0,
+    attackCd:0,
+    pulseCd:0,
+    invuln:0
+  },
+  camera:{ x:0, y:0 },
+  keys:new Set(),
+  touch:{ x:0, y:0 },
+  waypoint:null,
+  enemies:[],
+  relays:[],
+  restored:{},
+  defeated:{},
+  harvested:{},
+  shards:0,
+  relaysFound:0,
+  distance:0,
+  lastPos:{ x:worldX(0) + TILE / 2, y:worldY(0) + TILE / 2 },
+  log:[],
+  toast:"",
+  toastTimer:0,
+  interactTarget:null,
+  particles:[],
+  slash:null,
+  muted:false,
+  artReady:false,
+  artError:false,
+  time:0
+};
+
+let audio = null;
+function initAudio() {
+  if (audio) return audio;
+  try {
+    const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+    const master = ctxAudio.createGain();
+    master.gain.value = state.muted ? 0 : 0.78;
+    master.connect(ctxAudio.destination);
+    const music = ctxAudio.createGain();
+    music.gain.value = 0.08;
+    music.connect(master);
+    const sfx = ctxAudio.createGain();
+    sfx.gain.value = 0.35;
+    sfx.connect(master);
+    audio = { ctx:ctxAudio, master, music, sfx, step:0, next:ctxAudio.currentTime + 0.1 };
+    setInterval(musicTick, 120);
+  } catch (error) {
+    audio = null;
+  }
+  return audio;
+}
+function setMuted(next) {
+  state.muted = next;
+  try { localStorage.setItem(MUTE_KEY, next ? "1" : "0"); } catch (error) {}
+  $("muteBtn").textContent = next ? "Sound Off" : "Sound On";
+  if (audio) audio.master.gain.setTargetAtTime(next ? 0 : 0.78, audio.ctx.currentTime, 0.04);
+}
+function tone(freq, dur, type, gain, slide) {
+  if (!audio || state.muted) return;
+  const t = audio.ctx.currentTime;
+  const osc = audio.ctx.createOscillator();
+  const node = audio.ctx.createGain();
+  osc.type = type || "sine";
+  osc.frequency.setValueAtTime(freq, t);
+  if (slide) osc.frequency.exponentialRampToValueAtTime(slide, t + dur);
+  node.gain.setValueAtTime(gain || 0.1, t);
+  node.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(node);
+  node.connect(audio.sfx);
+  osc.start(t);
+  osc.stop(t + dur + 0.03);
+}
+function musicNote(freq, t, dur, gain) {
+  if (!audio || state.muted || state.mode === "title") return;
+  const osc = audio.ctx.createOscillator();
+  const g = audio.ctx.createGain();
+  const f = audio.ctx.createBiquadFilter();
+  osc.type = "triangle";
+  osc.frequency.value = freq;
+  f.type = "lowpass";
+  f.frequency.value = 900;
+  g.gain.setValueAtTime(gain, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(f);
+  f.connect(g);
+  g.connect(audio.music);
+  osc.start(t);
+  osc.stop(t + dur + 0.05);
+}
+function musicTick() {
+  if (!audio || audio.ctx.state !== "running") return;
+  const stepDur = 60 / 76 / 2;
+  const chords = [
+    [220, 277.18, 329.63],
+    [196, 246.94, 293.66],
+    [174.61, 220, 261.63],
+    [207.65, 261.63, 311.13]
+  ];
+  while (audio.next < audio.ctx.currentTime + 0.2) {
+    const chord = chords[Math.floor(audio.step / 8) % chords.length];
+    if (audio.step % 4 === 0) musicNote(chord[0] / 2, audio.next, 0.7, 0.035);
+    if (audio.step % 2 === 0) musicNote(chord[(audio.step / 2) % 3] * 2, audio.next, 0.12, 0.018);
+    audio.step++;
+    audio.next += stepDur;
+  }
+}
+
+function addLog(text) {
+  state.log.unshift(text);
+  state.log = state.log.slice(0, 8);
+  renderLog();
+}
+function toast(text) {
+  state.toast = text;
+  state.toastTimer = 3;
+  const node = $("toast");
+  node.textContent = text;
+  node.classList.add("show");
+}
+function renderLog() {
+  $("logList").innerHTML = state.log.map((item) => `<p>${item}</p>`).join("");
+}
+
+function regionById(id) {
+  return regions.find((r) => r.id === id) || regions[0];
+}
+function nearestRegion(tx, ty) {
+  let best = regions[0];
+  let bestScore = -Infinity;
+  for (const r of regions) {
+    const d = Math.hypot(tx - r.x, ty - r.y) / r.r;
+    const score = 1 - d + (fbm(tx + r.x * 3, ty + r.y * 3) - 0.5) * 0.28;
+    if (score > bestScore) {
+      best = r;
+      bestScore = score;
+    }
+  }
+  return { region:best, score:bestScore };
+}
+function pointSegmentDistance(px, py, ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const t = clamp(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy), 0, 1);
+  return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
+}
+function onBridge(tx, ty) {
+  for (const [a, b] of paths) {
+    const d = pointSegmentDistance(tx, ty, a.x, a.y, b.x, b.y);
+    if (d < 2.2 + smoothNoise(tx * 0.12, ty * 0.12) * 0.9) return true;
+  }
+  return false;
+}
+function tileAt(tx, ty) {
+  const bridge = onBridge(tx, ty);
+  const nearest = nearestRegion(tx, ty);
+  const r = nearest.region;
+  const score = nearest.score;
+  const n = fbm(tx, ty);
+  const edge = score < 0.13;
+  if (!bridge && score < -0.04) return { kind:"void", region:r, walk:false, color:"#071024" };
+  if (bridge && score < 0.06) return { kind:"bridge", region:r, walk:true, color:"#255d72" };
+  const roll = hash2(tx, ty);
+  if (!bridge && !edge && roll > 0.972 && Math.abs(tx - r.x) + Math.abs(ty - r.y) > 8) {
+    return { kind:"crystal", region:r, walk:true, color:r.accent };
+  }
+  if (!bridge && r.id === "storm" && n > 0.76) return { kind:"storm", region:r, walk:true, color:"#24396c" };
+  if (!bridge && r.id === "ember" && n > 0.73) return { kind:"ember", region:r, walk:true, color:"#75402f" };
+  if (!bridge && r.id === "archive" && n > 0.71) return { kind:"ruin", region:r, walk:true, color:"#463665" };
+  if (edge && !bridge) return { kind:"edge", region:r, walk:true, color:"#1d3b4e" };
+  if (bridge) return { kind:"bridge", region:r, walk:true, color:"#2b6a7d" };
+  if (n > 0.68) return { kind:"glass", region:r, walk:true, color:"#2a6b72" };
+  return { kind:"floor", region:r, walk:true, color:r.floor };
+}
+function isWalkableAt(x, y) {
+  return tileAt(tileX(x), tileY(y)).walk;
+}
+
+function chooseWalkableNear(cx, cy, index) {
+  for (let radius = 4; radius < 24; radius++) {
+    const angle = hash2(index, radius) * TAU;
+    const tx = Math.round(cx + Math.cos(angle) * radius);
+    const ty = Math.round(cy + Math.sin(angle) * radius);
+    if (tileAt(tx, ty).walk) return { x:worldX(tx) + TILE / 2, y:worldY(ty) + TILE / 2 };
+  }
+  return { x:worldX(cx) + TILE / 2, y:worldY(cy) + TILE / 2 };
+}
+function buildRelays() {
+  const relays = [];
+  let id = 0;
+  for (const r of regions) {
+    for (let i = 0; i < 22; i++) {
+      const angle = hash2(i + 31, r.x) * TAU;
+      const radius = 8 + hash2(i, r.y + 7) * (r.r - 9);
+      const tx = Math.round(r.x + Math.cos(angle) * radius);
+      const ty = Math.round(r.y + Math.sin(angle) * radius);
+      const pos = chooseWalkableNear(tx, ty, i + r.x * 17);
+      relays.push({ id:`relay-${id++}`, x:pos.x, y:pos.y, region:r.id });
+    }
+  }
+  return relays;
+}
+function buildEnemies() {
+  const enemies = [];
+  let id = 0;
+  for (const r of regions) {
+    const count = r.id === "dawn" ? 6 : 22;
+    for (let i = 0; i < count; i++) {
+      const angle = hash2(i + 100, r.y) * TAU;
+      const minRadius = r.id === "dawn" ? 18 : 10;
+      const radius = minRadius + hash2(i + 41, r.x) * (r.r - minRadius + 3);
+      const tx = Math.round(r.x + Math.cos(angle) * radius);
+      const ty = Math.round(r.y + Math.sin(angle) * radius);
+      const pos = chooseWalkableNear(tx, ty, i + r.y * 31);
+      const threat = r.id === "dawn" ? 0 : 1;
+      enemies.push({
+        id:`sentinel-${id++}`,
+        type:threat ? "sentinel" : "drifter",
+        region:r.id,
+        x:pos.x,
+        y:pos.y,
+        homeX:pos.x,
+        homeY:pos.y,
+        hp:threat ? 52 : 26,
+        maxHp:threat ? 52 : 26,
+        dmg:threat ? 10 : 4,
+        speed:threat ? 94 : 66,
+        attackCd:0,
+        dead:false,
+        boss:false
+      });
+    }
+  }
+  for (const site of beaconSites) {
+    const pos = chooseWalkableNear(site.x, site.y, 999 + site.x);
+    enemies.push({
+      id:site.boss,
+      type:"warden",
+      region:site.region,
+      x:pos.x + TILE * 2,
+      y:pos.y - TILE * 1.5,
+      homeX:pos.x,
+      homeY:pos.y,
+      hp:210,
+      maxHp:210,
+      dmg:18,
+      speed:82,
+      attackCd:0,
+      dead:false,
+      boss:true
+    });
+  }
+  return enemies;
+}
+function resetWorld() {
+  state.player = {
+    x:worldX(0) + TILE / 2,
+    y:worldY(0) + TILE / 2,
+    vx:0,
+    vy:0,
+    hp:100,
+    maxHp:100,
+    energy:100,
+    maxEnergy:100,
+    xp:0,
+    rank:1,
+    facing:0,
+    attackCd:0,
+    pulseCd:0,
+    invuln:0
+  };
+  state.camera.x = state.player.x;
+  state.camera.y = state.player.y;
+  state.enemies = buildEnemies();
+  state.relays = buildRelays();
+  state.restored = {};
+  state.defeated = {};
+  state.harvested = {};
+  state.shards = 0;
+  state.relaysFound = 0;
+  state.distance = 0;
+  state.lastPos = { x:state.player.x, y:state.player.y };
+  state.waypoint = null;
+  state.ending = false;
+  state.log = [];
+  addLog("Dawn Spire wakes. The compass points to four silent beacons.");
+  toast("Expedition started. Restore all four beacons.");
+}
+
+function grantXp(amount) {
+  const p = state.player;
+  p.xp += amount;
+  const needed = p.rank * 100;
+  if (p.xp >= needed) {
+    p.xp -= needed;
+    p.rank++;
+    p.maxHp += 12;
+    p.maxEnergy += 6;
+    p.hp = p.maxHp;
+    p.energy = p.maxEnergy;
+    addLog(`Rank ${p.rank} reached. Health and energy increased.`);
+    toast(`Warden rank ${p.rank}`);
+    tone(520, 0.12, "triangle", 0.18, 880);
+  }
+}
+function restoredCount() {
+  return beaconSites.filter((site) => state.restored[site.id]).length;
+}
+function nearestOpenBeacon() {
+  let best = null;
+  let bestD = Infinity;
+  for (const site of beaconSites) {
+    if (state.restored[site.id]) continue;
+    const d = dist(state.player.x, state.player.y, worldX(site.x), worldY(site.y));
+    if (d < bestD) {
+      best = site;
+      bestD = d;
+    }
+  }
+  return best;
+}
+function revive() {
+  const p = state.player;
+  p.x = worldX(0) + TILE / 2;
+  p.y = worldY(0) + TILE / 2;
+  p.hp = Math.max(35, Math.round(p.maxHp * 0.55));
+  p.energy = p.maxEnergy;
+  p.invuln = 3;
+  state.waypoint = null;
+  addLog("The wind returns you to Dawn Spire before the fall becomes final.");
+  toast("Recovered at Dawn Spire");
+}
+
+function startGame(loadExisting) {
+  initAudio();
+  if (audio && audio.ctx.state === "suspended") audio.ctx.resume();
+  $("titleOverlay").hidden = true;
+  $("endOverlay").hidden = true;
+  state.started = true;
+  state.mode = "play";
+  if (loadExisting && loadGame()) {
+    toast("Save loaded");
+  } else {
+    resetWorld();
+  }
+  updateHud();
+}
+
+function saveGame() {
+  const save = {
+    player:state.player,
+    restored:state.restored,
+    defeated:state.defeated,
+    harvested:state.harvested,
+    shards:state.shards,
+    relaysFound:state.relaysFound,
+    distance:state.distance,
+    ending:state.ending,
+    log:state.log.slice(0, 8)
+  };
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+    toast("Expedition saved");
+    addLog("Progress saved to this browser.");
+    return true;
+  } catch (error) {
+    toast("Save failed: storage is unavailable");
+    return false;
+  }
+}
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      toast("No save found");
+      return false;
+    }
+    const save = JSON.parse(raw);
+    state.enemies = buildEnemies();
+    state.relays = buildRelays();
+    state.player = { ...state.player, ...save.player };
+    state.restored = save.restored || {};
+    state.defeated = save.defeated || {};
+    state.harvested = save.harvested || {};
+    state.shards = save.shards || 0;
+    state.relaysFound = save.relaysFound || 0;
+    state.distance = save.distance || 0;
+    state.ending = !!save.ending;
+    state.log = save.log || [];
+    for (const enemy of state.enemies) {
+      if (state.defeated[enemy.id]) enemy.dead = true;
+    }
+    state.camera.x = state.player.x;
+    state.camera.y = state.player.y;
+    renderLog();
+    updateHud();
+    return true;
+  } catch (error) {
+    toast("Save could not be read");
+    return false;
+  }
+}
+
+function screenToWorld(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = (clientX - rect.left) / rect.width * VIEW_W;
+  const sy = (clientY - rect.top) / rect.height * VIEW_H;
+  return {
+    x:state.camera.x - VIEW_W / 2 + sx,
+    y:state.camera.y - VIEW_H / 2 + sy
+  };
+}
+function attack() {
+  if (state.mode !== "play") return;
+  const p = state.player;
+  if (p.attackCd > 0) return;
+  p.attackCd = 0.34;
+  state.slash = { x:p.x, y:p.y, angle:p.facing, t:0.16, max:0.16 };
+  tone(300, 0.08, "triangle", 0.16, 520);
+  for (const enemy of state.enemies) {
+    if (enemy.dead) continue;
+    const d = dist(p.x, p.y, enemy.x, enemy.y);
+    if (d > 86) continue;
+    const a = Math.atan2(enemy.y - p.y, enemy.x - p.x);
+    const diff = Math.atan2(Math.sin(a - p.facing), Math.cos(a - p.facing));
+    if (Math.abs(diff) > 1.55 && d > 42) continue;
+    damageEnemy(enemy, 24 + p.rank * 3, Math.cos(a) * 80, Math.sin(a) * 80);
+  }
+}
+function pulse() {
+  if (state.mode !== "play") return;
+  const p = state.player;
+  if (p.pulseCd > 0 || p.energy < 24) return;
+  p.energy -= 24;
+  p.pulseCd = 1.3;
+  tone(180, 0.2, "sawtooth", 0.12, 720);
+  spawnRing(p.x, p.y, "#9dfbff", 34);
+  for (const enemy of state.enemies) {
+    if (enemy.dead) continue;
+    const d = dist(p.x, p.y, enemy.x, enemy.y);
+    if (d < 170) {
+      const ang = Math.atan2(enemy.y - p.y, enemy.x - p.x);
+      damageEnemy(enemy, 30 + p.rank * 2, Math.cos(ang) * 180, Math.sin(ang) * 180);
+    }
+  }
+}
+function damageEnemy(enemy, amount, kx, ky) {
+  enemy.hp -= amount;
+  enemy.x += (kx || 0) * 0.045;
+  enemy.y += (ky || 0) * 0.045;
+  spawnBurst(enemy.x, enemy.y, enemy.boss ? "#ffd77a" : regionById(enemy.region).accent, enemy.boss ? 16 : 9);
+  if (enemy.hp <= 0) {
+    enemy.dead = true;
+    state.defeated[enemy.id] = true;
+    const shards = enemy.boss ? 14 : enemy.type === "sentinel" ? 3 : 2;
+    state.shards += shards;
+    grantXp(enemy.boss ? 70 : 18);
+    addLog(enemy.boss ? `Sentinel ${enemy.id.replace("-warden", "")} broke. ${shards} shards recovered.` : `${shards} skyglass shards recovered from a roving sentinel.`);
+    toast(`+${shards} shards`);
+    tone(enemy.boss ? 120 : 260, enemy.boss ? 0.34 : 0.12, "square", 0.15, enemy.boss ? 70 : 480);
+  }
+}
+function interact() {
+  if (state.mode !== "play") return;
+  const target = state.interactTarget;
+  if (!target) {
+    toast("Nothing close enough to use");
+    return;
+  }
+  if (target.kind === "relay") {
+    if (state.harvested[target.item.id]) return;
+    state.harvested[target.item.id] = true;
+    state.relaysFound++;
+    const found = 4 + Math.floor(hash2(target.item.x, target.item.y) * 4);
+    state.shards += found;
+    grantXp(12);
+    spawnRing(target.item.x, target.item.y, "#9dfbff", 24);
+    tone(620, 0.16, "triangle", 0.16, 980);
+    addLog(`Crystal relay mapped. ${found} shards tuned to the compass.`);
+    toast(`Relay harvested: +${found} shards`);
+  } else if (target.kind === "site") {
+    const site = target.item;
+    if (site.type === "home") {
+      if (restoredCount() === beaconSites.length && !state.ending) {
+        state.ending = true;
+        $("endingText").textContent = `All four beacons were restored after ${Math.round(state.distance / 1000)} km of patrol. The skyglass archipelago is stable, but the atlas remains open.`;
+        $("endOverlay").hidden = false;
+        addLog("Dawn Spire receives all four beams. The Warden charge is complete.");
+        saveGame();
+      } else {
+        state.player.hp = state.player.maxHp;
+        state.player.energy = state.player.maxEnergy;
+        addLog("Dawn Spire mends the Warden's gear.");
+        toast("Rested at Dawn Spire");
+      }
+      return;
+    }
+    if (state.restored[site.id]) {
+      state.player.hp = Math.min(state.player.maxHp, state.player.hp + 35);
+      state.player.energy = state.player.maxEnergy;
+      toast(`${site.name} hums with safe light`);
+      return;
+    }
+    const bossDown = !!state.defeated[site.boss];
+    if (!bossDown) {
+      toast(`Defeat the ${site.name} sentinel first`);
+      return;
+    }
+    if (state.shards < 18) {
+      toast("18 shards required to restore this beacon");
+      return;
+    }
+    state.shards -= 18;
+    state.restored[site.id] = true;
+    state.player.maxEnergy += 12;
+    state.player.energy = state.player.maxEnergy;
+    grantXp(55);
+    spawnRing(worldX(site.x), worldY(site.y), site.color, 52);
+    addLog(`${site.name} restored. A permanent safe route opens through ${regionById(site.region).name}.`);
+    toast(`${site.name} restored`);
+    tone(392, 0.16, "triangle", 0.18, 784);
+    setTimeout(() => tone(523.25, 0.18, "triangle", 0.16, 1046.5), 110);
+  }
+}
+
+function spawnBurst(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const a = hash2(i + state.time * 1000, x + y) * TAU;
+    const s = 80 + hash2(i, y) * 190;
+    state.particles.push({
+      x, y,
+      vx:Math.cos(a) * s,
+      vy:Math.sin(a) * s,
+      size:2 + hash2(i, x) * 4,
+      color,
+      life:0.45 + hash2(x, i) * 0.45,
+      max:0.9,
+      ring:false
+    });
+  }
+}
+function spawnRing(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const a = i / count * TAU;
+    const s = 80 + (i % 5) * 18;
+    state.particles.push({
+      x, y,
+      vx:Math.cos(a) * s,
+      vy:Math.sin(a) * s,
+      size:3,
+      color,
+      life:0.65,
+      max:0.65,
+      ring:true
+    });
+  }
+}
+
+function updatePlayer(dt) {
+  const p = state.player;
+  p.attackCd = Math.max(0, p.attackCd - dt);
+  p.pulseCd = Math.max(0, p.pulseCd - dt);
+  p.invuln = Math.max(0, p.invuln - dt);
+  p.energy = Math.min(p.maxEnergy, p.energy + dt * (10 + restoredCount() * 1.5));
+  let ix = 0;
+  let iy = 0;
+  if (state.keys.has("arrowleft") || state.keys.has("a")) ix -= 1;
+  if (state.keys.has("arrowright") || state.keys.has("d")) ix += 1;
+  if (state.keys.has("arrowup") || state.keys.has("w")) iy -= 1;
+  if (state.keys.has("arrowdown") || state.keys.has("s")) iy += 1;
+  ix += state.touch.x;
+  iy += state.touch.y;
+  if (state.waypoint && Math.abs(ix) + Math.abs(iy) < 0.1) {
+    const dx = state.waypoint.x - p.x;
+    const dy = state.waypoint.y - p.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 18) state.waypoint = null;
+    else {
+      ix = dx / d;
+      iy = dy / d;
+    }
+  }
+  const len = Math.hypot(ix, iy);
+  if (len > 0) {
+    ix /= len;
+    iy /= len;
+    p.facing = Math.atan2(iy, ix);
+  }
+  const speed = 178 + p.rank * 4;
+  const nextX = p.x + ix * speed * dt;
+  const nextY = p.y + iy * speed * dt;
+  if (isWalkableAt(nextX, p.y)) p.x = nextX;
+  if (isWalkableAt(p.x, nextY)) p.y = nextY;
+  const moved = dist(p.x, p.y, state.lastPos.x, state.lastPos.y);
+  if (moved > 1) {
+    state.distance += moved / 18;
+    state.lastPos.x = p.x;
+    state.lastPos.y = p.y;
+  }
+  const standing = tileAt(tileX(p.x), tileY(p.y));
+  if ((standing.kind === "storm" || standing.kind === "ember") && p.invuln <= 0) {
+    const safe = state.restored[standing.region.id];
+    if (!safe) {
+      p.hp -= dt * (standing.kind === "ember" ? 6 : 4);
+      if (p.hp <= 0) revive();
+    }
+  }
+  for (const site of allSites) {
+    if (site.type === "home" || state.restored[site.id]) {
+      const d = dist(p.x, p.y, worldX(site.x), worldY(site.y));
+      if (d < TILE * 4) {
+        p.hp = Math.min(p.maxHp, p.hp + dt * 9);
+        p.energy = Math.min(p.maxEnergy, p.energy + dt * 18);
+      }
+    }
+  }
+}
+function updateEnemies(dt) {
+  const p = state.player;
+  for (const enemy of state.enemies) {
+    if (enemy.dead) continue;
+    enemy.attackCd = Math.max(0, enemy.attackCd - dt);
+    const d = dist(enemy.x, enemy.y, p.x, p.y);
+    let targetX = enemy.homeX;
+    let targetY = enemy.homeY;
+    if (d < (enemy.boss ? 610 : 420)) {
+      targetX = p.x;
+      targetY = p.y;
+    }
+    const homeD = dist(enemy.x, enemy.y, enemy.homeX, enemy.homeY);
+    if (!enemy.boss && homeD > TILE * 18 && d > 220) {
+      targetX = enemy.homeX;
+      targetY = enemy.homeY;
+    }
+    const dx = targetX - enemy.x;
+    const dy = targetY - enemy.y;
+    const len = Math.hypot(dx, dy);
+    if (len > 6) {
+      const speed = enemy.speed * (d < 180 ? 1.16 : 0.72);
+      const nx = enemy.x + dx / len * speed * dt;
+      const ny = enemy.y + dy / len * speed * dt;
+      if (isWalkableAt(nx, enemy.y)) enemy.x = nx;
+      if (isWalkableAt(enemy.x, ny)) enemy.y = ny;
+    }
+    if (d < (enemy.boss ? 58 : 44) && enemy.attackCd <= 0 && p.invuln <= 0) {
+      enemy.attackCd = enemy.boss ? 1.1 : 0.9;
+      p.hp -= enemy.dmg;
+      p.invuln = 0.34;
+      spawnBurst(p.x, p.y, "#ff7988", 7);
+      tone(96, 0.1, "square", 0.12, 70);
+      if (p.hp <= 0) revive();
+    }
+  }
+}
+function updateInteractTarget() {
+  const p = state.player;
+  let best = null;
+  let bestD = 78;
+  for (const relay of state.relays) {
+    if (state.harvested[relay.id]) continue;
+    const d = dist(p.x, p.y, relay.x, relay.y);
+    if (d < bestD) {
+      best = { kind:"relay", item:relay, d };
+      bestD = d;
+    }
+  }
+  for (const site of allSites) {
+    const d = dist(p.x, p.y, worldX(site.x), worldY(site.y));
+    if (d < Math.max(bestD, 112)) {
+      best = { kind:"site", item:site, d };
+      bestD = d;
+    }
+  }
+  state.interactTarget = best;
+}
+function updateParticles(dt) {
+  for (const particle of state.particles) {
+    particle.life -= dt;
+    particle.x += particle.vx * dt;
+    particle.y += particle.vy * dt;
+    particle.vx *= Math.pow(0.08, dt);
+    particle.vy *= Math.pow(0.08, dt);
+  }
+  state.particles = state.particles.filter((p) => p.life > 0);
+  if (state.slash) {
+    state.slash.t -= dt;
+    if (state.slash.t <= 0) state.slash = null;
+  }
+  if (state.toastTimer > 0) {
+    state.toastTimer -= dt;
+    if (state.toastTimer <= 0) $("toast").classList.remove("show");
+  }
+}
+function update(dt) {
+  if (state.mode !== "play" || state.paused) return;
+  state.time += dt;
+  updatePlayer(dt);
+  updateEnemies(dt);
+  updateInteractTarget();
+  updateParticles(dt);
+  state.camera.x = lerp(state.camera.x, state.player.x, 1 - Math.pow(0.0006, dt));
+  state.camera.y = lerp(state.camera.y, state.player.y, 1 - Math.pow(0.0006, dt));
+}
+
+function drawTile(tx, ty, tile, sx, sy) {
+  if (tile.kind === "void") return;
+  const x = sx;
+  const y = sy;
+  const r = tile.region;
+  let color = tile.color;
+  if (tile.kind === "edge") color = "#153044";
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, TILE + 1, TILE + 1);
+  const shade = hash2(tx, ty);
+  ctx.fillStyle = shade > 0.5 ? "rgba(255,255,255,.035)" : "rgba(0,0,0,.06)";
+  ctx.fillRect(x, y, TILE + 1, TILE + 1);
+  if (tile.kind === "bridge") {
+    ctx.strokeStyle = "rgba(157,251,255,.3)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + 6, y + TILE / 2);
+    ctx.lineTo(x + TILE - 6, y + TILE / 2);
+    ctx.moveTo(x + TILE / 2, y + 6);
+    ctx.lineTo(x + TILE / 2, y + TILE - 6);
+    ctx.stroke();
+  } else if (tile.kind === "crystal") {
+    ctx.fillStyle = r.accent;
+    ctx.globalAlpha = 0.38;
+    ctx.beginPath();
+    ctx.moveTo(x + TILE * 0.5, y + 6);
+    ctx.lineTo(x + TILE - 9, y + TILE * 0.62);
+    ctx.lineTo(x + TILE * 0.5, y + TILE - 5);
+    ctx.lineTo(x + 9, y + TILE * 0.62);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  } else if (tile.kind === "storm") {
+    ctx.strokeStyle = "rgba(180,205,255,.22)";
+    ctx.beginPath();
+    ctx.moveTo(x + 9, y + 12);
+    ctx.lineTo(x + 23, y + 22);
+    ctx.lineTo(x + 15, y + 33);
+    ctx.stroke();
+  } else if (tile.kind === "ember") {
+    ctx.fillStyle = "rgba(255,215,122,.18)";
+    ctx.beginPath();
+    ctx.arc(x + TILE * 0.5, y + TILE * 0.55, 9 + shade * 6, 0, TAU);
+    ctx.fill();
+  } else if (tile.kind === "ruin") {
+    ctx.fillStyle = "rgba(255,255,255,.08)";
+    ctx.fillRect(x + 10, y + 10, 6, 23);
+    ctx.fillRect(x + 25, y + 8, 5, 26);
+  }
+}
+function worldToScreen(x, y) {
+  return {
+    x:x - state.camera.x + VIEW_W / 2,
+    y:y - state.camera.y + VIEW_H / 2
+  };
+}
+function drawWorld() {
+  const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+  g.addColorStop(0, "#10234a");
+  g.addColorStop(0.5, "#6d8bc0");
+  g.addColorStop(1, "#e6d2c6");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.fillStyle = "rgba(255,255,255,.18)";
+  for (let i = 0; i < 26; i++) {
+    const x = ((i * 173 + state.camera.x * -0.05) % (VIEW_W + 220)) - 110;
+    const y = ((i * 89 + state.camera.y * -0.035) % (VIEW_H + 160)) - 70;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 54 + (i % 4) * 22, 16 + (i % 3) * 8, 0, 0, TAU);
+    ctx.fill();
+  }
+  const minTx = Math.floor((state.camera.x - VIEW_W / 2) / TILE) - 2;
+  const maxTx = Math.ceil((state.camera.x + VIEW_W / 2) / TILE) + 2;
+  const minTy = Math.floor((state.camera.y - VIEW_H / 2) / TILE) - 2;
+  const maxTy = Math.ceil((state.camera.y + VIEW_H / 2) / TILE) + 2;
+  for (let ty = minTy; ty <= maxTy; ty++) {
+    for (let tx = minTx; tx <= maxTx; tx++) {
+      const tile = tileAt(tx, ty);
+      const sx = tx * TILE - state.camera.x + VIEW_W / 2;
+      const sy = ty * TILE - state.camera.y + VIEW_H / 2;
+      drawTile(tx, ty, tile, sx, sy);
+    }
+  }
+  ctx.strokeStyle = "rgba(255,255,255,.045)";
+  ctx.lineWidth = 1;
+  for (let tx = minTx; tx <= maxTx; tx++) {
+    const sx = tx * TILE - state.camera.x + VIEW_W / 2;
+    ctx.beginPath();
+    ctx.moveTo(sx, 0);
+    ctx.lineTo(sx, VIEW_H);
+    ctx.stroke();
+  }
+  for (let ty = minTy; ty <= maxTy; ty++) {
+    const sy = ty * TILE - state.camera.y + VIEW_H / 2;
+    ctx.beginPath();
+    ctx.moveTo(0, sy);
+    ctx.lineTo(VIEW_W, sy);
+    ctx.stroke();
+  }
+}
+function drawSites() {
+  for (const site of allSites) {
+    const p = worldToScreen(worldX(site.x), worldY(site.y));
+    if (p.x < -120 || p.y < -120 || p.x > VIEW_W + 120 || p.y > VIEW_H + 120) continue;
+    const restored = site.type === "home" || state.restored[site.id];
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.globalCompositeOperation = "lighter";
+    const glow = ctx.createRadialGradient(0, 0, 8, 0, 0, restored ? 92 : 58);
+    glow.addColorStop(0, restored ? site.color : "rgba(80,100,120,.72)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, restored ? 92 : 58, 0, TAU);
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#07101f";
+    ctx.strokeStyle = restored ? site.color : "rgba(190,210,230,.45)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(0, -40);
+    ctx.lineTo(24, 22);
+    ctx.lineTo(0, 38);
+    ctx.lineTo(-24, 22);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = restored ? site.color : "#6f8190";
+    ctx.beginPath();
+    ctx.arc(0, -4, 10, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = "#ecf8ff";
+    ctx.font = "800 14px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(site.name, 0, 48);
+    ctx.restore();
+  }
+}
+function drawRelays() {
+  for (const relay of state.relays) {
+    if (state.harvested[relay.id]) continue;
+    const p = worldToScreen(relay.x, relay.y);
+    if (p.x < -60 || p.y < -60 || p.x > VIEW_W + 60 || p.y > VIEW_H + 60) continue;
+    const pulse = 0.5 + Math.sin(state.time * 3 + relay.x * 0.01) * 0.5;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.strokeStyle = `rgba(157,251,255,${0.35 + pulse * 0.25})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 16 + pulse * 5, 0, TAU);
+    ctx.stroke();
+    ctx.fillStyle = "#9dfbff";
+    ctx.beginPath();
+    ctx.moveTo(0, -18);
+    ctx.lineTo(12, 0);
+    ctx.lineTo(0, 18);
+    ctx.lineTo(-12, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#06101d";
+    ctx.fillRect(-2, -10, 4, 20);
+    ctx.restore();
+  }
+}
+function drawEnemies() {
+  for (const enemy of state.enemies) {
+    if (enemy.dead) continue;
+    const p = worldToScreen(enemy.x, enemy.y);
+    if (p.x < -100 || p.y < -100 || p.x > VIEW_W + 100 || p.y > VIEW_H + 100) continue;
+    const r = enemy.boss ? 28 : enemy.type === "sentinel" ? 18 : 15;
+    const color = enemy.boss ? "#ffd77a" : regionById(enemy.region).accent;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(state.time * (enemy.boss ? 0.7 : 1.5));
+    ctx.fillStyle = "rgba(4,8,18,.65)";
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 7, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = enemy.boss ? 4 : 3;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = i / 6 * TAU;
+      const rr = i % 2 ? r * 0.72 : r;
+      const x = Math.cos(a) * rr;
+      const y = Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.45;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    if (enemy.hp < enemy.maxHp) {
+      ctx.fillStyle = "rgba(0,0,0,.55)";
+      ctx.fillRect(p.x - 28, p.y - r - 20, 56, 6);
+      ctx.fillStyle = enemy.boss ? "#ffd77a" : "#ff7988";
+      ctx.fillRect(p.x - 28, p.y - r - 20, 56 * clamp(enemy.hp / enemy.maxHp, 0, 1), 6);
+    }
+  }
+}
+function drawPlayer() {
+  const p = worldToScreen(state.player.x, state.player.y);
+  const inv = state.player.invuln > 0 && Math.sin(state.time * 36) > 0;
+  if (inv) return;
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(state.player.facing + Math.PI / 2);
+  ctx.fillStyle = "rgba(0,0,0,.28)";
+  ctx.beginPath();
+  ctx.ellipse(0, 14, 19, 8, 0, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = "#0c2442";
+  ctx.strokeStyle = "#9dfbff";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, -23);
+  ctx.lineTo(16, 18);
+  ctx.lineTo(0, 10);
+  ctx.lineTo(-16, 18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#ffd77a";
+  ctx.beginPath();
+  ctx.arc(0, -8, 7, 0, TAU);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(157,251,255,.75)";
+  ctx.beginPath();
+  ctx.moveTo(0, -22);
+  ctx.lineTo(0, -42);
+  ctx.stroke();
+  ctx.restore();
+  if (state.slash) {
+    const s = state.slash;
+    const sp = worldToScreen(s.x, s.y);
+    const alpha = clamp(s.t / s.max, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(sp.x, sp.y);
+    ctx.rotate(s.angle);
+    ctx.strokeStyle = "#ffd77a";
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.arc(0, 0, 62, -0.65, 0.65);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+function drawParticles() {
+  for (const particle of state.particles) {
+    const p = worldToScreen(particle.x, particle.y);
+    const alpha = clamp(particle.life / particle.max, 0, 1);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = particle.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, particle.size * (particle.ring ? 1.3 : 1), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawQuestArrow() {
+  const target = nearestOpenBeacon() || allSites[0];
+  const tx = worldX(target.x);
+  const ty = worldY(target.y);
+  const dx = tx - state.player.x;
+  const dy = ty - state.player.y;
+  const d = Math.hypot(dx, dy);
+  if (d < 280) return;
+  const angle = Math.atan2(dy, dx);
+  const x = VIEW_W / 2 + Math.cos(angle) * (VIEW_H * 0.38);
+  const y = VIEW_H / 2 + Math.sin(angle) * (VIEW_H * 0.38);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.fillStyle = "rgba(255,215,122,.9)";
+  ctx.strokeStyle = "rgba(4,8,18,.7)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(22, 0);
+  ctx.lineTo(-14, -14);
+  ctx.lineTo(-8, 0);
+  ctx.lineTo(-14, 14);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
+  ctx.restore();
+}
+function drawMapOverlay() {
+  if (!state.showMap) return;
+  ctx.save();
+  ctx.fillStyle = "rgba(4,8,18,.78)";
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.translate(VIEW_W / 2, VIEW_H / 2);
+  const scale = 3.15;
+  for (let ty = -88; ty <= 72; ty += 2) {
+    for (let tx = -90; tx <= 88; tx += 2) {
+      const tile = tileAt(tx, ty);
+      if (!tile.walk) continue;
+      ctx.fillStyle = tile.kind === "bridge" ? "#7ff7ff" : tile.region.color;
+      ctx.globalAlpha = tile.kind === "bridge" ? 0.85 : 0.55;
+      ctx.fillRect(tx * scale, ty * scale, scale * 2.2, scale * 2.2);
+    }
+  }
+  ctx.globalAlpha = 1;
+  for (const site of allSites) {
+    ctx.fillStyle = site.type === "home" || state.restored[site.id] ? site.color : "#ff7988";
+    ctx.beginPath();
+    ctx.arc(site.x * scale, site.y * scale, 7, 0, TAU);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(state.player.x / TILE * scale, state.player.y / TILE * scale, 6, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = "#ecf8ff";
+  ctx.font = "800 28px system-ui";
+  ctx.textAlign = "center";
+  ctx.fillText("Skyglass Atlas", 0, -VIEW_H / 2 + 54);
+  ctx.font = "16px system-ui";
+  ctx.fillStyle = "#bcd4e4";
+  ctx.fillText("M toggles map. Gold/blue beacons are restored, red beacons still need a sentinel and 18 shards.", 0, -VIEW_H / 2 + 84);
+  ctx.restore();
+}
+function drawOverlayHud() {
+  const target = state.interactTarget;
+  if (target) {
+    const label = target.kind === "relay"
+      ? "E: harvest skyglass relay"
+      : target.item.type === "home"
+        ? restoredCount() === 4 && !state.ending ? "E: complete Warden charge" : "E: rest at Dawn Spire"
+        : state.restored[target.item.id] ? `E: rest at ${target.item.name}` : `E: restore ${target.item.name}`;
+    ctx.fillStyle = "rgba(4,8,18,.78)";
+    ctx.strokeStyle = "rgba(255,215,122,.28)";
+    ctx.lineWidth = 1;
+    roundRect(ctx, VIEW_W / 2 - 190, VIEW_H - 86, 380, 46, 14);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#ffeec4";
+    ctx.font = "800 17px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, VIEW_W / 2, VIEW_H - 63);
+  }
+  if (state.waypoint) {
+    const p = worldToScreen(state.waypoint.x, state.waypoint.y);
+    ctx.strokeStyle = "rgba(255,215,122,.85)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 18 + Math.sin(state.time * 5) * 4, 0, TAU);
+    ctx.stroke();
+  }
+}
+function render() {
+  drawWorld();
+  drawRelays();
+  drawSites();
+  drawEnemies();
+  drawParticles();
+  drawPlayer();
+  drawQuestArrow();
+  drawOverlayHud();
+  drawMapOverlay();
+}
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath();
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
+function updateHud() {
+  const p = state.player;
+  const hp = clamp(p.hp / p.maxHp, 0, 1);
+  const energy = clamp(p.energy / p.maxEnergy, 0, 1);
+  const needed = p.rank * 100;
+  const xp = clamp(p.xp / needed, 0, 1);
+  $("hpText").textContent = `${Math.ceil(p.hp)} / ${p.maxHp}`;
+  $("energyText").textContent = `${Math.floor(p.energy)} / ${p.maxEnergy}`;
+  $("xpText").textContent = `${Math.floor(p.xp)} / ${needed}`;
+  $("hpBar").style.width = `${hp * 100}%`;
+  $("energyBar").style.width = `${energy * 100}%`;
+  $("xpBar").style.width = `${xp * 100}%`;
+  $("rankStat").textContent = p.rank;
+  $("shardStat").textContent = state.shards;
+  $("shardHud").textContent = state.shards;
+  $("relayStat").textContent = `${state.relaysFound}/${state.relays.length}`;
+  $("distanceStat").textContent = `${Math.round(state.distance / 100) / 10} km`;
+  $("beaconHud").textContent = `${restoredCount()}/4`;
+  const current = tileAt(tileX(p.x), tileY(p.y)).region;
+  $("regionHud").textContent = current.name;
+  const target = nearestOpenBeacon();
+  if (!target) {
+    $("questText").textContent = "All beacons are restored. Return to Dawn Spire to complete the Warden charge, or keep exploring the open atlas.";
+  } else if (!state.defeated[target.boss]) {
+    $("questText").textContent = `Reach ${target.name} in ${regionById(target.region).name}, defeat its sentinel, then restore it with 18 shards.`;
+  } else if (state.shards < 18) {
+    $("questText").textContent = `${target.name}'s sentinel is down. Gather ${18 - state.shards} more shards to restore the beacon.`;
+  } else {
+    $("questText").textContent = `${target.name} is ready. Stand in its ring and press E to spend 18 shards.`;
+  }
+  const html = beaconSites.map((site) => {
+    const cls = state.restored[site.id] ? "objective done" : target && target.id === site.id ? "objective target" : "objective";
+    const status = state.restored[site.id] ? "Restored" : state.defeated[site.boss] ? "Sentinel down" : "Dark";
+    return `<div class="${cls}"><span class="dot"></span><span>${site.name}: ${status}</span></div>`;
+  }).join("");
+  $("objectives").innerHTML = html;
+  drawMiniMap();
+}
+function drawMiniMap() {
+  const w = mapCanvas.width;
+  const h = mapCanvas.height;
+  mapCtx.clearRect(0, 0, w, h);
+  const grad = mapCtx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, "#07172c");
+  grad.addColorStop(1, "#050913");
+  mapCtx.fillStyle = grad;
+  mapCtx.fillRect(0, 0, w, h);
+  const scale = 1.22;
+  const ox = w / 2;
+  const oy = h / 2;
+  for (let ty = -82; ty <= 68; ty += 3) {
+    for (let tx = -88; tx <= 84; tx += 3) {
+      const tile = tileAt(tx, ty);
+      if (!tile.walk) continue;
+      mapCtx.fillStyle = tile.kind === "bridge" ? "#7ff7ff" : tile.region.color;
+      mapCtx.globalAlpha = tile.kind === "bridge" ? 0.85 : 0.45;
+      mapCtx.fillRect(ox + tx * scale, oy + ty * scale, 3.2, 3.2);
+    }
+  }
+  mapCtx.globalAlpha = 1;
+  for (const site of allSites) {
+    mapCtx.fillStyle = site.type === "home" || state.restored[site.id] ? site.color : "#ff7988";
+    mapCtx.beginPath();
+    mapCtx.arc(ox + site.x * scale, oy + site.y * scale, 4.5, 0, TAU);
+    mapCtx.fill();
+  }
+  mapCtx.fillStyle = "#fff";
+  mapCtx.beginPath();
+  mapCtx.arc(ox + state.player.x / TILE * scale, oy + state.player.y / TILE * scale, 4, 0, TAU);
+  mapCtx.fill();
+}
+
+let hudTimer = 0;
+let lastTime = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  update(dt);
+  render();
+  hudTimer += dt;
+  if (hudTimer > 0.18) {
+    updateHud();
+    hudTimer = 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+window.addEventListener("keydown", (event) => {
+  const k = event.key.toLowerCase();
+  if (["arrowup", "arrowdown", "arrowleft", "arrowright", " ", "shift"].includes(k)) event.preventDefault();
+  state.keys.add(k);
+  if (k === " " || k === "j") attack();
+  else if (k === "shift" || k === "k") pulse();
+  else if (k === "e") interact();
+  else if (k === "m") state.showMap = !state.showMap;
+  else if (k === "p" || k === "escape") state.paused = !state.paused;
+});
+window.addEventListener("keyup", (event) => {
+  state.keys.delete(event.key.toLowerCase());
+});
+canvas.addEventListener("pointerdown", (event) => {
+  if (state.mode !== "play") return;
+  const pt = screenToWorld(event.clientX, event.clientY);
+  if (isWalkableAt(pt.x, pt.y)) {
+    state.waypoint = pt;
+    toast("Waypoint set");
+  }
+});
+$("startBtn").addEventListener("click", () => startGame(false));
+$("loadBtn").addEventListener("click", () => startGame(true));
+$("saveBtn").addEventListener("click", saveGame);
+$("muteBtn").addEventListener("click", () => { initAudio(); setMuted(!state.muted); });
+$("resetBtn").addEventListener("click", () => {
+  resetWorld();
+  state.mode = "play";
+  state.started = true;
+  $("titleOverlay").hidden = true;
+  $("endOverlay").hidden = true;
+  updateHud();
+});
+$("centerBtn").addEventListener("click", () => {
+  const target = nearestOpenBeacon();
+  if (target) {
+    state.waypoint = { x:worldX(target.x), y:worldY(target.y) };
+    toast(`Marker set for ${target.name}`);
+  } else {
+    state.waypoint = { x:worldX(0), y:worldY(-3) };
+    toast("Marker set for Dawn Spire");
+  }
+});
+$("continueBtn").addEventListener("click", () => {
+  $("endOverlay").hidden = true;
+  state.mode = "play";
+});
+$("newRunBtn").addEventListener("click", () => {
+  $("endOverlay").hidden = true;
+  resetWorld();
+});
+
+for (const btn of document.querySelectorAll(".touch-pad button")) {
+  const dir = btn.dataset.dir;
+  const set = (on) => {
+    if (dir === "left") state.touch.x = on ? -1 : state.touch.x === -1 ? 0 : state.touch.x;
+    if (dir === "right") state.touch.x = on ? 1 : state.touch.x === 1 ? 0 : state.touch.x;
+    if (dir === "up") state.touch.y = on ? -1 : state.touch.y === -1 ? 0 : state.touch.y;
+    if (dir === "down") state.touch.y = on ? 1 : state.touch.y === 1 ? 0 : state.touch.y;
+  };
+  btn.addEventListener("pointerdown", (event) => { event.preventDefault(); set(true); btn.setPointerCapture(event.pointerId); });
+  btn.addEventListener("pointerup", () => set(false));
+  btn.addEventListener("pointercancel", () => set(false));
+  btn.addEventListener("pointerleave", () => set(false));
+}
+for (const btn of document.querySelectorAll(".touch-actions button")) {
+  btn.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    if (btn.dataset.act === "attack") attack();
+    if (btn.dataset.act === "pulse") pulse();
+    if (btn.dataset.act === "interact") interact();
+  });
+}
+
+function boot() {
+  try { state.muted = localStorage.getItem(MUTE_KEY) === "1"; } catch (error) {}
+  setMuted(state.muted);
+  state.enemies = buildEnemies();
+  state.relays = buildRelays();
+  state.camera.x = state.player.x;
+  state.camera.y = state.player.y;
+  splash.addEventListener("load", () => {
+    state.artReady = true;
+    $("loading").hidden = true;
+  });
+  splash.addEventListener("error", () => {
+    state.artError = true;
+    $("loading").textContent = "Generated art could not load. Using live canvas world instead.";
+    setTimeout(() => { $("loading").hidden = true; }, 2200);
+  });
+  setTimeout(() => {
+    if (!state.artReady && !state.artError) $("loading").textContent = "Still loading high-resolution key art...";
+  }, 1600);
+  if (splash.complete && splash.naturalWidth > 0) {
+    state.artReady = true;
+    $("loading").hidden = true;
+  }
+  addLog("Open the atlas, restore four beacons, and survive the skyglass storms.");
+  updateHud();
+  requestAnimationFrame(frame);
+}
+boot();
+
+window.__SKYGLASS_WARDEN__ = {
+  start:() => startGame(false),
+  save:saveGame,
+  load:loadGame,
+  tileAt,
+  isWalkableAt,
+  getState:() => ({
+    mode:state.mode,
+    player:{ ...state.player },
+    shards:state.shards,
+    restored:{ ...state.restored },
+    defeated:{ ...state.defeated },
+    relays:state.relays.length,
+    enemies:state.enemies.length,
+    interact:state.interactTarget ? state.interactTarget.kind : null
+  }),
+  grantShards:(n) => { state.shards += n; updateHud(); },
+  restoreAll:() => {
+    for (const site of beaconSites) state.restored[site.id] = true;
+    updateHud();
+  }
+};
+</script>
+</body>
+</html>

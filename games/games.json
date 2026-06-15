@@ -1,6 +1,14 @@
 {
-  "gameOfTheDay": "lumen-drop",
+  "gameOfTheDay": "skyglass-warden",
   "games": [
+    {
+      "slug": "skyglass-warden",
+      "title": "Skyglass Warden",
+      "description": "An original open-world sky archipelago action RPG. Explore a giant floating atlas, harvest skyglass shards, duel storm-forged sentinels, restore four ancient beacons, and keep building a persistent Warden save.",
+      "tags": ["adventure", "rpg", "open-world"],
+      "emoji": "\ud83e\udded",
+      "added": "2026-06-15"
+    },
     {
       "slug": "lumen-drop",
       "title": "Lumen Drop",
