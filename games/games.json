@@ -1,6 +1,14 @@
 {
-  "gameOfTheDay": "baobab-gambit",
+  "gameOfTheDay": "lumen-drop",
   "games": [
+    {
+      "slug": "lumen-drop",
+      "title": "Lumen Drop",
+      "description": "A glowing numbers puzzle. Drop light-orbs into the lattice; an orb ignites when its number equals the orbs in its row or column. Crack stone geodes to reveal hidden numbers, chain cascading ignitions for huge combos, and outlast the rising dark.",
+      "tags": ["puzzle", "numbers", "strategy"],
+      "emoji": "🔆",
+      "added": "2026-06-15"
+    },
     {
       "slug": "baobab-gambit",
       "title": "Baobab Gambit",
