@@ -1,6 +1,14 @@
 {
-  "gameOfTheDay": "sonar-bloom",
+  "gameOfTheDay": "baobab-gambit",
   "games": [
+    {
+      "slug": "baobab-gambit",
+      "title": "Baobab Gambit",
+      "description": "A sunset board duel inspired by Fanorona. Capture by approach or withdrawal, chain the same stone across the 5x5 baobab grid, and outfox a tactical AI before the board dries into a standoff.",
+      "tags": ["strategy", "board", "tactics"],
+      "emoji": "🌳",
+      "added": "2026-06-14"
+    },
     {
       "slug": "sonar-bloom",
       "title": "Sonar Bloom",

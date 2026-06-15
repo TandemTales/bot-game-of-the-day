@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baobab Gambit - Bot Built Arcade</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='82' font-size='80'>%F0%9F%8C%B3</text></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --bg-0:#130d0e;
+  --bg-1:#221619;
+  --bg-2:#342125;
+  --panel:rgba(29,20,23,.84);
+  --panel-border:rgba(255,223,171,.14);
+  --board:#5a3928;
+  --board-2:#734933;
+  --line:#e5b470;
+  --node:#f5d6a1;
+  --node-dim:#b6865f;
+  --dawn:#f5bf5c;
+  --dawn-2:#ffe29c;
+  --dusk:#5e647f;
+  --dusk-2:#96a1cb;
+  --accent:#6dd0cb;
+  --accent-2:#ff9868;
+  --good:#88efb3;
+  --warn:#ffc370;
+  --bad:#ff8b8b;
+  --text:#fff3e2;
+  --text-dim:#ccb7a4;
+  --radius:24px;
+  --shadow:0 22px 54px rgba(0,0,0,.34);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 18% 10%,rgba(255,152,104,.17),transparent 26%),
+    radial-gradient(circle at 82% 14%,rgba(109,208,203,.14),transparent 24%),
+    radial-gradient(circle at 50% 118%,rgba(245,191,92,.1),transparent 30%),
+    linear-gradient(180deg,#3d241b 0%,#1c1315 26%,#120d0e 100%);
+  color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:18px 16px 28px;
+}
+a.back{
+  align-self:flex-start;
+  color:#f4d7ac;
+  text-decoration:none;
+  margin-bottom:8px;
+}
+a.back:hover{color:#fff5d4}
+h1{
+  margin:4px 0 8px;
+  font-size:clamp(2.3rem,5vw,4rem);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.intro{
+  width:min(1120px,100%);
+  margin:0 0 18px;
+  text-align:center;
+  color:#ead7c2;
+  line-height:1.54;
+}
+.intro b{color:var(--dawn-2)}
+.shell{
+  width:min(1160px,100%);
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) 320px;
+  gap:16px;
+  align-items:start;
+}
+.stage,.panel{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(12px);
+}
+.stage{
+  overflow:hidden;
+  position:relative;
+}
+.sky{
+  padding:18px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,212,140,.08),transparent 44%),
+    linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));
+}
+.hud{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.stat{
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:12px 14px;
+}
+.stat-label{
+  display:block;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:.74rem;
+}
+.stat-value{
+  display:block;
+  margin-top:7px;
+  font-size:1.45rem;
+  font-weight:900;
+}
+.main-grid{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 260px;
+  gap:16px;
+  align-items:start;
+}
+.board-wrap{
+  min-width:0;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),
+    linear-gradient(180deg,#513224,#3d261d 72%,#291b17);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:30px;
+  padding:16px;
+  position:relative;
+  overflow:hidden;
+}
+.board-wrap::before{
+  content:"";
+  position:absolute;
+  inset:12px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.06);
+  pointer-events:none;
+}
+.board-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:14px;
+}
+.board-head h2{
+  margin:0;
+  font-size:1rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.board-note{
+  color:var(--text-dim);
+  font-size:.92rem;
+  line-height:1.45;
+}
+.board-shell{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 50% 46%,rgba(255,221,156,.08),transparent 42%),
+    linear-gradient(180deg,#83563d,#613f2d 52%,#4d3326);
+  border:1px solid rgba(255,220,154,.2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -28px 50px rgba(0,0,0,.2);
+  overflow:hidden;
+}
+.board-shell::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 18%,rgba(255,255,255,.06),transparent 18%),
+    radial-gradient(circle at 80% 78%,rgba(255,255,255,.04),transparent 20%);
+  pointer-events:none;
+}
+#board-svg,
+#particles,
+#nodes{
+  position:absolute;
+  inset:0;
+}
+#board-svg{pointer-events:none}
+#board-svg line{
+  stroke:rgba(248,210,151,.72);
+  stroke-width:2.4;
+  stroke-linecap:round;
+}
+#board-svg .halo{
+  stroke:rgba(255,255,255,.07);
+  stroke-width:7.5;
+}
+.node{
+  position:absolute;
+  width:13%;
+  height:13%;
+  min-width:42px;
+  min-height:42px;
+  transform:translate(-50%,-50%);
+  border:none;
+  background:none;
+  padding:0;
+  cursor:pointer;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  outline:none;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.node::before{
+  content:"";
+  position:absolute;
+  width:18%;
+  height:18%;
+  min-width:8px;
+  min-height:8px;
+  border-radius:999px;
+  background:rgba(255,228,190,.94);
+  box-shadow:0 0 0 2px rgba(72,40,28,.85);
+}
+.node .piece{
+  width:74%;
+  height:74%;
+  border-radius:999px;
+  border:2px solid rgba(255,255,255,.18);
+  box-shadow:0 10px 20px rgba(0,0,0,.26),inset 0 2px 0 rgba(255,255,255,.2);
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
+}
+.node.player .piece{
+  background:radial-gradient(circle at 30% 28%,var(--dawn-2),var(--dawn) 56%,#9d6433 100%);
+}
+.node.ai .piece{
+  background:radial-gradient(circle at 34% 28%,#c9d1f3,var(--dusk-2) 42%,var(--dusk) 74%,#32364b 100%);
+}
+.node.selectable .piece{
+  box-shadow:0 0 0 3px rgba(109,208,203,.42),0 12px 20px rgba(0,0,0,.26),inset 0 2px 0 rgba(255,255,255,.2);
+}
+.node.selected .piece{
+  transform:scale(1.08);
+  box-shadow:0 0 0 4px rgba(255,152,104,.48),0 12px 22px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.22);
+}
+.node.destination::after{
+  content:"";
+  position:absolute;
+  width:46%;
+  height:46%;
+  border-radius:999px;
+  border:3px solid rgba(109,208,203,.95);
+  box-shadow:0 0 18px rgba(109,208,203,.34);
+}
+.node.destination.dual::after{
+  border-color:rgba(255,195,112,.94);
+  box-shadow:0 0 20px rgba(255,195,112,.34);
+}
+.node:hover .piece,
+.node.destination:hover::after,
+.node.selectable:hover .piece{filter:brightness(1.05)}
+.node:focus-visible .piece,
+.node.destination:focus-visible::after{
+  box-shadow:0 0 0 4px rgba(255,255,255,.42),0 12px 22px rgba(0,0,0,.24),inset 0 2px 0 rgba(255,255,255,.22);
+}
+.board-overlay{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  background:rgba(18,13,14,.52);
+  text-align:center;
+  padding:18px;
+  pointer-events:none;
+}
+.board-overlay[hidden]{display:none}
+.overlay-card{
+  max-width:min(78%,480px);
+  border-radius:22px;
+  padding:18px 20px;
+  background:rgba(26,17,20,.82);
+  border:1px solid rgba(255,223,171,.2);
+  box-shadow:0 18px 44px rgba(0,0,0,.36);
+}
+.overlay-card h3{
+  margin:0 0 8px;
+  font-size:1.8rem;
+  letter-spacing:.06em;
+}
+.overlay-card p{
+  margin:0;
+  color:#ead7c2;
+  line-height:1.5;
+}
+.board-fx{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+.spark{
+  position:absolute;
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  transform:translate(-50%,-50%);
+  animation:burst .7s ease-out forwards;
+}
+@keyframes burst{
+  from{opacity:1;transform:translate(calc(-50% + var(--sx,0px)),calc(-50% + var(--sy,0px))) scale(1)}
+  to{opacity:0;transform:translate(calc(-50% + var(--tx,0px)),calc(-50% + var(--ty,0px))) scale(.2)}
+}
+.control-well{
+  display:grid;
+  gap:14px;
+}
+.action-panel,.status-panel,.stack-panel{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  padding:14px;
+}
+.section-label{
+  margin:0 0 10px;
+  color:var(--text-dim);
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.primary,.secondary,.choice-btn{
+  min-height:52px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  font:800 1rem/1 system-ui;
+  cursor:pointer;
+  transition:transform .14s ease,filter .14s ease,border-color .14s ease,background .14s ease;
+}
+.primary{
+  background:linear-gradient(180deg,#f7cf74,#ec9d54);
+  color:#29180d;
+}
+.secondary{
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.05));
+  color:var(--text);
+}
+.choice-btn{
+  background:linear-gradient(180deg,rgba(109,208,203,.24),rgba(109,208,203,.1));
+  color:#ebfffd;
+}
+.primary:hover,.secondary:hover,.choice-btn:hover{transform:translateY(-1px)}
+.primary:active,.secondary:active,.choice-btn:active{transform:translateY(1px)}
+.primary:disabled,.secondary:disabled,.choice-btn:disabled{
+  opacity:.48;
+  cursor:default;
+  transform:none;
+}
+.button-stack{display:grid;gap:10px}
+.button-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.status-title{
+  display:block;
+  font-size:1.08rem;
+  margin-bottom:6px;
+  color:var(--dawn-2);
+}
+.status-panel p{
+  margin:0;
+  color:#ead7c2;
+  line-height:1.48;
+  font-size:.95rem;
+}
+.status-panel.good .status-title{color:var(--good)}
+.status-panel.warn .status-title{color:var(--warn)}
+.status-panel.bad .status-title{color:var(--bad)}
+.status-meta{
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+  color:#ebdccb;
+  font-size:.93rem;
+}
+.status-item{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+.status-item span:last-child{font-weight:700}
+.choice-box{
+  display:grid;
+  gap:10px;
+}
+.choice-box[hidden]{display:none}
+.choice-copy{
+  color:#ead7c2;
+  font-size:.93rem;
+  line-height:1.45;
+}
+.chain-row{
+  display:flex;
+  gap:10px;
+}
+.chain-row[hidden]{display:none}
+.chain-row button{flex:1}
+.move-log{
+  display:grid;
+  gap:8px;
+  max-height:220px;
+  overflow:auto;
+  padding-right:4px;
+}
+.move-log p{
+  margin:0;
+  padding:10px 12px;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+  color:#ead7c2;
+  font-size:.9rem;
+  line-height:1.4;
+}
+.move-log p strong{color:#fff7de}
+.sidebar{
+  display:grid;
+  gap:14px;
+}
+.panel{
+  padding:14px;
+}
+.panel h2{
+  margin:0 0 10px;
+  color:var(--dawn-2);
+  font-size:.94rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.panel p,.panel li{
+  margin:0;
+  color:#ead7c2;
+  line-height:1.48;
+  font-size:.95rem;
+}
+.panel ul{
+  margin:0;
+  padding-left:18px;
+  display:grid;
+  gap:8px;
+}
+.footer-note{
+  width:min(1160px,100%);
+  margin-top:14px;
+  color:#bea999;
+  text-align:center;
+  font-size:.88rem;
+}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  body{padding:12px 10px 18px}
+  .hud{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .main-grid{grid-template-columns:1fr}
+  .board-wrap{padding:12px}
+  .sky{padding:14px}
+}
+@media (max-width:640px){
+  .sidebar{grid-template-columns:1fr}
+  .button-row{grid-template-columns:1fr}
+  .chain-row{flex-direction:column}
+  .node{width:15%;height:15%;min-width:36px;min-height:36px}
+  .overlay-card h3{font-size:1.45rem}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<h1>Baobab Gambit</h1>
+<p class="intro"><b>Baobab Gambit</b> is a dusk-lit tactics duel inspired by the Madagascan game <b>Fanorona</b>. Every turn asks the same sharp question: do you <b>approach</b> the enemy line or <b>withdraw</b> from it to capture instead? Chain those captures cleanly, avoid repeating a lane, and trap the AI before the board locks into a dry-season standoff.</p>
+
+<div class="shell">
+  <section class="stage">
+    <div class="sky">
+      <div class="hud">
+        <div class="stat"><span class="stat-label">Turn</span><span class="stat-value" id="turn-stat">Dawn</span></div>
+        <div class="stat"><span class="stat-label">Dawn Stones</span><span class="stat-value" id="player-count-stat">12</span></div>
+        <div class="stat"><span class="stat-label">Dusk Stones</span><span class="stat-value" id="ai-count-stat">12</span></div>
+        <div class="stat"><span class="stat-label">Quiet Turns</span><span class="stat-value" id="quiet-stat">0 / 12</span></div>
+      </div>
+
+      <div class="main-grid">
+        <div class="board-wrap">
+          <div class="board-head">
+            <div>
+              <h2 id="board-title">Baobab Board</h2>
+              <div class="board-note" id="board-note">Dawn moves first. If any capture exists, it must be played.</div>
+            </div>
+            <div class="board-note" id="selection-note">Select a highlighted Dawn stone.</div>
+          </div>
+
+          <div class="board-shell" id="board-shell" aria-label="Baobab Gambit board">
+            <svg id="board-svg" viewBox="0 0 100 100" aria-hidden="true"></svg>
+            <div id="particles" class="board-fx" aria-hidden="true"></div>
+            <div id="nodes" aria-live="polite"></div>
+            <div id="overlay" class="board-overlay">
+              <div class="overlay-card" id="overlay-card">
+                <h3 id="overlay-title">Baobab Gambit</h3>
+                <p id="overlay-text">Capture by moving toward or away from a neighboring enemy line. Press Start Match to begin.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-well">
+          <div class="action-panel">
+            <p class="section-label">Actions</p>
+            <div class="button-stack">
+              <button class="primary" id="start-btn" type="button">Start Match</button>
+              <div class="button-row">
+                <button class="secondary" id="restart-btn" type="button">New Match</button>
+                <button class="secondary" id="mute-btn" type="button">Sound On</button>
+              </div>
+              <div class="chain-row" id="chain-row" hidden>
+                <button class="secondary" id="end-chain-btn" type="button">End Capture Chain</button>
+              </div>
+              <div class="choice-box" id="choice-box" hidden>
+                <div class="choice-copy" id="choice-copy">This landing point can capture in two ways. Choose the line you want.</div>
+                <button class="choice-btn" id="approach-btn" type="button">Approach Capture</button>
+                <button class="choice-btn" id="withdraw-btn" type="button">Withdrawal Capture</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="status-panel" id="status-panel">
+            <p class="section-label">Status</p>
+            <strong class="status-title" id="status-title">Settle the board</strong>
+            <p id="status-text">Fanorona-style capture is mandatory. Move onto a neighboring point to attack forward, or pull away to strike backward.</p>
+            <div class="status-meta">
+              <div class="status-item"><span>Forced Capture</span><span id="forced-stat">No</span></div>
+              <div class="status-item"><span>Chain Piece</span><span id="chain-stat">-</span></div>
+              <div class="status-item"><span>Record</span><span id="record-stat">0-0-0</span></div>
+            </div>
+          </div>
+
+          <div class="stack-panel">
+            <p class="section-label">Move Log</p>
+            <div class="move-log" id="move-log" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <section class="panel">
+      <h2>How To Play</h2>
+      <ul>
+        <li>If any capture exists, you must take a capture instead of a quiet move.</li>
+        <li><b>Approach</b>: step toward an enemy line so the next point beyond your landing spot holds opponents.</li>
+        <li><b>Withdrawal</b>: step away from an adjacent enemy line so the point behind your starting spot holds opponents.</li>
+        <li>During a capture chain, the same stone may continue, but it cannot revisit a point or use the same direction twice in a row.</li>
+        <li>If 12 full turns pass without a capture, the side with more stones wins the dry-season standoff.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Controls</h2>
+      <p>Desktop: click a stone, then a glowing destination. Arrow keys move focus around the board, <b>Enter</b> or <b>Space</b> activates a point, <b>A</b> chooses approach, <b>W</b> chooses withdrawal, <b>E</b> ends a capture chain, <b>N</b> starts a fresh match, and <b>M</b> toggles sound.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Why This One</h2>
+      <p>The existing arcade favors real-time play. This entry deliberately shifts into board tactics: no physics flicks, no racing line, no shmup stream. Its identity is the unusual approach-versus-withdraw capture rule and the optional chain that follows.</p>
+    </section>
+  </aside>
+</div>
+
+<p class="footer-note">Original code, presentation, AI, and audio. Inspired by published descriptions of the Malagasy strategy game Fanorona and adapted here as a polished 5x5 browser duel.</p>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const SIZE = 5;
+const PLAYER = 1;
+const AI = -1;
+const QUIET_LIMIT = 12;
+const STORAGE_KEY = "baobab-gambit-record";
+const MUTE_KEY = "baobab-gambit-muted";
+const TAU = Math.PI * 2;
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const ui = {
+  boardShell: $("board-shell"),
+  boardSvg: $("board-svg"),
+  nodes: $("nodes"),
+  particles: $("particles"),
+  overlay: $("overlay"),
+  overlayTitle: $("overlay-title"),
+  overlayText: $("overlay-text"),
+  turn: $("turn-stat"),
+  playerCount: $("player-count-stat"),
+  aiCount: $("ai-count-stat"),
+  quiet: $("quiet-stat"),
+  boardTitle: $("board-title"),
+  boardNote: $("board-note"),
+  selectionNote: $("selection-note"),
+  statusPanel: $("status-panel"),
+  statusTitle: $("status-title"),
+  statusText: $("status-text"),
+  forced: $("forced-stat"),
+  chain: $("chain-stat"),
+  record: $("record-stat"),
+  start: $("start-btn"),
+  restart: $("restart-btn"),
+  mute: $("mute-btn"),
+  chainRow: $("chain-row"),
+  endChain: $("end-chain-btn"),
+  choiceBox: $("choice-box"),
+  choiceCopy: $("choice-copy"),
+  approach: $("approach-btn"),
+  withdraw: $("withdraw-btn"),
+  moveLog: $("move-log"),
+};
+
+const directions = [
+  { dr: -1, dc: 0, key: "N" },
+  { dr: 1, dc: 0, key: "S" },
+  { dr: 0, dc: -1, key: "W" },
+  { dr: 0, dc: 1, key: "E" },
+  { dr: -1, dc: -1, key: "NW" },
+  { dr: -1, dc: 1, key: "NE" },
+  { dr: 1, dc: -1, key: "SW" },
+  { dr: 1, dc: 1, key: "SE" },
+];
+
+const nodes = [];
+const neighbors = [];
+const directionMap = new Map();
+let nodeButtons = [];
+
+function indexOf(row, col) { return row * SIZE + col; }
+function rowOf(index) { return Math.floor(index / SIZE); }
+function colOf(index) { return index % SIZE; }
+function inside(row, col) { return row >= 0 && row < SIZE && col >= 0 && col < SIZE; }
+function isStrong(row, col) { return (row + col) % 2 === 0; }
+
+for (let row = 0; row < SIZE; row++) {
+  for (let col = 0; col < SIZE; col++) {
+    const index = indexOf(row, col);
+    const x = 12 + col * 19;
+    const y = 12 + row * 19;
+    nodes.push({ index, row, col, x, y, label: String.fromCharCode(65 + col) + (SIZE - row) });
+    neighbors[index] = [];
+  }
+}
+
+for (const node of nodes) {
+  for (const dir of directions) {
+    const row = node.row + dir.dr;
+    const col = node.col + dir.dc;
+    if (!inside(row, col)) continue;
+    const diagonal = Math.abs(dir.dr) === 1 && Math.abs(dir.dc) === 1;
+    if (diagonal && !(isStrong(node.row, node.col) && isStrong(row, col))) continue;
+    const target = indexOf(row, col);
+    neighbors[node.index].push({ to: target, dir: dir.key, dr: dir.dr, dc: dir.dc });
+    directionMap.set(node.index + ":" + target, dir.key);
+  }
+}
+
+const initialBoard = [
+  AI, AI, AI, AI, AI,
+  AI, AI, AI, AI, AI,
+  AI, PLAYER, 0, PLAYER, AI,
+  PLAYER, PLAYER, PLAYER, PLAYER, PLAYER,
+  PLAYER, PLAYER, PLAYER, PLAYER, PLAYER,
+];
+
+const state = {
+  board: initialBoard.slice(),
+  turn: PLAYER,
+  mode: "title",
+  quietTurns: 0,
+  selected: null,
+  selectedSteps: [],
+  captureRequired: false,
+  chain: null,
+  pendingChoice: null,
+  focusedIndex: 12,
+  thinking: false,
+  log: [],
+  muted: localStorage.getItem(MUTE_KEY) === "1",
+  record: readRecord(),
+};
+
+function readRecord() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return {
+      wins: saved.wins | 0,
+      losses: saved.losses | 0,
+      draws: saved.draws | 0,
+    };
+  } catch (error) {
+    return { wins: 0, losses: 0, draws: 0 };
+  }
+}
+
+function saveRecord() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.record));
+}
+
+function cloneBoard(board) {
+  return board.slice();
+}
+
+function otherSide(side) {
+  return side === PLAYER ? AI : PLAYER;
+}
+
+function countPieces(board, side) {
+  let total = 0;
+  for (const piece of board) if (piece === side) total++;
+  return total;
+}
+
+function emptyLog(message) {
+  ui.moveLog.innerHTML = "";
+  const p = document.createElement("p");
+  p.innerHTML = message;
+  ui.moveLog.appendChild(p);
+}
+
+function pushLog(message) {
+  state.log.unshift(message);
+  state.log = state.log.slice(0, 10);
+  ui.moveLog.innerHTML = "";
+  for (const line of state.log) {
+    const p = document.createElement("p");
+    p.innerHTML = line;
+    ui.moveLog.appendChild(p);
+  }
+}
+
+function buildBoardSvg() {
+  const seen = new Set();
+  const lines = [];
+  for (const node of nodes) {
+    for (const edge of neighbors[node.index]) {
+      const key = [Math.min(node.index, edge.to), Math.max(node.index, edge.to)].join("-");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const target = nodes[edge.to];
+      lines.push(`<line class="halo" x1="${node.x}" y1="${node.y}" x2="${target.x}" y2="${target.y}"></line>`);
+      lines.push(`<line x1="${node.x}" y1="${node.y}" x2="${target.x}" y2="${target.y}"></line>`);
+    }
+  }
+  ui.boardSvg.innerHTML = lines.join("");
+}
+
+function buildNodes() {
+  const buttons = [];
+  ui.nodes.innerHTML = "";
+  for (const node of nodes) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "node";
+    button.style.left = node.x + "%";
+    button.style.top = node.y + "%";
+    button.dataset.index = String(node.index);
+    button.setAttribute("aria-label", `Point ${node.label}`);
+    button.addEventListener("click", () => activateNode(node.index));
+    button.addEventListener("focus", () => { state.focusedIndex = node.index; });
+    ui.nodes.appendChild(button);
+    buttons.push(button);
+  }
+  nodeButtons = buttons;
+}
+
+function directionStep(index, dirKey) {
+  const edge = neighbors[index].find((item) => item.dir === dirKey);
+  return edge ? edge.to : -1;
+}
+
+function collectLine(board, start, dirKey, side) {
+  const captured = [];
+  let cursor = start;
+  while (cursor >= 0 && board[cursor] === side) {
+    captured.push(cursor);
+    cursor = directionStep(cursor, dirKey);
+  }
+  return captured;
+}
+
+function pieceCaptureSteps(board, side, source, chain) {
+  const results = [];
+  if (board[source] !== side) return results;
+  for (const edge of neighbors[source]) {
+    if (board[edge.to] !== 0) continue;
+    if (chain) {
+      if (chain.visited.has(edge.to)) continue;
+      if (chain.lastDir && chain.lastDir === edge.dir) continue;
+    }
+    const options = [];
+    const forward = directionStep(edge.to, edge.dir);
+    if (forward >= 0 && board[forward] === otherSide(side)) {
+      const captures = collectLine(board, forward, edge.dir, otherSide(side));
+      if (captures.length) {
+        options.push({
+          src: source,
+          dst: edge.to,
+          mode: "approach",
+          captures,
+          dir: edge.dir,
+        });
+      }
+    }
+    const opposite = oppositeDir(edge.dir);
+    const behind = directionStep(source, opposite);
+    if (behind >= 0 && board[behind] === otherSide(side)) {
+      const captures = collectLine(board, behind, opposite, otherSide(side));
+      if (captures.length) {
+        options.push({
+          src: source,
+          dst: edge.to,
+          mode: "withdraw",
+          captures,
+          dir: edge.dir,
+        });
+      }
+    }
+    results.push(...options);
+  }
+  return results;
+}
+
+function oppositeDir(dir) {
+  return ({
+    N: "S", S: "N", E: "W", W: "E",
+    NE: "SW", NW: "SE", SE: "NW", SW: "NE",
+  })[dir];
+}
+
+function pieceQuietSteps(board, side, source) {
+  const results = [];
+  if (board[source] !== side) return results;
+  for (const edge of neighbors[source]) {
+    if (board[edge.to] !== 0) continue;
+    results.push({ src: source, dst: edge.to, mode: "paika", captures: [], dir: edge.dir });
+  }
+  return results;
+}
+
+function anyCapture(board, side) {
+  for (let index = 0; index < board.length; index++) {
+    if (board[index] !== side) continue;
+    if (pieceCaptureSteps(board, side, index, null).length) return true;
+  }
+  return false;
+}
+
+function immediateSteps(board, side, source, chain) {
+  if (chain) return pieceCaptureSteps(board, side, source, chain);
+  const capture = anyCapture(board, side);
+  return capture ? pieceCaptureSteps(board, side, source, null) : pieceQuietSteps(board, side, source);
+}
+
+function selectablePieces(board, side, chain) {
+  if (chain) return [chain.piece];
+  const result = [];
+  for (let index = 0; index < board.length; index++) {
+    if (board[index] !== side) continue;
+    if (immediateSteps(board, side, index, null).length) result.push(index);
+  }
+  return result;
+}
+
+function applyStep(board, side, step) {
+  const next = cloneBoard(board);
+  next[step.src] = 0;
+  next[step.dst] = side;
+  for (const index of step.captures) next[index] = 0;
+  return next;
+}
+
+function enumerateCaptureTurns(board, side, source, chain) {
+  const steps = pieceCaptureSteps(board, side, source, chain);
+  const turns = [];
+  for (const step of steps) {
+    const nextBoard = applyStep(board, side, step);
+    const nextChain = {
+      piece: step.dst,
+      visited: new Set(chain.visited),
+      lastDir: step.dir,
+    };
+    nextChain.visited.add(step.dst);
+    turns.push({ steps: [step], board: nextBoard, captures: step.captures.length });
+    for (const continuation of enumerateCaptureTurns(nextBoard, side, step.dst, nextChain)) {
+      turns.push({
+        steps: [step, ...continuation.steps],
+        board: continuation.board,
+        captures: step.captures.length + continuation.captures,
+      });
+    }
+  }
+  return turns;
+}
+
+function generateTurns(board, side) {
+  const capture = anyCapture(board, side);
+  const turns = [];
+  for (let index = 0; index < board.length; index++) {
+    if (board[index] !== side) continue;
+    if (capture) {
+      const chain = { piece: index, visited: new Set([index]), lastDir: null };
+      turns.push(...enumerateCaptureTurns(board, side, index, chain));
+    } else {
+      for (const step of pieceQuietSteps(board, side, index)) {
+        turns.push({
+          steps: [step],
+          board: applyStep(board, side, step),
+          captures: 0,
+        });
+      }
+    }
+  }
+  return orderTurns(turns);
+}
+
+function orderTurns(turns) {
+  return turns.sort((left, right) => {
+    if (right.captures !== left.captures) return right.captures - left.captures;
+    return right.steps.length - left.steps.length;
+  });
+}
+
+function boardWinner(board, quietTurns, nextSide) {
+  const dawn = countPieces(board, PLAYER);
+  const dusk = countPieces(board, AI);
+  if (!dawn && !dusk) return 0;
+  if (!dawn) return AI;
+  if (!dusk) return PLAYER;
+  const legal = generateTurns(board, nextSide);
+  if (!legal.length) return otherSide(nextSide);
+  if (quietTurns >= QUIET_LIMIT) {
+    if (dawn === dusk) return 0;
+    return dawn > dusk ? PLAYER : AI;
+  }
+  return null;
+}
+
+function evaluateBoard(board) {
+  const dawn = countPieces(board, PLAYER);
+  const dusk = countPieces(board, AI);
+  let score = (dusk - dawn) * 110;
+  const centerWeights = [2,3,4,3,2,3,5,6,5,3,4,6,8,6,4,3,5,6,5,3,2,3,4,3,2];
+  for (let index = 0; index < board.length; index++) {
+    if (board[index] === AI) score += centerWeights[index];
+    else if (board[index] === PLAYER) score -= centerWeights[index];
+  }
+  score += generateTurns(board, AI).length * 2.5;
+  score -= generateTurns(board, PLAYER).length * 2.5;
+  return score;
+}
+
+function minimax(board, side, depth, alpha, beta, quietTurns) {
+  const winner = boardWinner(board, quietTurns, side);
+  if (winner !== null) {
+    if (winner === AI) return { score: 20000 + depth };
+    if (winner === PLAYER) return { score: -20000 - depth };
+    return { score: 0 };
+  }
+  if (depth === 0) return { score: evaluateBoard(board) };
+
+  const turns = generateTurns(board, side);
+  if (side === AI) {
+    let bestScore = -Infinity;
+    let bestTurn = turns[0];
+    for (const turn of turns) {
+      const nextQuiet = turn.captures ? 0 : quietTurns + 1;
+      const result = minimax(turn.board, PLAYER, depth - 1, alpha, beta, nextQuiet);
+      if (result.score > bestScore) {
+        bestScore = result.score;
+        bestTurn = turn;
+      }
+      alpha = Math.max(alpha, result.score);
+      if (beta <= alpha) break;
+    }
+    return { score: bestScore, turn: bestTurn };
+  }
+
+  let bestScore = Infinity;
+  let bestTurn = turns[0];
+  for (const turn of turns) {
+    const nextQuiet = turn.captures ? 0 : quietTurns + 1;
+    const result = minimax(turn.board, AI, depth - 1, alpha, beta, nextQuiet);
+    if (result.score < bestScore) {
+      bestScore = result.score;
+      bestTurn = turn;
+    }
+    beta = Math.min(beta, result.score);
+    if (beta <= alpha) break;
+  }
+  return { score: bestScore, turn: bestTurn };
+}
+
+function aiDepth(board) {
+  const total = countPieces(board, PLAYER) + countPieces(board, AI);
+  if (total <= 8) return 4;
+  if (total <= 14) return 3;
+  return 2;
+}
+
+function chooseAiTurn() {
+  const turns = generateTurns(state.board, AI);
+  if (!turns.length) return null;
+  const depth = aiDepth(state.board);
+  return minimax(state.board, AI, depth, -Infinity, Infinity, state.quietTurns).turn || turns[0];
+}
+
+function setStatus(title, text, tone) {
+  ui.statusTitle.textContent = title;
+  ui.statusText.textContent = text;
+  ui.statusPanel.className = "status-panel";
+  if (tone) ui.statusPanel.classList.add(tone);
+}
+
+function setOverlay(title, text, show) {
+  ui.overlayTitle.textContent = title;
+  ui.overlayText.textContent = text;
+  ui.overlay.hidden = !show;
+}
+
+function currentChainLabel() {
+  if (!state.chain) return "-";
+  return nodes[state.chain.piece].label;
+}
+
+function updateStats() {
+  ui.turn.textContent = state.turn === PLAYER ? "Dawn" : "Dusk";
+  ui.playerCount.textContent = String(countPieces(state.board, PLAYER));
+  ui.aiCount.textContent = String(countPieces(state.board, AI));
+  ui.quiet.textContent = `${state.quietTurns} / ${QUIET_LIMIT}`;
+  ui.forced.textContent = state.captureRequired ? "Yes" : "No";
+  ui.chain.textContent = currentChainLabel();
+  ui.record.textContent = `${state.record.wins}-${state.record.losses}-${state.record.draws}`;
+  ui.mute.textContent = state.muted ? "Sound Off" : "Sound On";
+  ui.chainRow.hidden = !(state.mode === "chain");
+}
+
+function refreshSelectionText() {
+  if (state.mode === "title") {
+    ui.boardTitle.textContent = "Baobab Board";
+    ui.boardNote.textContent = "Dawn moves first. If any capture exists, it must be played.";
+    ui.selectionNote.textContent = "Select Start Match to begin.";
+    return;
+  }
+  if (state.mode === "gameover") {
+    ui.boardTitle.textContent = "Match Complete";
+    ui.selectionNote.textContent = "Start another dusk duel from the action panel.";
+    return;
+  }
+  if (state.thinking) {
+    ui.boardTitle.textContent = "Dusk Thinking";
+    ui.selectionNote.textContent = "The AI is evaluating approach and withdrawal lines.";
+    return;
+  }
+  ui.boardTitle.textContent = state.mode === "chain" ? "Capture Chain Active" : "Baobab Board";
+  if (state.selected !== null && state.selectedSteps.length) {
+    const destinations = [...new Set(state.selectedSteps.map((step) => nodes[step.dst].label))].join(", ");
+    ui.selectionNote.textContent = `From ${nodes[state.selected].label}: ${destinations}`;
+  } else if (state.captureRequired) {
+    ui.selectionNote.textContent = "A capture is mandatory. Select a glowing Dawn stone.";
+  } else {
+    ui.selectionNote.textContent = "No capture is forced. Select any highlighted Dawn stone.";
+  }
+}
+
+function stepSummary(step) {
+  if (step.mode === "paika") return `${nodes[step.src].label}-${nodes[step.dst].label}`;
+  return `${nodes[step.src].label}-${nodes[step.dst].label} ${step.mode === "approach" ? "approach" : "withdraw"} x${step.captures.length}`;
+}
+
+function burstAt(index, color) {
+  const node = nodes[index];
+  const rect = ui.boardShell.getBoundingClientRect();
+  const cx = rect.width * (node.x / 100);
+  const cy = rect.height * (node.y / 100);
+  for (let i = 0; i < 10; i++) {
+    const spark = document.createElement("span");
+    spark.className = "spark";
+    spark.style.left = cx + "px";
+    spark.style.top = cy + "px";
+    spark.style.background = color;
+    spark.style.setProperty("--sx", (Math.random() * 8 - 4) + "px");
+    spark.style.setProperty("--sy", (Math.random() * 8 - 4) + "px");
+    spark.style.setProperty("--tx", (Math.random() * 110 - 55) + "px");
+    spark.style.setProperty("--ty", (Math.random() * 110 - 55) + "px");
+    ui.particles.appendChild(spark);
+    setTimeout(() => spark.remove(), 700);
+  }
+}
+
+const audio = {
+  ctx: null,
+  master: null,
+  sfx: null,
+  music: null,
+  nextBeat: 0,
+  step: 0,
+  ensure() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      return;
+    }
+    this.master = this.ctx.createGain();
+    this.master.gain.value = state.muted ? 0 : 1;
+    this.master.connect(this.ctx.destination);
+    this.music = this.ctx.createGain();
+    this.music.gain.value = 0.09;
+    this.music.connect(this.master);
+    this.sfx = this.ctx.createGain();
+    this.sfx.gain.value = 0.34;
+    this.sfx.connect(this.master);
+    this.nextBeat = this.ctx.currentTime + 0.05;
+    setInterval(() => this.tick(), 120);
+  },
+  start() {
+    this.ensure();
+    if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+  },
+  tone(freq, duration, type, gain, slide, when) {
+    if (!this.ctx || state.muted) return;
+    const start = when || this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const node = this.ctx.createGain();
+    osc.type = type || "triangle";
+    osc.frequency.setValueAtTime(freq, start);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(slide, start + duration);
+    node.gain.setValueAtTime(gain || 0.08, start);
+    node.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(node);
+    node.connect(this.sfx);
+    osc.start(start);
+    osc.stop(start + duration + 0.04);
+  },
+  tick() {
+    if (!this.ctx || this.ctx.state !== "running" || state.muted || state.mode === "gameover") return;
+    const stepDur = 60 / 84 / 2;
+    const chords = [
+      [196, 246.94, 293.66],
+      [174.61, 220, 261.63],
+      [164.81, 207.65, 246.94],
+      [146.83, 196, 233.08],
+    ];
+    while (this.nextBeat < this.ctx.currentTime + 0.25) {
+      const chord = chords[Math.floor(this.step / 8) % chords.length];
+      if (this.step % 4 === 0) this.tone(chord[0], 0.34, "triangle", 0.03, null, this.nextBeat);
+      if (this.step % 2 === 0) this.tone(chord[(this.step / 2) % 3] * 2, 0.08, "square", 0.014, null, this.nextBeat);
+      this.step++;
+      this.nextBeat += stepDur;
+    }
+  },
+  select() { this.tone(420, 0.08, "triangle", 0.1, 600); },
+  stepMove() { this.tone(260, 0.11, "triangle", 0.1, 340); },
+  capture() { this.tone(220, 0.18, "sawtooth", 0.15, 120); this.tone(420, 0.08, "square", 0.08, 700); },
+  chain() { this.tone(520, 0.12, "triangle", 0.12, 820); },
+  win() { [392, 523.25, 659.25].forEach((f, i) => setTimeout(() => this.tone(f, 0.14, "triangle", 0.12), i * 90)); },
+  lose() { [261.63, 220, 174.61].forEach((f, i) => setTimeout(() => this.tone(f, 0.18, "square", 0.1), i * 110)); },
+  toggleMuted(nextMuted) {
+    state.muted = nextMuted;
+    localStorage.setItem(MUTE_KEY, nextMuted ? "1" : "0");
+    if (this.master) this.master.gain.linearRampToValueAtTime(nextMuted ? 0 : 1, this.ctx.currentTime + 0.08);
+  },
+};
+
+function focusNode(index) {
+  const button = nodeButtons[index];
+  if (button) button.focus();
+}
+
+function renderNodes() {
+  const playable = state.turn === PLAYER && !state.thinking && state.mode !== "title" && state.mode !== "gameover";
+  const selectable = playable ? new Set(selectablePieces(state.board, PLAYER, state.chain)) : new Set();
+  const destinationMap = new Map();
+  if (playable && state.selected !== null) {
+    for (const step of state.selectedSteps) {
+      const list = destinationMap.get(step.dst) || [];
+      list.push(step);
+      destinationMap.set(step.dst, list);
+    }
+  }
+  for (const button of nodeButtons) {
+    const index = Number(button.dataset.index);
+    button.className = "node";
+    button.innerHTML = "";
+    button.disabled = !playable && state.mode !== "title" && state.mode !== "gameover";
+    const piece = state.board[index];
+    if (piece === PLAYER || piece === AI) {
+      const token = document.createElement("span");
+      token.className = "piece";
+      button.appendChild(token);
+      button.classList.add(piece === PLAYER ? "player" : "ai");
+    }
+    if (selectable.has(index)) button.classList.add("selectable");
+    if (state.selected === index) button.classList.add("selected");
+    if (destinationMap.has(index)) {
+      button.classList.add("destination");
+      if (destinationMap.get(index).length > 1) button.classList.add("dual");
+    }
+    const label = nodes[index].label;
+    if (piece === PLAYER) button.setAttribute("aria-label", `Dawn stone on ${label}`);
+    else if (piece === AI) button.setAttribute("aria-label", `Dusk stone on ${label}`);
+    else if (destinationMap.has(index)) button.setAttribute("aria-label", `Destination ${label}`);
+    else button.setAttribute("aria-label", `Empty point ${label}`);
+    button.tabIndex = 0;
+  }
+}
+
+function render() {
+  updateStats();
+  refreshSelectionText();
+  renderNodes();
+}
+
+function startMatch() {
+  audio.start();
+  state.board = initialBoard.slice();
+  state.turn = PLAYER;
+  state.mode = "player";
+  state.quietTurns = 0;
+  state.selected = null;
+  state.selectedSteps = [];
+  state.captureRequired = anyCapture(state.board, PLAYER);
+  state.chain = null;
+  state.pendingChoice = null;
+  state.thinking = false;
+  state.log = [];
+  emptyLog("Dawn opens. <strong>Capture is mandatory</strong> if you can make one.");
+  setStatus("Dawn to move", "Select a highlighted Dawn stone. If a destination glows amber, it offers both approach and withdrawal on the same landing point.", "good");
+  setOverlay("Baobab Gambit", "The dusk board is live. Dawn moves first.", false);
+  render();
+}
+
+function activateNode(index) {
+  if (state.mode === "title" || state.mode === "gameover") {
+    startMatch();
+    return;
+  }
+  if (state.turn !== PLAYER || state.thinking || state.pendingChoice) return;
+  const playable = state.mode === "chain" ? [state.chain.piece] : selectablePieces(state.board, PLAYER, null);
+  if (state.selected !== null) {
+    const matching = state.selectedSteps.filter((step) => step.dst === index);
+    if (matching.length === 1) {
+      commitPlayerStep(matching[0]);
+      return;
+    }
+    if (matching.length > 1) {
+      state.pendingChoice = matching;
+      ui.choiceBox.hidden = false;
+      ui.choiceCopy.textContent = `Landing on ${nodes[index].label} can capture either by approach or by withdrawal.`;
+      render();
+      return;
+    }
+  }
+  if (!playable.includes(index)) return;
+  state.selected = index;
+  state.selectedSteps = immediateSteps(state.board, PLAYER, index, state.chain);
+  ui.choiceBox.hidden = true;
+  state.pendingChoice = null;
+  audio.start();
+  audio.select();
+  render();
+}
+
+function hideChoice() {
+  state.pendingChoice = null;
+  ui.choiceBox.hidden = true;
+}
+
+function commitPlayerStep(step) {
+  hideChoice();
+  applyResolvedStep(step, PLAYER, true);
+}
+
+function describeStep(step, side) {
+  const actor = side === PLAYER ? "Dawn" : "Dusk";
+  if (step.mode === "paika") return `${actor} slides ${nodes[step.src].label} to ${nodes[step.dst].label}.`;
+  const verb = step.mode === "approach" ? "approaches" : "withdraws";
+  return `${actor} ${verb} into ${nodes[step.dst].label} and captures ${step.captures.length}.`;
+}
+
+function updateChainState(nextBoard, side, step, fromPlayer) {
+  if (!step.captures.length) return false;
+  const nextChain = {
+    piece: step.dst,
+    visited: new Set(state.chain ? state.chain.visited : [step.src]),
+    lastDir: step.dir,
+  };
+  nextChain.visited.add(step.dst);
+  const followups = pieceCaptureSteps(nextBoard, side, step.dst, nextChain);
+  if (!followups.length) return false;
+  if (!fromPlayer) return false;
+  state.board = nextBoard;
+  state.chain = nextChain;
+  state.mode = "chain";
+  state.selected = step.dst;
+  state.selectedSteps = followups;
+  state.captureRequired = true;
+  setStatus("Capture chain open", "The same Dawn stone may continue capturing, or you can end the chain now.", "good");
+  audio.chain();
+  render();
+  return true;
+}
+
+function finishTurnAfterStep(side, hadCapture) {
+  state.selected = null;
+  state.selectedSteps = [];
+  state.chain = null;
+  hideChoice();
+  state.quietTurns = hadCapture ? 0 : state.quietTurns + 1;
+  const nextSide = otherSide(side);
+  const winner = boardWinner(state.board, state.quietTurns, nextSide);
+  if (winner !== null) {
+    concludeMatch(winner);
+    return;
+  }
+  state.turn = nextSide;
+  if (nextSide === PLAYER) {
+    state.mode = "player";
+    state.captureRequired = anyCapture(state.board, PLAYER);
+    setStatus(
+      state.captureRequired ? "Dawn under pressure" : "Dawn to move",
+      state.captureRequired
+        ? "A Dawn capture is forced. Look for glowing stones."
+        : "No capture is forced. Reposition or set a trap.",
+      "good"
+    );
+    render();
+  } else {
+    state.mode = "ai";
+    state.captureRequired = anyCapture(state.board, AI);
+    setStatus("Dusk evaluating", "The AI is searching capture chains and quiet traps.", "warn");
+    render();
+    void performAiTurn();
+  }
+}
+
+function applyResolvedStep(step, side, fromPlayer) {
+  audio.start();
+  state.board = applyStep(state.board, side, step);
+  const highlight = side === PLAYER ? "rgba(255,214,133,.95)" : "rgba(150,161,203,.92)";
+  burstAt(step.dst, highlight);
+  for (const capture of step.captures) burstAt(capture, side === PLAYER ? "rgba(255,152,104,.9)" : "rgba(109,208,203,.86)");
+  if (step.captures.length) audio.capture();
+  else audio.stepMove();
+  pushLog(`<strong>${side === PLAYER ? "Dawn" : "Dusk"}</strong>: ${stepSummary(step)}`);
+  if (updateChainState(state.board, side, step, fromPlayer)) return;
+  finishTurnAfterStep(side, step.captures.length > 0);
+}
+
+function concludeMatch(winner) {
+  state.mode = "gameover";
+  state.selected = null;
+  state.selectedSteps = [];
+  state.chain = null;
+  hideChoice();
+  if (winner === PLAYER) {
+    state.record.wins++;
+    saveRecord();
+    setStatus("Dawn wins", state.quietTurns >= QUIET_LIMIT
+      ? "The dry season ended in Dawn's favor by stone count."
+      : "Dusk has no reply left on the board.", "good");
+    setOverlay("Dawn Wins", state.quietTurns >= QUIET_LIMIT
+      ? "The board dried up. Dawn held the stone advantage at the quiet-turn limit."
+      : "Dusk ran out of answers. Start a fresh match to play again.", true);
+    audio.win();
+  } else if (winner === AI) {
+    state.record.losses++;
+    saveRecord();
+    setStatus("Dusk wins", state.quietTurns >= QUIET_LIMIT
+      ? "The quiet-turn limit hit and Dusk held more stones."
+      : "Dawn has no legal reply left.", "bad");
+    setOverlay("Dusk Wins", state.quietTurns >= QUIET_LIMIT
+      ? "The dry season standoff favored Dusk on stone count."
+      : "Dawn was cornered. Start a new match to try again.", true);
+    audio.lose();
+  } else {
+    state.record.draws++;
+    saveRecord();
+    setStatus("Drawn board", "The quiet-turn limit hit with equal stones remaining.", "warn");
+    setOverlay("Draw", "Neither side held a stone edge when the board dried up.", true);
+  }
+  render();
+}
+
+async function performAiTurn() {
+  if (state.turn !== AI || state.mode === "gameover") return;
+  state.thinking = true;
+  render();
+  await wait(260);
+  const turn = chooseAiTurn();
+  state.thinking = false;
+  if (!turn) {
+    concludeMatch(PLAYER);
+    return;
+  }
+  for (const step of turn.steps) {
+    if (state.mode === "gameover") return;
+    state.board = applyStep(state.board, AI, step);
+    burstAt(step.dst, "rgba(150,161,203,.92)");
+    for (const capture of step.captures) burstAt(capture, "rgba(109,208,203,.86)");
+    if (step.captures.length) audio.capture();
+    else audio.stepMove();
+    pushLog(`<strong>Dusk</strong>: ${stepSummary(step)}`);
+    render();
+    await wait(step.captures.length ? 320 : 240);
+  }
+  finishTurnAfterStep(AI, turn.captures > 0);
+}
+
+function choosePending(mode) {
+  if (!state.pendingChoice) return;
+  const picked = state.pendingChoice.find((step) => step.mode === mode);
+  if (picked) commitPlayerStep(picked);
+}
+
+function endChain() {
+  if (state.mode !== "chain") return;
+  finishTurnAfterStep(PLAYER, true);
+}
+
+function boardKey(board) {
+  return board.join(",");
+}
+
+function setBoardFromDebug(payload) {
+  state.board = payload.board.slice();
+  state.turn = payload.turn;
+  state.mode = payload.turn === PLAYER ? "player" : "ai";
+  state.quietTurns = payload.quietTurns || 0;
+  state.selected = null;
+  state.selectedSteps = [];
+  state.chain = payload.chain || null;
+  state.captureRequired = anyCapture(state.board, state.turn);
+  state.pendingChoice = null;
+  state.thinking = false;
+  render();
+}
+
+function serializeStep(step) {
+  return {
+    src: step.src,
+    dst: step.dst,
+    mode: step.mode,
+    captures: step.captures.slice(),
+    dir: step.dir,
+  };
+}
+
+function currentState() {
+  return {
+    board: state.board.slice(),
+    turn: state.turn,
+    mode: state.mode,
+    quietTurns: state.quietTurns,
+    selected: state.selected,
+    selectedSteps: state.selectedSteps.map(serializeStep),
+    captureRequired: state.captureRequired,
+    chain: state.chain ? {
+      piece: state.chain.piece,
+      visited: [...state.chain.visited],
+      lastDir: state.chain.lastDir,
+    } : null,
+    pendingChoice: state.pendingChoice ? state.pendingChoice.map(serializeStep) : null,
+    record: { ...state.record },
+    boardKey: boardKey(state.board),
+  };
+}
+
+function moveFocus(deltaRow, deltaCol) {
+  let row = rowOf(state.focusedIndex);
+  let col = colOf(state.focusedIndex);
+  row = clamp(row + deltaRow, 0, SIZE - 1);
+  col = clamp(col + deltaCol, 0, SIZE - 1);
+  state.focusedIndex = indexOf(row, col);
+  focusNode(state.focusedIndex);
+}
+
+ui.nodes.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowUp") { event.preventDefault(); moveFocus(-1, 0); }
+  else if (event.key === "ArrowDown") { event.preventDefault(); moveFocus(1, 0); }
+  else if (event.key === "ArrowLeft") { event.preventDefault(); moveFocus(0, -1); }
+  else if (event.key === "ArrowRight") { event.preventDefault(); moveFocus(0, 1); }
+});
+
+window.addEventListener("keydown", (event) => {
+  const key = event.key.toLowerCase();
+  if (["a", "w", "e", "m", "n", " "].includes(key)) event.preventDefault();
+  if (key === "n") startMatch();
+  else if (key === "m") { audio.start(); audio.toggleMuted(!state.muted); render(); }
+  else if (key === "e") endChain();
+  else if (key === "a") choosePending("approach");
+  else if (key === "w") choosePending("withdraw");
+  else if ((key === " " || key === "enter") && (state.mode === "title" || state.mode === "gameover")) startMatch();
+});
+
+ui.start.addEventListener("click", startMatch);
+ui.restart.addEventListener("click", startMatch);
+ui.mute.addEventListener("click", () => {
+  audio.start();
+  audio.toggleMuted(!state.muted);
+  render();
+});
+ui.endChain.addEventListener("click", endChain);
+ui.approach.addEventListener("click", () => choosePending("approach"));
+ui.withdraw.addEventListener("click", () => choosePending("withdraw"));
+
+buildBoardSvg();
+buildNodes();
+emptyLog("Capture lines are drawn. <strong>Start Match</strong> to wake the board.");
+setOverlay("Baobab Gambit", "Capture by approach or withdrawal. Start a match to play Dawn against the Dusk AI.", true);
+setStatus("Settle the board", "Fanorona-style capture is mandatory. Move toward or away from an enemy line to take stones.", "warn");
+render();
+
+const baobabApi = {
+  getState: currentState,
+  start: startMatch,
+  setBoard: setBoardFromDebug,
+  availableFrom(index) {
+    return immediateSteps(state.board, state.turn, index, state.chain).map(serializeStep);
+  },
+  selectNode(index) { activateNode(index); },
+  chooseMode(mode) { choosePending(mode); },
+  endChain,
+  aiTurn() {
+    if (state.turn !== AI) return false;
+    const turn = chooseAiTurn();
+    if (!turn) return false;
+    state.board = turn.board.slice();
+    finishTurnAfterStep(AI, turn.captures > 0);
+    return true;
+  },
+  generateTurns(board, side) {
+    return generateTurns(board.slice(), side).map((turn) => ({
+      steps: turn.steps.map(serializeStep),
+      captures: turn.captures,
+      board: turn.board.slice(),
+    }));
+  },
+};
+try { window.__BAOBAB_GAMBIT__ = baobabApi; } catch (error) {}
+try { globalThis.__BAOBAB_GAMBIT__ = baobabApi; } catch (error) {}
+</script>
+</body>
+</html>
