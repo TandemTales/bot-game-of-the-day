@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Signalrail Sovereign - Bot Built Arcade</title>
+<meta name="description" content="A continent-scale train-city expedition sim. Run contracts, survive rail hazards, upgrade your convoy, and restore the six Signal Crowns.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%2309131f'/><text x='50' y='62' text-anchor='middle' font-size='38' font-family='Arial' fill='%23f2c35b'>SR</text></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#071019;
+  --ink:#0b1320;
+  --panel:rgba(9,19,31,.86);
+  --panel-2:rgba(14,30,45,.76);
+  --line:rgba(190,222,236,.18);
+  --text:#eef7f5;
+  --muted:#9eb1b3;
+  --teal:#60e4d0;
+  --gold:#f2c35b;
+  --coral:#ff7f6e;
+  --green:#8ce59a;
+  --blue:#80a8ff;
+  --bad:#ff5c72;
+  --radius:8px;
+  --shadow:0 22px 60px rgba(0,0,0,.36);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;overflow-x:hidden}
+body{
+  min-height:100vh;
+  color:var(--text);
+  background:
+    linear-gradient(180deg,#0e1826 0%,#071019 52%,#050a0e 100%);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  padding:14px;
+}
+a.back{
+  display:block;
+  width:min(1500px,100%);
+  margin:0 auto 8px;
+  color:#bfd4d4;
+  text-decoration:none;
+  font-size:.92rem;
+}
+a.back:hover{color:var(--teal)}
+button,input{
+  font:inherit;
+}
+button{
+  min-height:42px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--radius);
+  background:rgba(18,38,56,.86);
+  color:var(--text);
+  font-weight:800;
+  cursor:pointer;
+  transition:transform .12s ease,border-color .12s ease,filter .12s ease,background .12s ease;
+}
+button:hover{border-color:rgba(96,228,208,.62);filter:brightness(1.06)}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.46;cursor:default;filter:none;transform:none}
+button.primary{
+  color:#08111b;
+  background:linear-gradient(135deg,#ffe08a,#60e4d0);
+  border-color:rgba(255,255,255,.42);
+  box-shadow:0 14px 34px rgba(96,228,208,.18);
+}
+button.danger{background:rgba(87,28,38,.9)}
+.app{
+  width:min(1500px,100%);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 360px;
+  gap:14px;
+  align-items:start;
+}
+.stage,.panel{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:var(--shadow);
+}
+.stage{overflow:hidden;min-width:0}
+.canvas-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  min-height:390px;
+  background:#071019;
+}
+canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  touch-action:none;
+  cursor:pointer;
+}
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:10px 12px;
+  border-top:1px solid var(--line);
+  background:rgba(5,12,20,.78);
+}
+.hint{
+  color:#c3d6d6;
+  font-size:.88rem;
+  line-height:1.36;
+}
+.hud-pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{
+  min-width:92px;
+  border:1px solid rgba(255,255,255,.11);
+  background:rgba(255,255,255,.045);
+  border-radius:var(--radius);
+  padding:7px 10px;
+  color:var(--muted);
+  font-size:.82rem;
+}
+.pill strong{display:block;color:var(--text);font-size:.98rem;font-variant-numeric:tabular-nums}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:8;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:rgba(4,9,15,.56);
+  backdrop-filter:blur(5px);
+}
+.overlay[hidden]{display:none}
+.title-card{
+  position:relative;
+  width:min(920px,100%);
+  min-height:min(630px,82vh);
+  overflow:hidden;
+  border-radius:var(--radius);
+  border:1px solid rgba(255,255,255,.24);
+  background:#09131f;
+  box-shadow:0 28px 82px rgba(0,0,0,.54);
+}
+.title-card img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:saturate(1.04) contrast(1.03);
+}
+.title-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(3,8,14,.9),rgba(3,8,14,.56) 56%,rgba(3,8,14,.18)),
+    linear-gradient(0deg,rgba(3,8,14,.86),rgba(3,8,14,.1) 58%);
+}
+.title-copy{
+  position:relative;
+  z-index:1;
+  min-height:min(630px,82vh);
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:38px;
+}
+.eyebrow{
+  align-self:flex-start;
+  display:inline-flex;
+  border:1px solid rgba(96,228,208,.38);
+  color:var(--teal);
+  border-radius:999px;
+  padding:6px 11px;
+  background:rgba(7,16,25,.68);
+  font-size:.76rem;
+  font-weight:900;
+  text-transform:uppercase;
+}
+h1{
+  margin:14px 0 8px;
+  font-size:4.8rem;
+  line-height:.94;
+  text-transform:uppercase;
+  text-shadow:0 5px 28px rgba(0,0,0,.72);
+}
+.title-copy p{
+  max-width:600px;
+  margin:0 0 18px;
+  color:#d8e8e5;
+  line-height:1.52;
+}
+.button-row{display:flex;gap:10px;flex-wrap:wrap}
+.button-row button{padding:0 18px}
+.loading,.toast{
+  position:absolute;
+  left:14px;
+  right:14px;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  pointer-events:none;
+}
+.loading{
+  top:14px;
+  min-height:40px;
+  border-radius:999px;
+  color:#dffcf8;
+  background:rgba(5,12,20,.72);
+  border:1px solid rgba(96,228,208,.18);
+  font-size:.86rem;
+}
+.loading[hidden]{display:none}
+.toast{
+  bottom:68px;
+  min-height:48px;
+  padding:10px 16px;
+  border-radius:var(--radius);
+  background:rgba(5,12,20,.88);
+  border:1px solid rgba(242,195,91,.32);
+  color:#ffefc4;
+  opacity:0;
+  transform:translateY(16px);
+  transition:opacity .18s ease,transform .18s ease;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.side{display:grid;gap:12px}
+.panel{padding:13px;backdrop-filter:blur(12px)}
+.brand{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 56px;
+  gap:12px;
+  align-items:start;
+}
+.brand h2{
+  margin:0;
+  font-size:1.25rem;
+  text-transform:uppercase;
+}
+.brand p{
+  margin:5px 0 0;
+  color:var(--muted);
+  line-height:1.42;
+  font-size:.9rem;
+}
+.sigil{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:1px solid rgba(96,228,208,.34);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(255,224,138,.88) 0 8px,transparent 9px),
+    conic-gradient(from 30deg,#60e4d0,#f2c35b,#ff7f6e,#80a8ff,#60e4d0);
+  box-shadow:0 0 30px rgba(96,228,208,.22);
+  position:relative;
+}
+.sigil::before,.sigil::after{
+  content:"";
+  position:absolute;
+  inset:10px;
+  border-radius:50%;
+  border:2px solid rgba(7,16,25,.74);
+}
+.sigil::after{inset:24px;background:#071019;border:none}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.stat{
+  min-width:0;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.045);
+  padding:9px 10px;
+}
+.stat .k{
+  color:var(--muted);
+  text-transform:uppercase;
+  font-size:.68rem;
+}
+.stat .v{
+  margin-top:4px;
+  font-weight:900;
+  font-size:1.16rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums;
+}
+.meters{display:grid;gap:8px}
+.meter-label{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--muted);
+  font-size:.76rem;
+  margin-bottom:4px;
+}
+.bar{
+  height:10px;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.06);
+}
+.bar span{
+  display:block;
+  height:100%;
+  width:50%;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--teal),var(--gold));
+}
+#hullBar{background:linear-gradient(90deg,#ff5c72,#f2c35b)}
+#fuelBar{background:linear-gradient(90deg,#80a8ff,#60e4d0)}
+#moraleBar{background:linear-gradient(90deg,#ff7f6e,#8ce59a)}
+.section-title{
+  margin:0 0 9px;
+  color:#dffcf8;
+  font-size:.8rem;
+  text-transform:uppercase;
+}
+.station-name{
+  margin:0;
+  font-size:1.2rem;
+}
+.small-copy{
+  color:#c4d6d4;
+  font-size:.88rem;
+  line-height:1.42;
+  margin:5px 0 0;
+}
+.list{display:grid;gap:8px}
+.route-btn,.contract,.upgrade{
+  width:100%;
+  text-align:left;
+  display:grid;
+  gap:4px;
+  padding:9px 10px;
+  min-height:0;
+  background:rgba(255,255,255,.045);
+}
+.route-btn strong,.contract strong,.upgrade strong{font-size:.92rem}
+.route-btn span,.contract span,.upgrade span{
+  color:var(--muted);
+  font-size:.78rem;
+  line-height:1.3;
+}
+.contract.accepted{border-color:rgba(140,229,154,.32)}
+.event{
+  border-color:rgba(255,127,110,.34);
+  background:rgba(65,24,30,.76);
+}
+.event h3{margin:0 0 7px;font-size:1.02rem;color:#ffe1db}
+.event p{margin:0 0 10px;color:#ffd9d2;line-height:1.42;font-size:.9rem}
+.actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.travel-actions{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.travel-actions button{min-height:48px}
+.log-list{
+  display:grid;
+  gap:7px;
+  max-height:156px;
+  overflow:auto;
+  padding-right:2px;
+}
+.log-list p{
+  margin:0;
+  color:#c9dbd8;
+  background:rgba(255,255,255,.045);
+  border-radius:var(--radius);
+  padding:8px 9px;
+  line-height:1.34;
+  font-size:.8rem;
+}
+.empty{
+  color:var(--muted);
+  font-size:.84rem;
+  margin:0;
+  line-height:1.42;
+}
+.mobile-dock{
+  position:fixed;
+  z-index:24;
+  left:0;
+  right:0;
+  bottom:0;
+  display:none;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  padding:8px;
+  background:linear-gradient(180deg,rgba(5,10,14,0),rgba(5,10,14,.92) 22%,rgba(5,10,14,.98));
+  pointer-events:none;
+}
+.mobile-dock button{
+  pointer-events:auto;
+  min-height:52px;
+  background:rgba(8,20,31,.92);
+  backdrop-filter:blur(8px);
+}
+@media (max-width:1120px){
+  .app{grid-template-columns:1fr}
+  .side{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .panel.brand-panel,.panel.station-panel,.panel.log-panel{grid-column:1/-1}
+}
+@media (max-width:760px){
+  body{padding:8px 8px 76px}
+  .canvas-wrap{min-height:310px}
+  .side{grid-template-columns:1fr}
+  .topbar{align-items:flex-start}
+  .hud-pills{width:100%}
+  .pill{flex:1;min-width:0}
+  h1{font-size:3rem}
+  .title-copy{padding:22px;min-height:560px}
+  .title-card{min-height:560px}
+  .travel-actions{grid-template-columns:1fr}
+  .mobile-dock{display:grid}
+}
+@media (max-width:430px){
+  .stats,.actions{grid-template-columns:1fr 1fr}
+  h1{font-size:2.45rem}
+  .brand{grid-template-columns:1fr}
+  .sigil{display:none}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<main class="app">
+  <section class="stage" aria-label="Signalrail Sovereign game">
+    <div class="canvas-wrap">
+      <canvas id="game" width="1280" height="720" aria-label="Continent rail map"></canvas>
+      <div class="loading" id="loading">Loading generated Signalrail key art...</div>
+      <div class="toast" id="toast"></div>
+      <div class="overlay" id="titleOverlay">
+        <div class="title-card">
+          <img id="splash" src="assets/signalrail-splash.png" alt="Generated key art for Signalrail Sovereign">
+          <div class="title-copy">
+            <span class="eyebrow">Original train-city expedition sim</span>
+            <h1>Signalrail Sovereign</h1>
+            <p>Command a mobile rail city across a fractured continent. Accept contracts, brave railstorms, upgrade the convoy, and restore six Signal Crowns in a persistent world built for long campaigns.</p>
+            <div class="button-row">
+              <button class="primary" id="startBtn" type="button">Begin Crossing</button>
+              <button id="loadBtn" type="button">Load Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay" id="endOverlay" hidden>
+        <div class="title-card">
+          <img src="assets/signalrail-splash.png" alt="">
+          <div class="title-copy">
+            <span class="eyebrow">The continent is linked</span>
+            <h1>Six Crowns Awake</h1>
+            <p id="endingText">Your train-city has joined the rail lights from Hearthline to Umbra. The map remains open for contracts, upgrades, and harder crossings.</p>
+            <div class="button-row">
+              <button class="primary" id="continueBtn" type="button">Keep Running Rails</button>
+              <button id="newEpochBtn" type="button">New Campaign</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="topbar">
+      <div class="hint">Click a connected station or choose a route. Space boosts, Shift raises signal screens, R triggers repairs.</div>
+      <div class="hud-pills">
+        <div class="pill">Mode <strong id="modeHud">Title</strong></div>
+        <div class="pill">Station <strong id="stationHud">Foundry Gate</strong></div>
+        <div class="pill">Crowns <strong id="crownsHud">0/6</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="panel brand-panel">
+      <div class="brand">
+        <div>
+          <h2>Signalrail Sovereign</h2>
+          <p>A long-form transport survival game with a persistent rail continent, route events, cargo contracts, station economies, convoy upgrades, and six regional Crown objectives.</p>
+        </div>
+        <div class="sigil" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="panel meters">
+      <div>
+        <div class="meter-label"><span>Hull</span><span id="hullText">100 / 100</span></div>
+        <div class="bar"><span id="hullBar"></span></div>
+      </div>
+      <div>
+        <div class="meter-label"><span>Fuel</span><span id="fuelText">42 / 60</span></div>
+        <div class="bar"><span id="fuelBar"></span></div>
+      </div>
+      <div>
+        <div class="meter-label"><span>Morale</span><span id="moraleText">72 / 100</span></div>
+        <div class="bar"><span id="moraleBar"></span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="stats">
+        <div class="stat"><div class="k">Credits</div><div class="v" id="creditStat">120</div></div>
+        <div class="stat"><div class="k">Alloy</div><div class="v" id="alloyStat">8</div></div>
+        <div class="stat"><div class="k">Keys</div><div class="v" id="keyStat">1</div></div>
+        <div class="stat"><div class="k">Cargo</div><div class="v" id="cargoStat">0 / 18</div></div>
+        <div class="stat"><div class="k">Day</div><div class="v" id="dayStat">1</div></div>
+        <div class="stat"><div class="k">Distance</div><div class="v" id="kmStat">0 km</div></div>
+      </div>
+    </section>
+
+    <section class="panel station-panel">
+      <p class="section-title">Current Station</p>
+      <h3 class="station-name" id="stationName">Foundry Gate</h3>
+      <p class="small-copy" id="stationCopy">The first furnaces still burn under the old rail crown.</p>
+      <div class="actions" style="margin-top:10px">
+        <button id="repairBtn" type="button">Repair</button>
+        <button id="refuelBtn" type="button">Refuel</button>
+        <button id="waterBtn" type="button">Water</button>
+        <button id="alloyBtn" type="button">Alloy</button>
+      </div>
+      <button class="primary" id="crownBtn" type="button" style="width:100%;margin-top:8px">Restore Crown</button>
+    </section>
+
+    <section class="panel" id="eventPanel" hidden>
+      <div class="event">
+        <h3 id="eventTitle">Rail Event</h3>
+        <p id="eventText"></p>
+        <div class="list" id="eventChoices"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="section-title">Routes</p>
+      <div class="list" id="routeList"></div>
+    </section>
+
+    <section class="panel">
+      <p class="section-title">Contracts</p>
+      <div class="list" id="contractList"></div>
+    </section>
+
+    <section class="panel">
+      <p class="section-title">Active Freight</p>
+      <div class="list" id="activeList"></div>
+    </section>
+
+    <section class="panel">
+      <p class="section-title">Convoy Upgrades</p>
+      <div class="list" id="upgradeList"></div>
+    </section>
+
+    <section class="panel">
+      <p class="section-title">Travel Deck</p>
+      <div class="travel-actions">
+        <button id="boostBtn" type="button">Boost</button>
+        <button id="shieldBtn" type="button">Screens</button>
+        <button id="fieldRepairBtn" type="button">Field Repair</button>
+      </div>
+    </section>
+
+    <section class="panel actions">
+      <button id="saveBtn" type="button">Save</button>
+      <button id="muteBtn" type="button">Sound On</button>
+      <button id="centerBtn" type="button">Center Map</button>
+      <button class="danger" id="resetBtn" type="button">New Game</button>
+    </section>
+
+    <section class="panel log-panel">
+      <p class="section-title">Rail Chronicle</p>
+      <div class="log-list" id="logList" aria-live="polite"></div>
+    </section>
+  </aside>
+</main>
+
+<div class="mobile-dock" aria-label="Mobile travel controls">
+  <button id="mobileBoost" type="button">Boost</button>
+  <button id="mobileShield" type="button">Screens</button>
+  <button id="mobileRepair" type="button">Repair</button>
+</div>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const canvas = $("game");
+const ctx = canvas.getContext("2d", { alpha:false });
+const splash = $("splash");
+const VIEW_W = 1280;
+const VIEW_H = 720;
+const TAU = Math.PI * 2;
+const SAVE_KEY = "signalrail-sovereign-save-v1";
+const MUTE_KEY = "signalrail-sovereign-muted";
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist = (a, b, c, d) => Math.hypot(a - c, b - d);
+const money = (n) => Math.floor(n).toLocaleString();
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+const regions = [
+  { id:"hearth", name:"Hearthline Basin", color:"#f2a65f", accent:"#ffe08a", x:-170, y:70, threat:1, copy:"Forge basins, orchard boilers, and short reliable supply runs." },
+  { id:"verdant", name:"Verdant Weir", color:"#78d989", accent:"#b8f2a6", x:-620, y:-210, threat:2, copy:"Flooded green rails where root bridges swallow slow engines." },
+  { id:"salt", name:"Pale Salt March", color:"#d9e5df", accent:"#60e4d0", x:220, y:-250, threat:3, copy:"Mirror flats, whiteout mirages, and priceless brine condensers." },
+  { id:"storm", name:"Copper Squall", color:"#80a8ff", accent:"#9fd0ff", x:650, y:30, threat:4, copy:"Lightning pylons and exposed viaducts under mobile storm walls." },
+  { id:"frost", name:"Northwake Shelf", color:"#b7d7ff", accent:"#e4f4ff", x:210, y:360, threat:4, copy:"Cold high rails where ice grit wears through unarmored wheels." },
+  { id:"umbra", name:"Umbra Terminus", color:"#ad8cff", accent:"#dfc8ff", x:-560, y:320, threat:5, copy:"Black glass tunnels, eclipse yards, and the oldest unlit Crown." }
+];
+
+const stationSeeds = [
+  ["foundry","Foundry Gate","hearth",-90,82,"yard"],
+  ["ash","Ash Orchard","hearth",-270,-8,"market"],
+  ["cinder","Cinderford Exchange","hearth",95,-18,"market"],
+  ["turntable","Old Turntable","hearth",-12,188,"yard"],
+  ["hearth-crown","Hearth Crown","hearth",-210,164,"crown"],
+  ["kettle","Kettlewatch","hearth",175,118,"water"],
+
+  ["moss","Mossweir","verdant",-540,-120,"water"],
+  ["greenmill","Greenmill","verdant",-710,-255,"market"],
+  ["fern","Fern Signal","verdant",-410,-318,"yard"],
+  ["root","Rootbridge Yard","verdant",-825,-92,"yard"],
+  ["verdant-crown","Verdant Crown","verdant",-650,-410,"crown"],
+  ["reed","Reed Hospital","verdant",-930,-250,"water"],
+
+  ["whitepan","Whitepan","salt",120,-170,"market"],
+  ["brine","Brine Chapel","salt",355,-205,"water"],
+  ["mirror","Mirror Depot","salt",130,-385,"yard"],
+  ["glassfen","Glassfen Spur","salt",475,-345,"market"],
+  ["salt-crown","Salt Crown","salt",265,-512,"crown"],
+  ["sunken","Sunken Switch","salt",-55,-316,"yard"],
+
+  ["kite","Kite Junction","storm",548,-62,"yard"],
+  ["thunder","Thunder Yards","storm",770,-28,"market"],
+  ["copper","Copper Squall","storm",665,148,"water"],
+  ["spar","Spar Anchorage","storm",900,110,"yard"],
+  ["storm-crown","Storm Crown","storm",790,282,"crown"],
+  ["needle","Needle Viaduct","storm",482,240,"market"],
+
+  ["northwake","Northwake","frost",170,255,"water"],
+  ["cobalt","Cobalt Cut","frost",42,420,"yard"],
+  ["iceglass","Iceglass Port","frost",360,475,"market"],
+  ["mammoth","Mammoth Siding","frost",585,360,"yard"],
+  ["frost-crown","Frost Crown","frost",214,566,"crown"],
+  ["rime","Rime Relay","frost",-70,305,"market"],
+
+  ["eclipse","Eclipse Yard","umbra",-430,260,"yard"],
+  ["lantern","Lantern Scar","umbra",-620,180,"market"],
+  ["blackrain","Blackrain Works","umbra",-760,360,"yard"],
+  ["dusk","Dusk Reservoir","umbra",-460,475,"water"],
+  ["umbra-crown","Umbra Crown","umbra",-840,505,"crown"],
+  ["monolith","Monolith Gate","umbra",-270,380,"market"]
+];
+
+const routePairs = [
+  ["foundry","ash",1],["foundry","cinder",1],["foundry","turntable",1],["ash","hearth-crown",1],["turntable","hearth-crown",1],["cinder","kettle",1],["turntable","kettle",1],
+  ["ash","moss",2],["moss","greenmill",2],["moss","fern",2],["greenmill","root",2],["greenmill","verdant-crown",2],["root","reed",3],["reed","verdant-crown",3],["fern","verdant-crown",3],
+  ["cinder","whitepan",2],["whitepan","brine",2],["whitepan","sunken",2],["sunken","mirror",3],["mirror","salt-crown",3],["brine","glassfen",3],["glassfen","salt-crown",3],["fern","sunken",3],
+  ["brine","kite",3],["kite","thunder",3],["kite","needle",3],["thunder","spar",4],["copper","spar",4],["needle","copper",4],["copper","storm-crown",4],["spar","storm-crown",5],
+  ["kettle","northwake",2],["northwake","cobalt",3],["northwake","iceglass",3],["iceglass","mammoth",4],["mammoth","storm-crown",5],["cobalt","frost-crown",4],["iceglass","frost-crown",4],["rime","cobalt",4],["turntable","rime",3],
+  ["rime","eclipse",4],["eclipse","lantern",4],["eclipse","monolith",4],["lantern","blackrain",5],["blackrain","umbra-crown",5],["dusk","umbra-crown",5],["monolith","dusk",5],["hearth-crown","lantern",4],
+  ["storm-crown","mammoth",5],["salt-crown","thunder",5],["verdant-crown","blackrain",5]
+];
+
+const stationById = new Map(stationSeeds.map((s) => [s[0], {
+  id:s[0], name:s[1], region:s[2], x:s[3], y:s[4], service:s[5],
+  crown:s[5] === "crown"
+}]));
+const regionById = new Map(regions.map((r) => [r.id, r]));
+const routes = routePairs.map(([a, b, risk], index) => {
+  const sa = stationById.get(a);
+  const sb = stationById.get(b);
+  return {
+    id:`${a}-${b}`,
+    index, a, b, risk,
+    length:Math.round(dist(sa.x, sa.y, sb.x, sb.y) * 1.85 + 80)
+  };
+});
+const adjacency = new Map();
+for (const station of stationById.values()) adjacency.set(station.id, []);
+for (const route of routes) {
+  adjacency.get(route.a).push(route);
+  adjacency.get(route.b).push(route);
+}
+
+const upgradeDefs = [
+  { id:"engine", name:"Signal Engine", max:5, copy:"More route speed, lower fuel burn, and steadier boosts.", base:120, alloy:3 },
+  { id:"hull", name:"Ceramic Plating", max:5, copy:"Raises maximum hull and reduces impact damage.", base:110, alloy:5 },
+  { id:"cargo", name:"Stacked Freight Cars", max:5, copy:"Adds cargo capacity for richer contract chains.", base:95, alloy:4 },
+  { id:"garden", name:"Garden Reservoir", max:4, copy:"Raises water and morale capacity for long detours.", base:105, alloy:3 },
+  { id:"signal", name:"Crown Decoder", max:4, copy:"Improves event odds and lowers Crown restoration cost.", base:150, alloy:6 }
+];
+
+const eventKinds = ["railstorm", "broken-span", "nomad-market", "signal-echo", "raider-semaphore", "silent-bridge"];
+const cargoNames = ["tea batteries", "mirror salt", "orchard engines", "root silk", "copper vanes", "iceglass medicine", "eclipse lenses", "garden condensers"];
+
+function maxHull() { return 100 + (state.upgrades.hull || 0) * 24; }
+function maxFuel() { return 60 + (state.upgrades.engine || 0) * 10; }
+function maxWater() { return 50 + (state.upgrades.garden || 0) * 12; }
+function maxMorale() { return 100 + (state.upgrades.garden || 0) * 5; }
+function cargoCap() { return 18 + (state.upgrades.cargo || 0) * 8; }
+function restoredCount() { return Object.values(state.crowns).filter(Boolean).length; }
+function currentStation() { return stationById.get(state.current); }
+function otherEnd(route, id) { return route.a === id ? route.b : route.a; }
+function routeBetween(a, b) { return routes.find((route) => (route.a === a && route.b === b) || (route.a === b && route.b === a)); }
+
+function createState() {
+  return {
+    mode:"title",
+    started:false,
+    current:"foundry",
+    selected:"foundry",
+    train:{ x:stationById.get("foundry").x, y:stationById.get("foundry").y },
+    hull:100,
+    fuel:42,
+    water:34,
+    morale:72,
+    credits:120,
+    alloy:8,
+    cargo:0,
+    keys:1,
+    day:1,
+    km:0,
+    reputation:0,
+    crowns:{},
+    upgrades:{ engine:0, hull:0, cargo:0, garden:0, signal:0 },
+    contracts:[],
+    offers:[],
+    visited:{ foundry:true },
+    discovered:{ foundry:true, ash:true, cinder:true, turntable:true, kettle:true },
+    log:[],
+    travel:null,
+    event:null,
+    particles:[],
+    muted:false,
+    ending:false,
+    camera:{ x:0, y:0, zoom:1 },
+    input:{ boost:false, shield:false }
+  };
+}
+
+let state = createState();
+
+const ui = {
+  titleOverlay:$("titleOverlay"),
+  endOverlay:$("endOverlay"),
+  modeHud:$("modeHud"),
+  stationHud:$("stationHud"),
+  crownsHud:$("crownsHud"),
+  stationName:$("stationName"),
+  stationCopy:$("stationCopy"),
+  hullText:$("hullText"),
+  fuelText:$("fuelText"),
+  moraleText:$("moraleText"),
+  hullBar:$("hullBar"),
+  fuelBar:$("fuelBar"),
+  moraleBar:$("moraleBar"),
+  creditStat:$("creditStat"),
+  alloyStat:$("alloyStat"),
+  keyStat:$("keyStat"),
+  cargoStat:$("cargoStat"),
+  dayStat:$("dayStat"),
+  kmStat:$("kmStat"),
+  routeList:$("routeList"),
+  contractList:$("contractList"),
+  activeList:$("activeList"),
+  upgradeList:$("upgradeList"),
+  logList:$("logList"),
+  eventPanel:$("eventPanel"),
+  eventTitle:$("eventTitle"),
+  eventText:$("eventText"),
+  eventChoices:$("eventChoices"),
+  crownBtn:$("crownBtn"),
+  repairBtn:$("repairBtn"),
+  refuelBtn:$("refuelBtn"),
+  waterBtn:$("waterBtn"),
+  alloyBtn:$("alloyBtn"),
+  boostBtn:$("boostBtn"),
+  shieldBtn:$("shieldBtn"),
+  fieldRepairBtn:$("fieldRepairBtn"),
+  muteBtn:$("muteBtn")
+};
+
+function addLog(text) {
+  state.log.unshift(text);
+  state.log = state.log.slice(0, 18);
+}
+
+function toast(text) {
+  const el = $("toast");
+  el.textContent = text;
+  el.classList.add("show");
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => el.classList.remove("show"), 1900);
+}
+
+function revealAround(stationId) {
+  state.discovered[stationId] = true;
+  for (const route of adjacency.get(stationId) || []) {
+    state.discovered[otherEnd(route, stationId)] = true;
+  }
+}
+
+function routeCost(route) {
+  const burnBase = route.length / (165 + (state.upgrades.engine || 0) * 22);
+  const fuel = Math.max(2, Math.ceil(burnBase + route.risk * 0.55));
+  const water = Math.max(1, Math.ceil(route.length / 330 + route.risk * 0.3));
+  return { fuel, water };
+}
+
+function routeRisk(route) {
+  const signal = state.upgrades.signal || 0;
+  return Math.max(1, route.risk + Math.round(route.length / 420) - Math.floor(signal / 2));
+}
+
+function generateOffers() {
+  const here = currentStation();
+  const neighbors = adjacency.get(here.id).map((r) => stationById.get(otherEnd(r, here.id)));
+  const pool = [...stationById.values()].filter((station) => station.id !== here.id);
+  const offers = [];
+  for (let i = 0; i < 3; i++) {
+    const farBias = Math.random() < 0.45 && pool.length ? pool : neighbors;
+    const dest = pick(farBias);
+    const d = dist(here.x, here.y, dest.x, dest.y);
+    const destRegion = regionById.get(dest.region);
+    const cargo = Math.max(2, Math.ceil(d / 190 + Math.random() * 3));
+    const reward = Math.round(45 + d / 3.8 + destRegion.threat * 18 + Math.random() * 28);
+    const key = Math.random() < 0.18 + destRegion.threat * 0.035;
+    offers.push({
+      id:`C${Date.now().toString(36)}${Math.floor(Math.random() * 9999).toString(36)}${i}`,
+      from:here.id,
+      to:dest.id,
+      cargo,
+      reward,
+      key,
+      expires:state.day + Math.ceil(d / 210) + 5 + i,
+      goods:pick(cargoNames)
+    });
+  }
+  state.offers = offers;
+}
+
+function acceptContract(index) {
+  if (state.mode !== "station") return;
+  const offer = state.offers[index];
+  if (!offer) return;
+  if (state.cargo + offer.cargo > cargoCap()) {
+    toast("Cargo deck is full");
+    return;
+  }
+  state.cargo += offer.cargo;
+  state.contracts.push(offer);
+  state.offers.splice(index, 1);
+  addLog(`Loaded ${offer.cargo} cars of ${offer.goods} for ${stationById.get(offer.to).name}.`);
+  audio.select();
+  updateHud();
+  saveGame(true);
+}
+
+function completeContracts() {
+  const kept = [];
+  for (const contract of state.contracts) {
+    if (contract.to === state.current) {
+      state.credits += contract.reward;
+      state.reputation += 3;
+      state.cargo = Math.max(0, state.cargo - contract.cargo);
+      if (contract.key) state.keys += 1;
+      addLog(`Delivered ${contract.goods}: +${contract.reward} credits${contract.key ? ", +1 signal key" : ""}.`);
+      audio.reward();
+    } else if (contract.expires < state.day) {
+      state.cargo = Math.max(0, state.cargo - contract.cargo);
+      state.morale = clamp(state.morale - 7, 0, maxMorale());
+      addLog(`${contract.goods} contract expired. The crew morale slips.`);
+    } else {
+      kept.push(contract);
+    }
+  }
+  state.contracts = kept;
+}
+
+function startFresh() {
+  state = createState();
+  state.mode = "station";
+  state.started = true;
+  state.muted = localStorage.getItem(MUTE_KEY) === "1";
+  revealAround(state.current);
+  generateOffers();
+  addLog("The Sovereign leaves Foundry Gate with one signal key and a continent of broken rails ahead.");
+  ui.titleOverlay.hidden = true;
+  ui.endOverlay.hidden = true;
+  audio.setMuted(state.muted);
+  updateHud();
+  saveGame(true);
+}
+
+function loadGame() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (error) {}
+  if (!saved) {
+    toast("No saved crossing found");
+    return false;
+  }
+  const base = createState();
+  state = {
+    ...base,
+    ...saved,
+    train:{ ...base.train, ...(saved.train || {}) },
+    crowns:{ ...base.crowns, ...(saved.crowns || {}) },
+    upgrades:{ ...base.upgrades, ...(saved.upgrades || {}) },
+    visited:{ ...base.visited, ...(saved.visited || {}) },
+    discovered:{ ...base.discovered, ...(saved.discovered || {}) },
+    input:{ boost:false, shield:false },
+    particles:[]
+  };
+  state.started = true;
+  if (!state.offers || !state.offers.length) generateOffers();
+  if (state.mode === "title") state.mode = "station";
+  if (!stationById.has(state.current)) state.current = "foundry";
+  if (!state.travel) {
+    const s = currentStation();
+    state.train.x = s.x;
+    state.train.y = s.y;
+  }
+  state.hull = clamp(state.hull, 1, maxHull());
+  state.fuel = clamp(state.fuel, 0, maxFuel());
+  state.water = clamp(state.water, 0, maxWater());
+  state.morale = clamp(state.morale, 0, maxMorale());
+  state.muted = localStorage.getItem(MUTE_KEY) === "1";
+  audio.setMuted(state.muted);
+  ui.titleOverlay.hidden = true;
+  ui.endOverlay.hidden = !state.ending;
+  addLog("Save loaded. The rails remember your last dispatch.");
+  updateHud();
+  return true;
+}
+
+function serializableState() {
+  const copy = { ...state };
+  copy.input = { boost:false, shield:false };
+  copy.particles = [];
+  return copy;
+}
+
+function saveGame(silent) {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(serializableState()));
+    if (!silent) toast("Crossing saved");
+  } catch (error) {
+    toast("Save failed");
+  }
+}
+
+function stationFlavor(station) {
+  const region = regionById.get(station.region);
+  if (station.crown) return `${station.name} holds a dark Signal Crown. ${region.copy}`;
+  if (station.service === "yard") return `${station.name} has repair pits, spare wheels, and rail crews. ${region.copy}`;
+  if (station.service === "water") return `${station.name} stores condenser water and crew comforts. ${region.copy}`;
+  return `${station.name} trades freight, rumors, and hard credit. ${region.copy}`;
+}
+
+function canUseStationServices() {
+  return state.mode === "station" && !state.event;
+}
+
+function buyRepair() {
+  if (!canUseStationServices()) return;
+  const missing = maxHull() - state.hull;
+  if (missing <= 0) return toast("Hull is already sound");
+  const amount = Math.min(30, missing);
+  const cost = Math.ceil(amount * 1.55);
+  const alloy = amount > 18 ? 2 : 1;
+  if (state.credits < cost || state.alloy < alloy) return toast("Repair needs credits and alloy");
+  state.credits -= cost;
+  state.alloy -= alloy;
+  state.hull = clamp(state.hull + amount, 0, maxHull());
+  addLog(`Station crews plated ${Math.round(amount)} hull for ${cost} credits.`);
+  audio.repair();
+  updateHud();
+}
+
+function buyFuel() {
+  if (!canUseStationServices()) return;
+  const amount = Math.min(18, maxFuel() - state.fuel);
+  if (amount <= 0) return toast("Fuel tanks are full");
+  const cost = Math.ceil(amount * 2.4);
+  if (state.credits < cost) return toast("Not enough credits for fuel");
+  state.credits -= cost;
+  state.fuel = clamp(state.fuel + amount, 0, maxFuel());
+  addLog(`Fuel bunkers filled by ${Math.round(amount)} units.`);
+  audio.select();
+  updateHud();
+}
+
+function buyWater() {
+  if (!canUseStationServices()) return;
+  const amount = Math.min(16, maxWater() - state.water);
+  if (amount <= 0) return toast("Water reserves are full");
+  const cost = Math.ceil(amount * 1.7);
+  if (state.credits < cost) return toast("Not enough credits for water");
+  state.credits -= cost;
+  state.water = clamp(state.water + amount, 0, maxWater());
+  state.morale = clamp(state.morale + 2, 0, maxMorale());
+  addLog("Reservoir cars topped up and the galley lights warmed.");
+  audio.select();
+  updateHud();
+}
+
+function buyAlloy() {
+  if (!canUseStationServices()) return;
+  const cost = 44;
+  if (state.credits < cost) return toast("Not enough credits for alloy");
+  state.credits -= cost;
+  state.alloy += 5;
+  addLog("Loaded five crates of rail alloy.");
+  audio.select();
+  updateHud();
+}
+
+function upgradeCost(def) {
+  const level = state.upgrades[def.id] || 0;
+  return {
+    credits:def.base + level * 85 + restoredCount() * 12,
+    alloy:def.alloy + level * 2
+  };
+}
+
+function buyUpgrade(id) {
+  if (!canUseStationServices()) return;
+  const def = upgradeDefs.find((u) => u.id === id);
+  if (!def) return;
+  const level = state.upgrades[id] || 0;
+  if (level >= def.max) return toast("Upgrade is already maxed");
+  const cost = upgradeCost(def);
+  if (state.credits < cost.credits || state.alloy < cost.alloy) {
+    toast("Upgrade needs more credits or alloy");
+    return;
+  }
+  const beforeHull = maxHull();
+  const beforeFuel = maxFuel();
+  const beforeWater = maxWater();
+  const beforeMorale = maxMorale();
+  state.credits -= cost.credits;
+  state.alloy -= cost.alloy;
+  state.upgrades[id] = level + 1;
+  state.hull += maxHull() - beforeHull;
+  state.fuel += maxFuel() - beforeFuel;
+  state.water += maxWater() - beforeWater;
+  state.morale += maxMorale() - beforeMorale;
+  addLog(`${def.name} upgraded to level ${state.upgrades[id]}.`);
+  audio.reward();
+  updateHud();
+  saveGame(true);
+}
+
+function crownCost() {
+  const restored = restoredCount();
+  const signal = state.upgrades.signal || 0;
+  return {
+    keys:1,
+    alloy:Math.max(8, 11 + restored * 2 - signal),
+    credits:Math.max(70, 95 + restored * 28 - signal * 12)
+  };
+}
+
+function restoreCrown() {
+  if (!canUseStationServices()) return;
+  const station = currentStation();
+  if (!station.crown) return toast("No Signal Crown at this station");
+  if (state.crowns[station.region]) return toast("This Crown is already restored");
+  const cost = crownCost();
+  if (state.keys < cost.keys || state.alloy < cost.alloy || state.credits < cost.credits) {
+    toast(`Crown needs ${cost.keys} key, ${cost.alloy} alloy, and ${cost.credits} credits`);
+    return;
+  }
+  state.keys -= cost.keys;
+  state.alloy -= cost.alloy;
+  state.credits -= cost.credits;
+  state.crowns[station.region] = true;
+  state.reputation += 10;
+  state.morale = clamp(state.morale + 18, 0, maxMorale());
+  state.hull = clamp(state.hull + 18, 0, maxHull());
+  addLog(`${station.name} lights across the horizon. Regional traffic returns to the map.`);
+  audio.crown();
+  if (restoredCount() >= regions.length && !state.ending) {
+    state.ending = true;
+    state.mode = "station";
+    ui.endOverlay.hidden = false;
+    addLog("All six Signal Crowns are awake. The Sovereign becomes a living timetable.");
+  }
+  updateHud();
+  saveGame(true);
+}
+
+function startTravel(destId) {
+  if (state.mode !== "station" || state.event) return;
+  if (destId === state.current) return;
+  const route = routeBetween(state.current, destId);
+  if (!route) return toast("No direct rail to that station");
+  const cost = routeCost(route);
+  if (state.fuel < cost.fuel) return toast(`Need ${cost.fuel} fuel for this route`);
+  if (state.water < cost.water) return toast(`Need ${cost.water} water for this route`);
+  state.fuel -= cost.fuel;
+  state.water -= cost.water;
+  const from = currentStation();
+  const to = stationById.get(destId);
+  state.travel = {
+    from:from.id,
+    to:to.id,
+    routeId:route.id,
+    progress:0,
+    length:route.length,
+    heat:0,
+    screens:100,
+    hazardAt:0.25 + Math.random() * 0.5,
+    eventDone:false,
+    startedDay:state.day,
+    velocity:78 + (state.upgrades.engine || 0) * 9
+  };
+  state.mode = "travel";
+  state.selected = destId;
+  addLog(`Departed ${from.name} for ${to.name}. Fuel -${cost.fuel}, water -${cost.water}.`);
+  audio.depart();
+  updateHud();
+}
+
+function eventDefinition(kind) {
+  const armor = state.upgrades.hull || 0;
+  const signal = state.upgrades.signal || 0;
+  const defs = {
+    "railstorm":{
+      title:"Railstorm Wall",
+      text:"A moving curtain of copper lightning crosses the track ahead.",
+      choices:[
+        { label:"Raise signal screens", desc:"Spend 7 water, take light hull wear.", apply:() => {
+          state.water = clamp(state.water - 7, 0, maxWater());
+          damage(5 - armor, "screens absorbed the storm");
+          state.travel.screens = clamp(state.travel.screens - 22, 0, 100);
+        }},
+        { label:"Drive the centerline", desc:"Take damage but keep schedule.", apply:() => {
+          damage(18 - armor * 2, "lightning hammered the roofline");
+          state.travel.progress += state.travel.length * 0.08;
+        }},
+        { label:"Anchor and wait", desc:"Lose a day, save hull.", apply:() => {
+          state.day += 1;
+          state.morale = clamp(state.morale - 4, 0, maxMorale());
+          damage(2, "storm grit scored the paint");
+        }}
+      ]
+    },
+    "broken-span":{
+      title:"Broken Span",
+      text:"A viaduct segment has folded into the canyon, leaving the rails misaligned.",
+      choices:[
+        { label:"Spend alloy braces", desc:"Use 3 alloy and cross cleanly.", apply:() => {
+          if (state.alloy >= 3) { state.alloy -= 3; state.reputation += 1; }
+          else damage(12 - armor, "short alloy forced a rough bridge");
+        }},
+        { label:"Build a switchback", desc:"Lose time and water, avoid most risk.", apply:() => {
+          state.day += 1;
+          state.water = clamp(state.water - 5, 0, maxWater());
+          state.travel.progress += state.travel.length * 0.04;
+        }},
+        { label:"Crawl over the gap", desc:"Risk hull for speed.", apply:() => {
+          damage(21 - armor * 2, "the gap bit the lower cars");
+          state.morale = clamp(state.morale - 6, 0, maxMorale());
+        }}
+      ]
+    },
+    "nomad-market":{
+      title:"Lantern Market",
+      text:"Signal nomads unfold a night market beside the rails.",
+      choices:[
+        { label:"Trade for fuel", desc:"Pay 32 credits for 12 fuel.", apply:() => {
+          if (state.credits >= 32) { state.credits -= 32; state.fuel = clamp(state.fuel + 12, 0, maxFuel()); }
+          else state.morale = clamp(state.morale - 2, 0, maxMorale());
+        }},
+        { label:"Buy alloy crates", desc:"Pay 38 credits for 4 alloy.", apply:() => {
+          if (state.credits >= 38) { state.credits -= 38; state.alloy += 4; }
+          else state.morale = clamp(state.morale - 2, 0, maxMorale());
+        }},
+        { label:"Host the market", desc:"Gain morale and reputation.", apply:() => {
+          state.morale = clamp(state.morale + 10, 0, maxMorale());
+          state.reputation += 2;
+          state.day += 1;
+        }}
+      ]
+    },
+    "signal-echo":{
+      title:"Signal Echo",
+      text:"A Crown frequency rings through the rails. The decoder can trap it if the crew holds steady.",
+      choices:[
+        { label:"Tune the decoder", desc:"Chance to gain a key; better with upgrades.", apply:() => {
+          const odds = 0.48 + signal * 0.11;
+          if (Math.random() < odds) { state.keys += 1; addLog("The decoder forged a new signal key."); audio.reward(); }
+          else { damage(8 - armor, "feedback cracked a signal mast"); }
+          state.travel.heat = clamp(state.travel.heat + 20, 0, 120);
+        }},
+        { label:"Ground the train", desc:"Avoid danger, lose momentum.", apply:() => {
+          state.travel.progress = Math.max(0, state.travel.progress - state.travel.length * 0.04);
+          state.morale = clamp(state.morale + 2, 0, maxMorale());
+        }},
+        { label:"Broadcast a claim", desc:"Spend morale for reputation.", apply:() => {
+          state.morale = clamp(state.morale - 8, 0, maxMorale());
+          state.reputation += 4;
+        }}
+      ]
+    },
+    "raider-semaphore":{
+      title:"Raider Semaphore",
+      text:"A masked rail clan flags a false stop signal and tries to split the convoy.",
+      choices:[
+        { label:"Outbid the ambush", desc:"Pay 40 credits, no damage.", apply:() => {
+          if (state.credits >= 40) state.credits -= 40;
+          else damage(13 - armor, "raiders took parts in lieu of credit");
+        }},
+        { label:"Run dark", desc:"Spend morale and screens to escape.", apply:() => {
+          state.morale = clamp(state.morale - 8, 0, maxMorale());
+          state.travel.screens = clamp(state.travel.screens - 28, 0, 100);
+          state.travel.progress += state.travel.length * 0.06;
+        }},
+        { label:"Counter-signal", desc:"Decoder may turn them aside.", apply:() => {
+          if (Math.random() < 0.35 + signal * 0.14) { state.keys += Math.random() < 0.28 ? 1 : 0; state.reputation += 3; }
+          else damage(16 - armor, "the counter-signal failed");
+        }}
+      ]
+    },
+    "silent-bridge":{
+      title:"Silent Bridge",
+      text:"Every instrument goes flat as the rail enters a soundless black span.",
+      choices:[
+        { label:"Let the crew sing", desc:"Spend morale, gain safe passage.", apply:() => {
+          state.morale = clamp(state.morale - 6, 0, maxMorale());
+          state.travel.progress += state.travel.length * 0.05;
+        }},
+        { label:"Overcharge lamps", desc:"Spend fuel and heat to cross fast.", apply:() => {
+          state.fuel = clamp(state.fuel - 4, 0, maxFuel());
+          state.travel.heat = clamp(state.travel.heat + 30, 0, 120);
+          state.travel.progress += state.travel.length * 0.12;
+        }},
+        { label:"Map the silence", desc:"Lose time, gain reputation.", apply:() => {
+          state.day += 1;
+          state.reputation += 2;
+          state.keys += Math.random() < 0.2 ? 1 : 0;
+        }}
+      ]
+    }
+  };
+  return defs[kind] || defs.railstorm;
+}
+
+function triggerEvent() {
+  const route = routes.find((r) => r.id === state.travel.routeId);
+  const risk = routeRisk(route);
+  const kind = Math.random() < risk / 8 ? pick(eventKinds) : pick(eventKinds.slice(0, 4));
+  state.event = { kind };
+  state.travel.eventDone = true;
+  audio.alert();
+  updateHud();
+}
+
+function resolveEvent(index) {
+  if (!state.event || !state.travel) return;
+  const def = eventDefinition(state.event.kind);
+  const choice = def.choices[index];
+  if (!choice) return;
+  choice.apply();
+  addLog(`${def.title}: ${choice.label}.`);
+  state.event = null;
+  state.hull = clamp(state.hull, 0, maxHull());
+  state.fuel = clamp(state.fuel, 0, maxFuel());
+  state.water = clamp(state.water, 0, maxWater());
+  state.morale = clamp(state.morale, 0, maxMorale());
+  if (state.hull <= 0) rescueTrain();
+  updateHud();
+  saveGame(true);
+}
+
+function damage(amount, reason) {
+  const actual = Math.max(1, Math.round(amount));
+  state.hull = clamp(state.hull - actual, 0, maxHull());
+  spawnParticles(state.train.x, state.train.y, "#ff7f6e", 16);
+  addLog(`Hull -${actual}: ${reason}.`);
+  audio.hit();
+  if (state.hull <= 0) rescueTrain();
+}
+
+function rescueTrain() {
+  const route = state.travel;
+  const fallback = route ? route.from : state.current;
+  state.current = fallback;
+  const station = stationById.get(fallback);
+  state.train.x = station.x;
+  state.train.y = station.y;
+  state.mode = "station";
+  state.travel = null;
+  state.event = null;
+  state.hull = Math.max(28, Math.floor(maxHull() * 0.38));
+  state.credits = Math.max(0, state.credits - 55);
+  state.morale = clamp(state.morale - 14, 0, maxMorale());
+  addLog("Emergency crews dragged the Sovereign back to the last safe yard.");
+  toast("Emergency recovery");
+}
+
+function arrive() {
+  const route = state.travel;
+  if (!route) return;
+  state.current = route.to;
+  const station = currentStation();
+  state.train.x = station.x;
+  state.train.y = station.y;
+  state.mode = "station";
+  state.travel = null;
+  state.event = null;
+  state.visited[station.id] = true;
+  revealAround(station.id);
+  const days = Math.max(1, Math.ceil(route.length / 430));
+  state.day += days;
+  state.km += route.length;
+  state.morale = clamp(state.morale + (station.service === "water" ? 4 : 1), 0, maxMorale());
+  completeContracts();
+  generateOffers();
+  addLog(`Arrived at ${station.name} after ${route.length} km of rail.`);
+  audio.arrive();
+  updateHud();
+  saveGame(true);
+}
+
+function fieldRepair() {
+  if (state.mode !== "travel" || state.event) return;
+  if (state.alloy < 2 || state.water < 3) {
+    toast("Field repair needs 2 alloy and 3 water");
+    return;
+  }
+  state.alloy -= 2;
+  state.water -= 3;
+  state.hull = clamp(state.hull + 18 + (state.upgrades.hull || 0) * 2, 0, maxHull());
+  state.travel.heat = clamp(state.travel.heat + 10, 0, 120);
+  addLog("Field crews patched the lower cars while the train rolled.");
+  audio.repair();
+  updateHud();
+}
+
+function updateTravel(dt) {
+  if (state.mode !== "travel" || !state.travel || state.event) return;
+  const t = state.travel;
+  const route = routes.find((r) => r.id === t.routeId);
+  const from = stationById.get(t.from);
+  const to = stationById.get(t.to);
+  const boosting = state.input.boost && state.fuel > 0;
+  const shielding = state.input.shield && t.screens > 0 && state.water > 0;
+  let velocity = t.velocity;
+  if (boosting) {
+    velocity *= 1.72;
+    t.heat = clamp(t.heat + dt * 28, 0, 130);
+    state.fuel = clamp(state.fuel - dt * 0.75, 0, maxFuel());
+    spawnParticles(state.train.x, state.train.y, "#ffe08a", 1);
+  } else {
+    t.heat = clamp(t.heat - dt * (12 + (state.upgrades.engine || 0) * 1.2), 0, 130);
+  }
+  if (shielding) {
+    t.screens = clamp(t.screens - dt * 18, 0, 100);
+    state.water = clamp(state.water - dt * 0.24, 0, maxWater());
+    t.heat = clamp(t.heat - dt * 6, 0, 130);
+  } else {
+    t.screens = clamp(t.screens + dt * 5, 0, 100);
+  }
+  if (t.heat > 100) {
+    state.hull = clamp(state.hull - dt * (t.heat - 96) * 0.09, 0, maxHull());
+    if (Math.random() < dt * 5) spawnParticles(state.train.x, state.train.y, "#ff5c72", 2);
+    if (state.hull <= 0) rescueTrain();
+  }
+  t.progress += velocity * dt;
+  const p = clamp(t.progress / t.length, 0, 1);
+  const sway = Math.sin(performance.now() * 0.0017) * 3;
+  state.train.x = lerp(from.x, to.x, p);
+  state.train.y = lerp(from.y, to.y, p) + sway;
+  if (!t.eventDone && p >= t.hazardAt) triggerEvent();
+  if (t.progress >= t.length) arrive();
+}
+
+function updateParticles(dt) {
+  for (const particle of state.particles) {
+    particle.x += particle.vx * dt;
+    particle.y += particle.vy * dt;
+    particle.life -= dt;
+  }
+  state.particles = state.particles.filter((p) => p.life > 0);
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * TAU;
+    const s = 24 + Math.random() * 70;
+    state.particles.push({
+      x, y,
+      vx:Math.cos(a) * s,
+      vy:Math.sin(a) * s,
+      size:2 + Math.random() * 4,
+      color,
+      life:.35 + Math.random() * .55,
+      max:.9
+    });
+  }
+  state.particles = state.particles.slice(-220);
+}
+
+function worldBounds() {
+  return { minX:-1030, maxX:1010, minY:-610, maxY:650 };
+}
+
+function transform() {
+  const b = worldBounds();
+  const scale = Math.min((VIEW_W - 120) / (b.maxX - b.minX), (VIEW_H - 94) / (b.maxY - b.minY)) * state.camera.zoom;
+  return {
+    scale,
+    ox:VIEW_W / 2 - ((b.minX + b.maxX) / 2 + state.camera.x) * scale,
+    oy:VIEW_H / 2 - ((b.minY + b.maxY) / 2 + state.camera.y) * scale
+  };
+}
+
+function worldToScreen(x, y) {
+  const tr = transform();
+  return { x:x * tr.scale + tr.ox, y:y * tr.scale + tr.oy, scale:tr.scale };
+}
+
+function screenToWorld(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = (clientX - rect.left) / rect.width * VIEW_W;
+  const sy = (clientY - rect.top) / rect.height * VIEW_H;
+  const tr = transform();
+  return { x:(sx - tr.ox) / tr.scale, y:(sy - tr.oy) / tr.scale };
+}
+
+function drawBackground(now) {
+  const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+  g.addColorStop(0, "#102338");
+  g.addColorStop(0.52, "#0b1624");
+  g.addColorStop(1, "#060b10");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+
+  const tr = transform();
+  for (const region of regions) {
+    const p = worldToScreen(region.x, region.y);
+    const radius = 230 * tr.scale;
+    const glow = ctx.createRadialGradient(p.x, p.y, 10, p.x, p.y, radius);
+    glow.addColorStop(0, hexToRgba(region.color, .22));
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius, 0, TAU);
+    ctx.fill();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = .18;
+  ctx.strokeStyle = "#d9e5df";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 28; i++) {
+    const y = 70 + i * 25 + Math.sin(now * .0004 + i) * 4;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    for (let x = 0; x <= VIEW_W; x += 80) {
+      ctx.lineTo(x, y + Math.sin(x * .012 + i * 1.8) * 8);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function hexToRgba(hex, alpha) {
+  const clean = hex.replace("#", "");
+  const n = parseInt(clean, 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function drawRoutes(now) {
+  for (const route of routes) {
+    const a = stationById.get(route.a);
+    const b = stationById.get(route.b);
+    const pa = worldToScreen(a.x, a.y);
+    const pb = worldToScreen(b.x, b.y);
+    const current = state.travel && state.travel.routeId === route.id;
+    const connected = state.mode === "station" && (route.a === state.current || route.b === state.current);
+    const known = state.discovered[route.a] || state.discovered[route.b] || current;
+    ctx.save();
+    ctx.globalAlpha = known ? 1 : .18;
+    ctx.lineWidth = current ? 7 : connected ? 4.4 : 2.2;
+    ctx.strokeStyle = current ? "#ffe08a" : connected ? "rgba(96,228,208,.78)" : "rgba(186,204,207,.28)";
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    const mx = (pa.x + pb.x) / 2;
+    const my = (pa.y + pb.y) / 2 + Math.sin(route.index * 1.7) * 10;
+    ctx.quadraticCurveTo(mx, my, pb.x, pb.y);
+    ctx.stroke();
+    if (known) {
+      ctx.setLineDash([8, 12]);
+      ctx.lineDashOffset = -now * .03 - route.index * 5;
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = current ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.18)";
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.quadraticCurveTo(mx, my, pb.x, pb.y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawStations(now) {
+  const connectedIds = new Set();
+  if (state.mode === "station") {
+    for (const route of adjacency.get(state.current) || []) connectedIds.add(otherEnd(route, state.current));
+  }
+  for (const station of stationById.values()) {
+    const region = regionById.get(station.region);
+    const p = worldToScreen(station.x, station.y);
+    const known = state.discovered[station.id] || state.visited[station.id] || station.id === state.current;
+    const current = station.id === state.current;
+    const connected = connectedIds.has(station.id);
+    const selected = station.id === state.selected;
+    const restored = station.crown && state.crowns[station.region];
+    const dim = known ? 1 : .26;
+    ctx.save();
+    ctx.globalAlpha = dim;
+    if (current || connected || selected || restored) {
+      const glow = ctx.createRadialGradient(p.x, p.y, 3, p.x, p.y, current ? 44 : 31);
+      glow.addColorStop(0, current ? "rgba(255,224,138,.7)" : hexToRgba(region.accent, .5));
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, current ? 44 : 31, 0, TAU);
+      ctx.fill();
+    }
+    ctx.fillStyle = station.crown ? (restored ? region.accent : "#141d2a") : "#0b1320";
+    ctx.strokeStyle = current ? "#ffe08a" : connected ? "#60e4d0" : restored ? region.accent : "rgba(224,240,240,.45)";
+    ctx.lineWidth = current ? 4 : connected || selected ? 3 : 2;
+    const r = station.crown ? 10 : station.service === "yard" ? 8 : 7;
+    ctx.beginPath();
+    if (station.crown) {
+      for (let i = 0; i < 6; i++) {
+        const a = -Math.PI / 2 + i / 6 * TAU;
+        const rr = i % 2 ? r * .74 : r * 1.35;
+        const x = p.x + Math.cos(a) * rr;
+        const y = p.y + Math.sin(a) * rr;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+    } else {
+      ctx.arc(p.x, p.y, r, 0, TAU);
+    }
+    ctx.fill();
+    ctx.stroke();
+    if (known && (current || connected || station.crown || selected)) {
+      ctx.fillStyle = current ? "#fff3c4" : "#d8e8e5";
+      ctx.font = current ? "800 17px system-ui" : "700 13px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(station.name, p.x, p.y + 16);
+    }
+    ctx.restore();
+  }
+}
+
+function drawTrain(now) {
+  const p = worldToScreen(state.train.x, state.train.y);
+  const angle = state.travel ? Math.atan2(
+    stationById.get(state.travel.to).y - stationById.get(state.travel.from).y,
+    stationById.get(state.travel.to).x - stationById.get(state.travel.from).x
+  ) : 0;
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(angle);
+  const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 38);
+  glow.addColorStop(0, "rgba(255,224,138,.62)");
+  glow.addColorStop(1, "rgba(255,224,138,0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, 38, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = "#071019";
+  ctx.strokeStyle = "#ffe08a";
+  ctx.lineWidth = 3;
+  roundRect(ctx, -24, -11, 48, 22, 6);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#60e4d0";
+  ctx.fillRect(9, -6, 9, 12);
+  ctx.fillStyle = "#f2c35b";
+  ctx.beginPath();
+  ctx.moveTo(28, 0);
+  ctx.lineTo(16, -10);
+  ctx.lineTo(16, 10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  if (state.travel) {
+    const t = state.travel;
+    const x = 32;
+    const y = VIEW_H - 54;
+    const w = VIEW_W - 64;
+    ctx.fillStyle = "rgba(5,12,20,.72)";
+    roundRect(ctx, x, y, w, 20, 8);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.12)";
+    roundRect(ctx, x + 8, y + 7, w - 16, 6, 3);
+    ctx.fill();
+    const pct = clamp(t.progress / t.length, 0, 1);
+    const prog = ctx.createLinearGradient(x, 0, x + w, 0);
+    prog.addColorStop(0, "#60e4d0");
+    prog.addColorStop(1, "#ffe08a");
+    ctx.fillStyle = prog;
+    roundRect(ctx, x + 8, y + 7, (w - 16) * pct, 6, 3);
+    ctx.fill();
+    ctx.fillStyle = "#d8e8e5";
+    ctx.font = "800 13px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`${stationById.get(t.from).name} -> ${stationById.get(t.to).name}`, VIEW_W / 2, y - 4);
+  }
+}
+
+function drawParticles() {
+  for (const particle of state.particles) {
+    const p = worldToScreen(particle.x, particle.y);
+    ctx.globalAlpha = clamp(particle.life / particle.max, 0, 1);
+    ctx.fillStyle = particle.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, particle.size, 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawMapOverlay() {
+  ctx.save();
+  ctx.fillStyle = "rgba(5,12,20,.64)";
+  roundRect(ctx, 22, 22, 284, 86, 8);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.12)";
+  ctx.stroke();
+  ctx.fillStyle = "#dffcf8";
+  ctx.font = "900 20px system-ui";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("Signalrail Atlas", 38, 36);
+  ctx.fillStyle = "#aebfc0";
+  ctx.font = "13px system-ui";
+  const active = state.travel ? "Convoy in motion" : "Dispatch from station";
+  ctx.fillText(`${active} | ${restoredCount()} of ${regions.length} Crowns restored`, 38, 66);
+  if (state.travel) {
+    ctx.fillText(`Heat ${Math.round(state.travel.heat)} | Screens ${Math.round(state.travel.screens)}%`, 38, 86);
+  } else {
+    ctx.fillText(`${state.contracts.length} active freight | ${state.offers.length} station offers`, 38, 86);
+  }
+  ctx.restore();
+}
+
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath();
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
+function render(now) {
+  drawBackground(now);
+  drawRoutes(now);
+  drawStations(now);
+  drawParticles();
+  drawTrain(now);
+  drawMapOverlay();
+}
+
+function renderRoutes() {
+  ui.routeList.innerHTML = "";
+  if (state.mode !== "station") {
+    ui.routeList.innerHTML = '<p class="empty">Routes are locked while the Sovereign is moving.</p>';
+    return;
+  }
+  const list = adjacency.get(state.current) || [];
+  for (const [index, route] of list.entries()) {
+    const destId = otherEnd(route, state.current);
+    const dest = stationById.get(destId);
+    const cost = routeCost(route);
+    const btn = document.createElement("button");
+    btn.className = "route-btn";
+    btn.type = "button";
+    btn.innerHTML = `<strong>${index + 1}. ${dest.name}</strong><span>${route.length} km | risk ${routeRisk(route)} | fuel ${cost.fuel}, water ${cost.water}</span>`;
+    btn.disabled = state.fuel < cost.fuel || state.water < cost.water;
+    btn.addEventListener("click", () => startTravel(destId));
+    ui.routeList.appendChild(btn);
+  }
+}
+
+function renderContracts() {
+  ui.contractList.innerHTML = "";
+  if (state.mode !== "station") {
+    ui.contractList.innerHTML = '<p class="empty">New freight offers appear when docked.</p>';
+    return;
+  }
+  if (!state.offers.length) {
+    ui.contractList.innerHTML = '<p class="empty">No open contracts. Travel to another station.</p>';
+    return;
+  }
+  state.offers.forEach((contract, index) => {
+    const dest = stationById.get(contract.to);
+    const btn = document.createElement("button");
+    btn.className = "contract";
+    btn.type = "button";
+    btn.innerHTML = `<strong>${contract.goods} to ${dest.name}</strong><span>${contract.cargo} cargo | ${contract.reward} credits${contract.key ? " | signal key" : ""} | due day ${contract.expires}</span>`;
+    btn.disabled = state.cargo + contract.cargo > cargoCap();
+    btn.addEventListener("click", () => acceptContract(index));
+    ui.contractList.appendChild(btn);
+  });
+
+  ui.activeList.innerHTML = "";
+  if (!state.contracts.length) {
+    ui.activeList.innerHTML = '<p class="empty">No freight loaded.</p>';
+    return;
+  }
+  for (const contract of state.contracts) {
+    const dest = stationById.get(contract.to);
+    const div = document.createElement("div");
+    div.className = "contract accepted";
+    div.innerHTML = `<strong>${contract.goods}</strong><span>Deliver to ${dest.name} by day ${contract.expires}. Reward ${contract.reward}${contract.key ? " plus key" : ""}.</span>`;
+    ui.activeList.appendChild(div);
+  }
+}
+
+function renderUpgrades() {
+  ui.upgradeList.innerHTML = "";
+  for (const def of upgradeDefs) {
+    const level = state.upgrades[def.id] || 0;
+    const cost = upgradeCost(def);
+    const btn = document.createElement("button");
+    btn.className = "upgrade";
+    btn.type = "button";
+    btn.innerHTML = `<strong>${def.name} ${level}/${def.max}</strong><span>${level >= def.max ? "Maximum level" : `${cost.credits} credits, ${cost.alloy} alloy`} | ${def.copy}</span>`;
+    btn.disabled = state.mode !== "station" || level >= def.max || state.credits < cost.credits || state.alloy < cost.alloy;
+    btn.addEventListener("click", () => buyUpgrade(def.id));
+    ui.upgradeList.appendChild(btn);
+  }
+}
+
+function renderEvent() {
+  ui.eventPanel.hidden = !state.event;
+  ui.eventChoices.innerHTML = "";
+  if (!state.event) return;
+  const def = eventDefinition(state.event.kind);
+  ui.eventTitle.textContent = def.title;
+  ui.eventText.textContent = def.text;
+  def.choices.forEach((choice, index) => {
+    const btn = document.createElement("button");
+    btn.className = "route-btn";
+    btn.type = "button";
+    btn.innerHTML = `<strong>${choice.label}</strong><span>${choice.desc}</span>`;
+    btn.addEventListener("click", () => resolveEvent(index));
+    ui.eventChoices.appendChild(btn);
+  });
+}
+
+function updateHud() {
+  const station = currentStation();
+  const region = regionById.get(station.region);
+  ui.modeHud.textContent = state.mode === "travel" ? "Travel" : state.mode === "station" ? "Docked" : "Title";
+  ui.stationHud.textContent = station.name;
+  ui.crownsHud.textContent = `${restoredCount()}/${regions.length}`;
+  ui.stationName.textContent = station.name;
+  ui.stationCopy.textContent = stationFlavor(station);
+  ui.hullText.textContent = `${Math.ceil(state.hull)} / ${maxHull()}`;
+  ui.fuelText.textContent = `${Math.floor(state.fuel)} / ${maxFuel()}`;
+  ui.moraleText.textContent = `${Math.floor(state.morale)} / ${maxMorale()}`;
+  ui.hullBar.style.width = `${clamp(state.hull / maxHull(), 0, 1) * 100}%`;
+  ui.fuelBar.style.width = `${clamp(state.fuel / maxFuel(), 0, 1) * 100}%`;
+  ui.moraleBar.style.width = `${clamp(state.morale / maxMorale(), 0, 1) * 100}%`;
+  ui.creditStat.textContent = money(state.credits);
+  ui.alloyStat.textContent = money(state.alloy);
+  ui.keyStat.textContent = money(state.keys);
+  ui.cargoStat.textContent = `${Math.floor(state.cargo)} / ${cargoCap()}`;
+  ui.dayStat.textContent = money(state.day);
+  ui.kmStat.textContent = `${money(state.km)} km`;
+  ui.muteBtn.textContent = state.muted ? "Sound Off" : "Sound On";
+
+  ui.logList.innerHTML = "";
+  for (const entry of state.log) {
+    const p = document.createElement("p");
+    p.textContent = entry;
+    ui.logList.appendChild(p);
+  }
+  if (!state.log.length) ui.logList.innerHTML = '<p>No chronicle entries yet.</p>';
+
+  const missingHull = maxHull() - state.hull;
+  ui.repairBtn.disabled = !canUseStationServices() || missingHull <= 0 || state.credits < Math.ceil(Math.min(30, missingHull) * 1.55) || state.alloy < 1;
+  ui.refuelBtn.disabled = !canUseStationServices() || state.fuel >= maxFuel() || state.credits < 10;
+  ui.waterBtn.disabled = !canUseStationServices() || state.water >= maxWater() || state.credits < 8;
+  ui.alloyBtn.disabled = !canUseStationServices() || state.credits < 44;
+  const cost = crownCost();
+  ui.crownBtn.hidden = !station.crown;
+  ui.crownBtn.disabled = !canUseStationServices() || state.crowns[station.region] || state.keys < cost.keys || state.alloy < cost.alloy || state.credits < cost.credits;
+  ui.crownBtn.textContent = station.crown
+    ? state.crowns[station.region]
+      ? `${region.name} Crown Restored`
+      : `Restore Crown: ${cost.keys} key, ${cost.alloy} alloy, ${cost.credits} credits`
+    : "Restore Crown";
+  ui.boostBtn.disabled = state.mode !== "travel" || Boolean(state.event) || state.fuel <= 0;
+  ui.shieldBtn.disabled = state.mode !== "travel" || Boolean(state.event) || !state.travel || state.travel.screens <= 0 || state.water <= 0;
+  ui.fieldRepairBtn.disabled = state.mode !== "travel" || Boolean(state.event) || state.alloy < 2 || state.water < 3 || state.hull >= maxHull();
+  $("mobileBoost").disabled = ui.boostBtn.disabled;
+  $("mobileShield").disabled = ui.shieldBtn.disabled;
+  $("mobileRepair").disabled = ui.fieldRepairBtn.disabled;
+  renderRoutes();
+  renderContracts();
+  renderUpgrades();
+  renderEvent();
+}
+
+function nearestStationAt(clientX, clientY) {
+  const pt = screenToWorld(clientX, clientY);
+  let best = null;
+  let bestD = Infinity;
+  for (const station of stationById.values()) {
+    const d = dist(pt.x, pt.y, station.x, station.y);
+    if (d < bestD) { bestD = d; best = station; }
+  }
+  return bestD < 48 ? best : null;
+}
+
+canvas.addEventListener("pointerdown", (event) => {
+  if (!state.started || state.mode !== "station") return;
+  const station = nearestStationAt(event.clientX, event.clientY);
+  if (!station) return;
+  state.selected = station.id;
+  const route = routeBetween(state.current, station.id);
+  if (route) startTravel(station.id);
+  else {
+    toast(station.name);
+    updateHud();
+  }
+});
+
+for (const [button, key] of [[ui.boostBtn, "boost"], [$("mobileBoost"), "boost"], [ui.shieldBtn, "shield"], [$("mobileShield"), "shield"]]) {
+  button.addEventListener("pointerdown", (event) => { event.preventDefault(); audio.ensure(); state.input[key] = true; button.setPointerCapture(event.pointerId); });
+  button.addEventListener("pointerup", () => { state.input[key] = false; });
+  button.addEventListener("pointercancel", () => { state.input[key] = false; });
+  button.addEventListener("pointerleave", () => { state.input[key] = false; });
+}
+
+$("mobileRepair").addEventListener("click", fieldRepair);
+ui.fieldRepairBtn.addEventListener("click", fieldRepair);
+ui.repairBtn.addEventListener("click", buyRepair);
+ui.refuelBtn.addEventListener("click", buyFuel);
+ui.waterBtn.addEventListener("click", buyWater);
+ui.alloyBtn.addEventListener("click", buyAlloy);
+ui.crownBtn.addEventListener("click", restoreCrown);
+$("startBtn").addEventListener("click", () => { audio.ensure(); startFresh(); });
+$("loadBtn").addEventListener("click", () => { audio.ensure(); loadGame(); });
+$("continueBtn").addEventListener("click", () => { ui.endOverlay.hidden = true; state.mode = "station"; updateHud(); });
+$("newEpochBtn").addEventListener("click", () => startFresh());
+$("saveBtn").addEventListener("click", () => saveGame(false));
+$("muteBtn").addEventListener("click", () => {
+  audio.ensure();
+  audio.setMuted(!state.muted);
+  updateHud();
+});
+$("centerBtn").addEventListener("click", () => {
+  state.camera.x = 0;
+  state.camera.y = 0;
+  state.camera.zoom = 1;
+  toast("Map centered");
+});
+$("resetBtn").addEventListener("click", () => startFresh());
+
+window.addEventListener("keydown", (event) => {
+  const key = event.key.toLowerCase();
+  if ([" ", "shift", "r", "m", "s", "1", "2", "3", "4", "5"].includes(key)) event.preventDefault();
+  if (!state.started && (key === "enter" || key === " ")) {
+    audio.ensure();
+    startFresh();
+    return;
+  }
+  if (key === " " || key === "b") state.input.boost = true;
+  if (key === "shift" || key === "s") state.input.shield = true;
+  if (key === "r") fieldRepair();
+  if (key === "m") { audio.ensure(); audio.setMuted(!state.muted); updateHud(); }
+  if (state.event && ["1", "2", "3"].includes(key)) resolveEvent(Number(key) - 1);
+  else if (state.mode === "station" && ["1", "2", "3", "4", "5"].includes(key)) {
+    const route = (adjacency.get(state.current) || [])[Number(key) - 1];
+    if (route) startTravel(otherEnd(route, state.current));
+  }
+});
+window.addEventListener("keyup", (event) => {
+  const key = event.key.toLowerCase();
+  if (key === " " || key === "b") state.input.boost = false;
+  if (key === "shift" || key === "s") state.input.shield = false;
+});
+
+const audio = {
+  ctx:null,
+  master:null,
+  music:null,
+  sfx:null,
+  next:0,
+  step:0,
+  ensure() {
+    if (this.ctx) {
+      if (this.ctx.state === "suspended") this.ctx.resume();
+      return;
+    }
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      return;
+    }
+    this.master = this.ctx.createGain();
+    this.master.gain.value = state.muted ? 0 : 1;
+    this.master.connect(this.ctx.destination);
+    this.music = this.ctx.createGain();
+    this.music.gain.value = .08;
+    this.music.connect(this.master);
+    this.sfx = this.ctx.createGain();
+    this.sfx.gain.value = .42;
+    this.sfx.connect(this.master);
+    this.next = this.ctx.currentTime + .05;
+    setInterval(() => this.tick(), 130);
+  },
+  setMuted(next) {
+    state.muted = next;
+    try { localStorage.setItem(MUTE_KEY, next ? "1" : "0"); } catch (error) {}
+    if (this.master && this.ctx) this.master.gain.setTargetAtTime(next ? 0 : 1, this.ctx.currentTime, .04);
+  },
+  tone(freq, dur, type, gain, slide) {
+    if (!this.ctx || state.muted) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type || "triangle";
+    osc.frequency.setValueAtTime(freq, t);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slide), t + dur);
+    g.gain.setValueAtTime(gain || .08, t);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    osc.connect(g);
+    g.connect(this.sfx);
+    osc.start(t);
+    osc.stop(t + dur + .04);
+  },
+  tick() {
+    if (!this.ctx || this.ctx.state !== "running" || state.muted || !state.started) return;
+    const stepDur = 60 / 92 / 2;
+    const chords = [[146.8,220,293.6],[164.8,246.9,329.6],[196,261.6,392],[174.6,233.1,349.2]];
+    while (this.next < this.ctx.currentTime + .22) {
+      const chord = chords[Math.floor(this.step / 8) % chords.length];
+      if (this.step % 4 === 0) this.note(chord[0], .34, "triangle", .024, this.next);
+      if (this.step % 2 === 0) this.note(chord[this.step % 3] * 2, .08, "square", .014, this.next);
+      this.step++;
+      this.next += stepDur;
+    }
+  },
+  note(freq, dur, type, gain, when) {
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(gain, when);
+    g.gain.exponentialRampToValueAtTime(.0001, when + dur);
+    osc.connect(g);
+    g.connect(this.music);
+    osc.start(when);
+    osc.stop(when + dur + .03);
+  },
+  select(){ this.ensure(); this.tone(520,.08,"triangle",.08,690); },
+  depart(){ this.ensure(); this.tone(196,.16,"sawtooth",.09,260); this.tone(392,.18,"triangle",.06,520); },
+  arrive(){ this.ensure(); [392,494,659].forEach((f,i) => setTimeout(() => this.tone(f,.12,"triangle",.09), i * 85)); },
+  reward(){ this.ensure(); [523,659,784].forEach((f,i) => setTimeout(() => this.tone(f,.1,"triangle",.08), i * 70)); },
+  crown(){ this.ensure(); [261,392,523,784].forEach((f,i) => setTimeout(() => this.tone(f,.18,"triangle",.1), i * 110)); },
+  repair(){ this.ensure(); this.tone(310,.09,"square",.08,360); this.tone(440,.08,"triangle",.05); },
+  hit(){ this.ensure(); this.tone(90,.18,"sawtooth",.14,45); },
+  alert(){ this.ensure(); this.tone(740,.08,"square",.08,520); setTimeout(() => this.tone(740,.08,"square",.08,520), 120); }
+};
+
+let last = performance.now();
+let hudTimer = 0;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000);
+  last = now;
+  updateTravel(dt);
+  updateParticles(dt);
+  render(now);
+  hudTimer += dt;
+  if (hudTimer > .2) {
+    updateHud();
+    hudTimer = 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+function boot() {
+  try { state.muted = localStorage.getItem(MUTE_KEY) === "1"; } catch (error) {}
+  audio.setMuted(state.muted);
+  splash.addEventListener("load", () => { $("loading").hidden = true; });
+  splash.addEventListener("error", () => {
+    $("loading").textContent = "Generated art could not load. The live rail map is ready.";
+    setTimeout(() => { $("loading").hidden = true; }, 2200);
+  });
+  setTimeout(() => {
+    if (!$("loading").hidden) $("loading").textContent = "Still loading high-resolution key art...";
+  }, 1500);
+  if (splash.complete && splash.naturalWidth > 0) $("loading").hidden = true;
+  generateOffers();
+  addLog("Begin a crossing or load an existing save.");
+  updateHud();
+  requestAnimationFrame(frame);
+}
+boot();
+
+window.__SIGNALRAIL_SOVEREIGN__ = {
+  getState:() => JSON.parse(JSON.stringify(serializableState())),
+  start:startFresh,
+  load:loadGame,
+  save:() => saveGame(true),
+  routeTo:startTravel,
+  tick:(seconds) => {
+    const steps = Math.ceil(seconds / .05);
+    for (let i = 0; i < steps; i++) {
+      if (state.event) resolveEvent(0);
+      updateTravel(.05);
+    }
+    updateHud();
+    return serializableState();
+  },
+  acceptContract,
+  restoreCrown,
+  grant:(payload = {}) => {
+    state.credits += payload.credits || 0;
+    state.alloy += payload.alloy || 0;
+    state.keys += payload.keys || 0;
+    state.fuel = clamp(state.fuel + (payload.fuel || 0), 0, maxFuel());
+    state.water = clamp(state.water + (payload.water || 0), 0, maxWater());
+    state.hull = clamp(state.hull + (payload.hull || 0), 0, maxHull());
+    updateHud();
+  },
+  stations:[...stationById.keys()],
+  routes:routes.map((r) => ({ ...r }))
+};
+</script>
+</body>
+</html>

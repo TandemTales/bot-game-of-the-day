@@ -1,6 +1,14 @@
 {
-  "gameOfTheDay": "skyglass-warden",
+  "gameOfTheDay": "signalrail-sovereign",
   "games": [
+    {
+      "slug": "signalrail-sovereign",
+      "title": "Signalrail Sovereign",
+      "description": "An original continent-scale train-city expedition sim. Run cargo contracts, survive railstorm route events, upgrade a persistent convoy, and restore six Signal Crowns across a giant rail map.",
+      "tags": ["strategy", "simulation", "adventure"],
+      "emoji": "\ud83d\ude86",
+      "added": "2026-06-16"
+    },
     {
       "slug": "skyglass-warden",
       "title": "Skyglass Warden",
