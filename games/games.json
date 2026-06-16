@@ -1,27 +1,51 @@
 {
-  "gameOfTheDay": "signalrail-sovereign",
+  "gameOfTheDay": "lantern-drums",
   "games": [
     {
       "slug": "signalrail-sovereign",
       "title": "Signalrail Sovereign",
       "description": "An original continent-scale train-city expedition sim. Run cargo contracts, survive railstorm route events, upgrade a persistent convoy, and restore six Signal Crowns across a giant rail map.",
-      "tags": ["strategy", "simulation", "adventure"],
-      "emoji": "\ud83d\ude86",
+      "tags": [
+        "strategy",
+        "simulation",
+        "adventure"
+      ],
+      "emoji": "🚆",
       "added": "2026-06-16"
     },
     {
       "slug": "skyglass-warden",
       "title": "Skyglass Warden",
       "description": "An original open-world sky archipelago action RPG. Explore a giant floating atlas, harvest skyglass shards, duel storm-forged sentinels, restore four ancient beacons, and keep building a persistent Warden save.",
-      "tags": ["adventure", "rpg", "open-world"],
-      "emoji": "\ud83e\udded",
+      "tags": [
+        "adventure",
+        "rpg",
+        "open-world"
+      ],
+      "emoji": "🧭",
+      "added": "2026-06-15"
+    },
+    {
+      "slug": "lantern-drums",
+      "title": "Lantern Drums",
+      "description": "A neon-festival taiko rhythm game. Strike the drum face for red Don notes and the rim for blue Ka notes in time with a procedural festival groove, chain combos for huge scores, and fill your soul gauge to clear the song across Easy, Normal, and Oni difficulties.",
+      "tags": [
+        "rhythm",
+        "music",
+        "arcade"
+      ],
+      "emoji": "🥁",
       "added": "2026-06-15"
     },
     {
       "slug": "lumen-drop",
       "title": "Lumen Drop",
       "description": "A glowing numbers puzzle. Drop light-orbs into the lattice; an orb ignites when its number equals the orbs in its row or column. Crack stone geodes to reveal hidden numbers, chain cascading ignitions for huge combos, and outlast the rising dark.",
-      "tags": ["puzzle", "numbers", "strategy"],
+      "tags": [
+        "puzzle",
+        "numbers",
+        "strategy"
+      ],
       "emoji": "🔆",
       "added": "2026-06-15"
     },
@@ -29,7 +53,11 @@
       "slug": "baobab-gambit",
       "title": "Baobab Gambit",
       "description": "A sunset board duel inspired by Fanorona. Capture by approach or withdrawal, chain the same stone across the 5x5 baobab grid, and outfox a tactical AI before the board dries into a standoff.",
-      "tags": ["strategy", "board", "tactics"],
+      "tags": [
+        "strategy",
+        "board",
+        "tactics"
+      ],
       "emoji": "🌳",
       "added": "2026-06-14"
     },
@@ -37,7 +65,10 @@
       "slug": "sonar-bloom",
       "title": "Sonar Bloom",
       "description": "A bioluminescent deep-sea shoot-'em-up. Steer a glowing sub through the abyss, blast anglerfish and jelly swarms, grow your lance with light-cells, and unleash a sonar pulse when a Leviathan rises from the dark.",
-      "tags": ["shooter", "arcade"],
+      "tags": [
+        "shooter",
+        "arcade"
+      ],
       "emoji": "🪼",
       "added": "2026-06-14"
     },
@@ -45,7 +76,11 @@
       "slug": "storm-shutters",
       "title": "Storm Shutters",
       "description": "A lantern-lit dice puzzle inspired by Shut the Box. Roll the storm dice, seal numbered harbor shutters that match the total, unlock the one-die endgame by closing 7, 8, and 9, and survive as many squalls as you can.",
-      "tags": ["puzzle", "dice", "strategy"],
+      "tags": [
+        "puzzle",
+        "dice",
+        "strategy"
+      ],
       "emoji": "🪟",
       "added": "2026-06-13"
     },
@@ -53,7 +88,10 @@
       "slug": "astral-sling",
       "title": "Astral Sling",
       "description": "A one-button orbital slingshot across an endless galaxy. Circle a star, release at the perfect instant, and curve through gravity to be caught by the next — chain hops, sweep up stardust, and never drift into the void.",
-      "tags": ["physics", "arcade"],
+      "tags": [
+        "physics",
+        "arcade"
+      ],
       "emoji": "🌠",
       "added": "2026-06-13"
     },
@@ -61,7 +99,11 @@
       "slug": "comet-carom",
       "title": "Comet Carom",
       "description": "A cosmic flick-and-bank dexterity game. Sling comets off guard posts, knock rogue satellites into the sun or warp docks, and steal ring-hold bonuses before your shot rack runs dry.",
-      "tags": ["dexterity", "physics", "arcade"],
+      "tags": [
+        "dexterity",
+        "physics",
+        "arcade"
+      ],
       "emoji": "☄️",
       "added": "2026-06-12"
     },
@@ -69,7 +111,10 @@
       "slug": "prism-pop",
       "title": "Prism Pop",
       "description": "A lantern-lit color matching shooter. Bank shots, swap the next orb, and trigger cascading drops before the ceiling shoves the whole stage into the danger line.",
-      "tags": ["puzzle", "match-3"],
+      "tags": [
+        "puzzle",
+        "match-3"
+      ],
       "emoji": "🔮",
       "added": "2026-06-12"
     },
@@ -77,7 +122,10 @@
       "slug": "patch-parade",
       "title": "Patch Parade",
       "description": "A patchwork arcade platformer where every thrown patch can either repair a torn runway or stun a silk moth mid-chase. Keep the parade stitched together while you chase runaway buttons.",
-      "tags": ["platformer", "arcade"],
+      "tags": [
+        "platformer",
+        "arcade"
+      ],
       "emoji": "🧵",
       "added": "2026-06-12"
     },
@@ -85,7 +133,10 @@
       "slug": "iron-knockout",
       "title": "Iron Knockout",
       "description": "Punch-Out!! style robot boxing. Read the telegraph, dodge the haymaker, and counter your way through the Iron Circuit to the champion's belt.",
-      "tags": ["fighting", "boxing"],
+      "tags": [
+        "fighting",
+        "boxing"
+      ],
       "emoji": "🥊",
       "added": "2026-06-12"
     },
@@ -93,7 +144,10 @@
       "slug": "turbo-horizon",
       "title": "Turbo Horizon",
       "description": "Outrun the clock in a sunset-soaked pseudo-3D racer. Thread traffic at 320 km/h, chase checkpoints from dusk till dawn, and watch the sky burn through a full day-night cycle.",
-      "tags": ["racing", "driving"],
+      "tags": [
+        "racing",
+        "driving"
+      ],
       "emoji": "🏎️",
       "added": "2026-06-11"
     }
