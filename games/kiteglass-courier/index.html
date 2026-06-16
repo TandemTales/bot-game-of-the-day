@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kiteglass Courier - Bot Built Arcade</title>
+<meta name="description" content="An original aerial delivery stunt game. Ride wind lanes across a stacked harbor, thread chime gates, drop parcels onto glowing balconies, and keep every fragile route on schedule.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23071320'/><path d='M50 12 84 46 54 88 16 44Z' fill='%23f6d18a'/><path d='M50 12 54 88 16 44Z' fill='%236bd7d2'/></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#07111d;
+  --panel:rgba(8,18,30,.84);
+  --panel-2:rgba(14,31,45,.78);
+  --line:rgba(221,238,240,.18);
+  --text:#f4fbf8;
+  --muted:#a8b9ba;
+  --cream:#f6d18a;
+  --teal:#67d7d1;
+  --coral:#ff8a70;
+  --green:#91df90;
+  --blue:#78a7ff;
+  --bad:#ff5f74;
+  --shadow:0 22px 68px rgba(0,0,0,.38);
+  --radius:8px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;overflow-x:hidden}
+body{
+  min-height:100vh;
+  color:var(--text);
+  background:
+    linear-gradient(180deg,#122235 0%,#07111d 58%,#05090f 100%);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  padding:14px;
+}
+a.back{
+  display:block;
+  width:min(1460px,100%);
+  margin:0 auto 8px;
+  color:#c7dddc;
+  text-decoration:none;
+  font-size:.92rem;
+}
+a.back:hover{color:var(--cream)}
+button{font:inherit}
+button{
+  min-height:42px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:var(--radius);
+  background:rgba(19,41,57,.86);
+  color:var(--text);
+  font-weight:850;
+  cursor:pointer;
+  transition:transform .12s ease,border-color .12s ease,filter .12s ease,background .12s ease;
+}
+button:hover{border-color:rgba(103,215,209,.68);filter:brightness(1.06)}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.48;cursor:default;filter:none;transform:none}
+button.primary{
+  color:#07111d;
+  background:linear-gradient(135deg,#ffe2a0,#67d7d1);
+  border-color:rgba(255,255,255,.42);
+  box-shadow:0 14px 34px rgba(103,215,209,.18);
+}
+.app{
+  width:min(1460px,100%);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 350px;
+  gap:14px;
+  align-items:start;
+}
+.stage,.panel{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:var(--shadow);
+}
+.stage{overflow:hidden;min-width:0}
+.canvas-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  min-height:380px;
+  background:#07111d;
+}
+canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  touch-action:none;
+  cursor:crosshair;
+}
+.topbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border-top:1px solid var(--line);
+  background:rgba(5,11,18,.82);
+}
+.hint{
+  color:#c7d8d8;
+  font-size:.86rem;
+  line-height:1.36;
+}
+.hint b{color:var(--text)}
+.hud-pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{
+  min-width:92px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.045);
+  padding:7px 10px;
+  color:var(--muted);
+  font-size:.82rem;
+}
+.pill strong{display:block;color:var(--text);font-variant-numeric:tabular-nums}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:8;
+  display:grid;
+  place-items:center;
+  padding:clamp(14px,3vw,28px);
+  background:rgba(4,9,15,.56);
+  backdrop-filter:blur(5px);
+}
+.overlay[hidden]{display:none}
+.title-card{
+  position:relative;
+  width:min(940px,100%);
+  min-height:min(620px,82vh);
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:var(--radius);
+  background:#071320;
+  box-shadow:0 28px 84px rgba(0,0,0,.54);
+}
+.title-card img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:saturate(1.04) contrast(1.03);
+}
+.title-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(4,9,15,.92),rgba(4,9,15,.58) 54%,rgba(4,9,15,.12)),
+    linear-gradient(0deg,rgba(4,9,15,.83),rgba(4,9,15,.08) 58%);
+}
+.title-copy{
+  position:relative;
+  z-index:1;
+  min-height:min(620px,82vh);
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:clamp(22px,4vw,42px);
+}
+.eyebrow{
+  align-self:flex-start;
+  border:1px solid rgba(103,215,209,.45);
+  color:#dffcf9;
+  border-radius:999px;
+  padding:6px 11px;
+  background:rgba(7,19,28,.68);
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+h1{
+  margin:14px 0 8px;
+  max-width:760px;
+  font-size:clamp(2.6rem,7.4vw,5.2rem);
+  line-height:.93;
+  letter-spacing:0;
+  text-transform:uppercase;
+  text-shadow:0 5px 28px rgba(0,0,0,.72);
+}
+.title-copy p{
+  width:min(620px,100%);
+  margin:0 0 18px;
+  color:#e0eeee;
+  line-height:1.52;
+}
+.button-row{display:flex;gap:10px;flex-wrap:wrap}
+.button-row button{padding:0 18px}
+.loading,.toast{
+  position:absolute;
+  left:14px;
+  right:14px;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  pointer-events:none;
+}
+.loading{
+  top:14px;
+  min-height:40px;
+  border-radius:999px;
+  color:#dffcf9;
+  background:rgba(5,12,20,.76);
+  border:1px solid rgba(103,215,209,.22);
+  font-size:.86rem;
+}
+.loading[hidden]{display:none}
+.toast{
+  bottom:70px;
+  min-height:48px;
+  padding:10px 16px;
+  border-radius:var(--radius);
+  background:rgba(5,12,20,.9);
+  border:1px solid rgba(246,209,138,.34);
+  color:#fff0c9;
+  opacity:0;
+  transform:translateY(16px);
+  transition:opacity .18s ease,transform .18s ease;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.side{display:grid;gap:12px}
+.panel{padding:13px;backdrop-filter:blur(12px)}
+.brand{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 56px;
+  gap:12px;
+  align-items:start;
+}
+.brand h2{
+  margin:0;
+  font-size:1.2rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.brand p,.panel p,.panel li{
+  color:#c8d8d8;
+  line-height:1.42;
+  font-size:.88rem;
+}
+.brand p{margin:5px 0 0}
+.sigil{
+  width:56px;
+  height:56px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:50%;
+  position:relative;
+  background:
+    conic-gradient(from 45deg,#f6d18a,#67d7d1,#ff8a70,#78a7ff,#f6d18a);
+  box-shadow:0 0 30px rgba(103,215,209,.2);
+}
+.sigil::before{
+  content:"";
+  position:absolute;
+  inset:12px;
+  transform:rotate(45deg);
+  border:3px solid #07111d;
+  background:rgba(255,255,255,.18);
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.stat{
+  min-width:0;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.045);
+  padding:9px 10px;
+}
+.stat .k{
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:.66rem;
+}
+.stat .v{
+  margin-top:4px;
+  font-size:1.14rem;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums;
+}
+.meters{display:grid;gap:9px}
+.meter-label{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--muted);
+  font-size:.76rem;
+  margin-bottom:4px;
+}
+.bar{
+  height:10px;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.06);
+}
+.bar span{
+  display:block;
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--teal),var(--cream));
+}
+#conditionBar{background:linear-gradient(90deg,var(--bad),var(--cream),var(--green))}
+#staminaBar{background:linear-gradient(90deg,var(--blue),var(--teal))}
+.section-title{
+  margin:0 0 9px;
+  color:#e4fffb;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  font-size:.78rem;
+}
+.delivery-list{display:grid;gap:7px}
+.delivery{
+  display:grid;
+  gap:3px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.045);
+  padding:8px 9px;
+}
+.delivery strong{font-size:.88rem}
+.delivery span{color:var(--muted);font-size:.76rem}
+.delivery.done{border-color:rgba(145,223,144,.34);background:rgba(145,223,144,.08)}
+.delivery.next{border-color:rgba(246,209,138,.36)}
+.panel ul{
+  margin:0;
+  padding-left:18px;
+  display:grid;
+  gap:7px;
+}
+.actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.mobile-controls{
+  position:absolute;
+  z-index:20;
+  left:0;
+  right:0;
+  bottom:0;
+  display:none;
+  justify-content:space-between;
+  align-items:flex-end;
+  padding:0 10px 10px;
+  pointer-events:none;
+}
+.mobile-controls[hidden]{display:none!important}
+.touch-pad,.touch-actions{
+  display:grid;
+  gap:8px;
+  pointer-events:auto;
+}
+.touch-pad{
+  grid-template-columns:48px 48px 48px;
+  grid-template-rows:48px 48px 48px;
+}
+.touch-pad button,.touch-actions button{
+  min-width:48px;
+  min-height:48px;
+  padding:0;
+  border-radius:var(--radius);
+  background:rgba(8,18,30,.82);
+  backdrop-filter:blur(8px);
+}
+.touch-pad [data-dir="up"]{grid-column:2;grid-row:1}
+.touch-pad [data-dir="left"]{grid-column:1;grid-row:2}
+.touch-pad [data-dir="right"]{grid-column:3;grid-row:2}
+.touch-pad [data-dir="down"]{grid-column:2;grid-row:3}
+.touch-actions{grid-template-columns:62px 62px}
+.touch-actions button{min-width:62px;min-height:56px}
+.touch-actions .wide{grid-column:1/3;min-height:44px}
+@media (max-width:1080px){
+  .app{grid-template-columns:1fr}
+  .side{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .brand-panel,.route-panel,.how-panel{grid-column:1/-1}
+}
+@media (max-width:760px){
+  body{padding:8px}
+  .canvas-wrap{min-height:590px}
+  .toast{bottom:202px}
+  .side{grid-template-columns:1fr}
+  .hud-pills{width:100%}
+  .pill{flex:1;min-width:0}
+  .title-card,.title-copy{min-height:560px}
+  .title-copy{padding:22px}
+  .mobile-controls{display:flex}
+}
+@media (max-width:430px){
+  .stats,.actions{grid-template-columns:1fr 1fr}
+  .brand{grid-template-columns:1fr}
+  .sigil{display:none}
+  .touch-pad{grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px}
+  .touch-actions{grid-template-columns:56px 56px}
+  .touch-actions button{min-width:56px}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<main class="app">
+  <section class="stage" aria-label="Kiteglass Courier game">
+    <div class="canvas-wrap">
+      <canvas id="game" width="1280" height="720" aria-label="Aerial delivery stunt game canvas"></canvas>
+      <div class="loading" id="loading">Loading generated Kiteglass Courier key art...</div>
+      <div class="toast" id="toast"></div>
+      <div class="overlay" id="titleOverlay">
+        <div class="title-card">
+          <img id="splash" src="assets/kiteglass-courier-splash.png" alt="Generated key art for Kiteglass Courier">
+          <div class="title-copy">
+            <span class="eyebrow">Original aerial delivery stunt</span>
+            <h1>Kiteglass Courier</h1>
+            <p>Ride handbuilt kite wings through a stacked harbor. Thread chime gates, read the wind, and drop fragile parcels onto lit balconies before each route clock runs out.</p>
+            <div class="button-row">
+              <button class="primary" id="startBtn" type="button">Start Route</button>
+              <button id="practiceBtn" type="button">Practice Flight</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay" id="resultOverlay" hidden>
+        <div class="title-card">
+          <img src="assets/kiteglass-courier-splash.png" alt="">
+          <div class="title-copy">
+            <span class="eyebrow" id="resultKicker">Route signed</span>
+            <h1 id="resultTitle">Courier Clear</h1>
+            <p id="resultText">Every parcel landed in one piece.</p>
+            <div class="button-row">
+              <button class="primary" id="nextBtn" type="button">Next Route</button>
+              <button id="replayBtn" type="button">Replay</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-controls" id="mobileControls" hidden aria-label="Touch controls">
+        <div class="touch-pad">
+          <button data-dir="up" type="button">W</button>
+          <button data-dir="left" type="button">A</button>
+          <button data-dir="right" type="button">D</button>
+          <button data-dir="down" type="button">S</button>
+        </div>
+        <div class="touch-actions">
+          <button data-act="flap" type="button">Flap</button>
+          <button data-act="drop" type="button">Drop</button>
+          <button data-act="brake" type="button">Brake</button>
+          <button data-act="pause" type="button">Pause</button>
+          <button class="wide" data-act="restart" type="button">Restart</button>
+        </div>
+      </div>
+    </div>
+    <div class="topbar">
+      <div class="hint"><b>Steer</b> WASD/Arrows, drag the sky, or use touch pad. <b>Flap</b> Space. <b>Drop</b> E/Enter. <b>Brake</b> Shift. <b>Pause</b> P.</div>
+      <div class="hud-pills">
+        <div class="pill">Route <strong id="routeHud">1/3</strong></div>
+        <div class="pill">Parcels <strong id="parcelHud">0/0</strong></div>
+        <div class="pill">Time <strong id="timeHud">0s</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="panel brand-panel">
+      <div class="brand">
+        <div>
+          <h2>Kiteglass Courier</h2>
+          <p>A precision flight and delivery game with original routes, generated key art, touch controls, keyboard support, synth audio, wind lanes, chime gates, hazards, and persistent best score.</p>
+        </div>
+        <div class="sigil" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="stats">
+        <div class="stat"><div class="k">Score</div><div class="v" id="scoreStat">0</div></div>
+        <div class="stat"><div class="k">Best</div><div class="v" id="bestStat">0</div></div>
+        <div class="stat"><div class="k">Route</div><div class="v" id="routeStat">Dock</div></div>
+        <div class="stat"><div class="k">Combo</div><div class="v" id="comboStat">x0</div></div>
+      </div>
+    </section>
+
+    <section class="panel meters">
+      <div>
+        <div class="meter-label"><span>Delivery progress</span><span id="progressText">0%</span></div>
+        <div class="bar"><span id="progressBar"></span></div>
+      </div>
+      <div>
+        <div class="meter-label"><span>Cargo condition</span><span id="conditionText">100%</span></div>
+        <div class="bar"><span id="conditionBar"></span></div>
+      </div>
+      <div>
+        <div class="meter-label"><span>Flap stamina</span><span id="staminaText">100%</span></div>
+        <div class="bar"><span id="staminaBar"></span></div>
+      </div>
+    </section>
+
+    <section class="panel route-panel">
+      <p class="section-title">Delivery Run</p>
+      <div class="delivery-list" id="deliveryList"></div>
+    </section>
+
+    <section class="panel how-panel">
+      <p class="section-title">Route Notes</p>
+      <ul>
+        <li>Blue wind ribbons restore stamina and help you climb without spending a flap.</li>
+        <li>Drop while centered in a balcony ring for higher landing bonuses.</li>
+        <li>Chime gates add score, combo time, and a small clock bonus.</li>
+        <li>Storm reels and crane hooks chip cargo condition, so brake before tight docks.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <p class="section-title">Current Brief</p>
+      <p id="routeNote">Start a route to receive the first balcony manifest.</p>
+    </section>
+
+    <section class="panel actions">
+      <button id="flapBtn" type="button">Flap</button>
+      <button id="dropBtn" type="button">Drop</button>
+      <button id="brakeBtn" type="button">Brake</button>
+      <button id="muteBtn" type="button">Sound On</button>
+      <button id="pauseBtn" type="button">Pause</button>
+      <button id="restartBtn" type="button">Restart</button>
+    </section>
+  </aside>
+</main>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const canvas = $("game");
+const ctx = canvas.getContext("2d", { alpha:false });
+const splash = $("splash");
+const VIEW_W = 1280;
+const VIEW_H = 720;
+const SKY_FLOOR = 668;
+const SKY_CEIL = 48;
+const TAU = Math.PI * 2;
+const BEST_KEY = "kiteglass-courier-best-v1";
+const MUTE_KEY = "kiteglass-courier-muted-v1";
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist = (a, b, c, d) => Math.hypot(a - c, b - d);
+
+function storeGet(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value === null ? fallback : value;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function storeSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (error) {}
+}
+
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = (arr, rng) => arr[Math.floor((rng ? rng() : Math.random()) * arr.length)];
+
+const routeDefs = [
+  {
+    name:"Docklight Rise",
+    short:"Dock",
+    seed:73011,
+    length:4320,
+    time:90,
+    deliveries:5,
+    gates:10,
+    hazards:5,
+    wind:34,
+    skyA:"#14324b",
+    skyB:"#f09868",
+    accent:"#67d7d1",
+    note:"A gentle harbor climb. Use the wide blue wind ribbons to learn how the kite holds altitude between balconies."
+  },
+  {
+    name:"Lantern Narrows",
+    short:"Narrows",
+    seed:98217,
+    length:4860,
+    time:98,
+    deliveries:6,
+    gates:12,
+    hazards:8,
+    wind:18,
+    skyA:"#102845",
+    skyB:"#c56d7a",
+    accent:"#f6d18a",
+    note:"Targets sit closer to awnings and crane hooks. Brake before each glow ring and drop only when the courier is centered."
+  },
+  {
+    name:"Stormglass Reach",
+    short:"Reach",
+    seed:44109,
+    length:5480,
+    time:108,
+    deliveries:7,
+    gates:14,
+    hazards:12,
+    wind:-6,
+    skyA:"#15203b",
+    skyB:"#5e82bd",
+    accent:"#ff8a70",
+    note:"The last route pushes back with crosswind and storm reels. Chime gates are the safest way to buy clock time."
+  }
+];
+
+const balconyNames = [
+  "Amber Slip", "Tidebell Loft", "Saltglass Nook", "Brass Fern", "Moonrope Yard",
+  "Copper Cupola", "Blue Sail", "Harbor Loom", "Juniper Step", "Cinder Veranda",
+  "Pearl Crane", "Sunflag Court", "Whistle Deck", "Mica Gallery", "Warmline Arcade"
+];
+
+const state = {
+  mode:"title",
+  routeIndex:0,
+  score:0,
+  best:+storeGet(BEST_KEY, "0") || 0,
+  timeLeft:0,
+  totalTime:0,
+  delivered:0,
+  cargo:0,
+  condition:100,
+  stamina:100,
+  combo:0,
+  comboTimer:0,
+  dropCooldown:0,
+  flapCooldown:0,
+  invuln:0,
+  practice:false,
+  muted:storeGet(MUTE_KEY, "0") === "1",
+  keys:new Set(),
+  touch:{ x:0, y:0, brake:false },
+  pointer:{ active:false, x:300, y:320 },
+  cameraX:0,
+  shake:0,
+  flash:0,
+  time:0,
+  toastTimer:0
+};
+
+const player = {
+  x:130,
+  y:330,
+  vx:235,
+  vy:0,
+  r:25,
+  bank:0,
+  wing:0
+};
+
+let deliveries = [];
+let gates = [];
+let hazards = [];
+let particles = [];
+let popups = [];
+let skyline = [];
+let windBands = [];
+
+function route() {
+  return routeDefs[state.routeIndex];
+}
+
+function toast(text) {
+  const node = $("toast");
+  node.textContent = text;
+  node.classList.add("show");
+  state.toastTimer = 1.8;
+}
+
+function worldToScreen(x, y) {
+  return { x:x - state.cameraX + VIEW_W * 0.38, y };
+}
+
+function screenToWorld(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = (clientX - rect.left) / rect.width * VIEW_W;
+  const sy = (clientY - rect.top) / rect.height * VIEW_H;
+  return { x:sx + state.cameraX - VIEW_W * 0.38, y:sy };
+}
+
+function createRoute(index) {
+  const def = routeDefs[index];
+  const rng = mulberry32(def.seed);
+  deliveries = [];
+  gates = [];
+  hazards = [];
+  particles = [];
+  popups = [];
+  skyline = [];
+  windBands = [];
+
+  for (let i = 0; i < def.deliveries; i++) {
+    const pct = (i + 1) / (def.deliveries + 1);
+    const x = 520 + pct * (def.length - 880) + (rng() - 0.5) * 170;
+    const high = i % 2 === 0;
+    const y = clamp((high ? 185 : 475) + (rng() - 0.5) * 150, 124, 586);
+    deliveries.push({
+      id:i,
+      name:pick(balconyNames, rng),
+      x,
+      y,
+      r:78,
+      delivered:false,
+      sparkle:rng() * TAU
+    });
+  }
+
+  for (let i = 0; i < def.gates; i++) {
+    const x = 360 + (i + rng() * 0.75) / def.gates * (def.length - 680);
+    const y = clamp(180 + Math.sin(i * 1.45 + rng() * 2) * 210 + (rng() - 0.5) * 100, 112, 592);
+    gates.push({ x, y, r:42 + rng() * 13, taken:false, spin:rng() * TAU });
+  }
+
+  for (let i = 0; i < def.hazards; i++) {
+    const type = i % 3 === 0 ? "hook" : "reel";
+    const x = 620 + rng() * (def.length - 900);
+    const y = clamp(135 + rng() * 470, 110, 620);
+    hazards.push({
+      type,
+      x,
+      y,
+      r:type === "hook" ? 34 : 42,
+      phase:rng() * TAU,
+      amp:30 + rng() * 70,
+      speed:0.7 + rng() * 1.25,
+      vertical:rng() > 0.5
+    });
+  }
+
+  for (let i = 0; i < 30; i++) {
+    const x = i / 29 * (def.length + 800) - 240;
+    const w = 80 + rng() * 160;
+    const h = 70 + rng() * 220;
+    skyline.push({ x, w, h, layer:i % 3, color:rng() > 0.5 ? "#13263a" : "#18334a" });
+  }
+
+  for (let i = 0; i < 5; i++) {
+    windBands.push({
+      x:220 + i * (def.length - 500) / 4,
+      y:170 + rng() * 360,
+      w:520 + rng() * 240,
+      amp:34 + rng() * 52,
+      phase:rng() * TAU,
+      color:i % 2 ? "#67d7d1" : "#78a7ff"
+    });
+  }
+}
+
+function startRoute(index, practice) {
+  state.routeIndex = clamp(index, 0, routeDefs.length - 1);
+  state.practice = Boolean(practice);
+  if (index === 0 || state.practice) state.score = 0;
+  state.mode = "play";
+  state.timeLeft = state.practice ? 999 : route().time;
+  state.totalTime = state.timeLeft;
+  state.delivered = 0;
+  state.cargo = route().deliveries;
+  state.condition = 100;
+  state.stamina = 100;
+  state.combo = 0;
+  state.comboTimer = 0;
+  state.dropCooldown = 0;
+  state.flapCooldown = 0;
+  state.invuln = 1.2;
+  state.cameraX = 0;
+  state.flash = 0;
+  state.shake = 0;
+  player.x = 130;
+  player.y = 330;
+  player.vx = 238;
+  player.vy = 0;
+  player.bank = 0;
+  player.wing = 0;
+  createRoute(state.routeIndex);
+  $("titleOverlay").hidden = true;
+  $("resultOverlay").hidden = true;
+  $("mobileControls").hidden = false;
+  $("routeNote").textContent = route().note;
+  toast(state.practice ? "Practice route loaded" : route().name + " manifest loaded");
+  audio.start();
+  updateHud(true);
+}
+
+function beginRun(practice) {
+  startRoute(0, practice);
+}
+
+function nextRoute() {
+  if (state.mode === "victory" || state.practice || state.routeIndex >= routeDefs.length - 1) {
+    beginRun(false);
+    return;
+  }
+  startRoute(state.routeIndex + 1, false);
+}
+
+function replayRun() {
+  beginRun(state.practice);
+}
+
+function showResult(kind, title, text) {
+  state.mode = kind;
+  $("mobileControls").hidden = true;
+  $("resultKicker").textContent = kind === "game-over" ? "Route failed" : kind === "victory" ? "Harbor signed" : "Route signed";
+  $("resultTitle").textContent = title;
+  $("resultText").textContent = text;
+  $("nextBtn").textContent = kind === "stage-clear" ? "Next Route" : "New Run";
+  $("resultOverlay").hidden = false;
+  updateBest();
+  updateHud(true);
+}
+
+function completeRoute() {
+  const clearBonus = Math.round(state.condition * 18 + state.timeLeft * 10 + state.combo * 35);
+  state.score += clearBonus;
+  audio.clear();
+  updateBest();
+  if (state.practice) {
+    showResult("victory", "Practice Signed", "Training complete. Your final route score was " + state.score.toLocaleString() + ".");
+  } else if (state.routeIndex >= routeDefs.length - 1) {
+    showResult("victory", "All Routes Signed", "Every balcony received its parcel. Final score: " + state.score.toLocaleString() + ".");
+  } else {
+    showResult("stage-clear", "Route Delivered", "Clear bonus " + clearBonus.toLocaleString() + ". The next harbor route is ready.");
+  }
+}
+
+function failRoute(reason, detail) {
+  audio.fail();
+  showResult("game-over", reason, detail + " Score held at " + state.score.toLocaleString() + ".");
+}
+
+function updateBest() {
+  if (state.score > state.best) {
+    state.best = state.score;
+    storeSet(BEST_KEY, String(state.best));
+  }
+}
+
+function nearestDelivery() {
+  let best = null;
+  let bestD = Infinity;
+  for (const target of deliveries) {
+    if (target.delivered) continue;
+    const d = dist(player.x, player.y, target.x, target.y);
+    if (d < bestD) {
+      bestD = d;
+      best = target;
+    }
+  }
+  return { target:best, d:bestD };
+}
+
+function dropParcel() {
+  if (state.mode !== "play" || state.dropCooldown > 0) return false;
+  state.dropCooldown = 0.34;
+  const near = nearestDelivery();
+  if (!near.target || near.d > near.target.r) {
+    toast("No balcony in range");
+    audio.warn();
+    return false;
+  }
+  const target = near.target;
+  const center = clamp(1 - near.d / target.r, 0, 1);
+  const gentle = clamp(1 - Math.abs(player.vy) / 410, 0, 1);
+  const speed = clamp(1 - Math.abs(player.vx - 210) / 360, 0, 1);
+  const quality = center * 0.58 + gentle * 0.26 + speed * 0.16;
+  const bonus = Math.round(520 + quality * 880 + Math.min(18, state.combo) * 35);
+  target.delivered = true;
+  target.quality = quality;
+  state.delivered++;
+  state.cargo = Math.max(0, state.cargo - 1);
+  state.combo = Math.min(99, state.combo + 1);
+  state.comboTimer = 5.2;
+  state.score += bonus;
+  state.condition = clamp(state.condition + 3 + quality * 2, 0, 100);
+  spawnBurst(target.x, target.y, route().accent, 24);
+  addPopup("+" + bonus, target.x, target.y - 34, "#ffe7a8", 1.1);
+  audio.deliver(quality);
+  toast(target.name + " signed");
+  if (state.delivered >= deliveries.length) {
+    setTimeout(() => {
+      if (state.mode === "play") completeRoute();
+    }, 520);
+  }
+  updateHud(true);
+  return true;
+}
+
+function flap() {
+  if (state.mode !== "play" || state.flapCooldown > 0 || state.stamina < 15) return false;
+  state.flapCooldown = 0.2;
+  state.stamina = Math.max(0, state.stamina - 15);
+  player.vy -= 185;
+  player.vx += 42;
+  player.wing = 1;
+  spawnTrail(10, "#f6d18a");
+  audio.flap();
+  return true;
+}
+
+function setBrake(on) {
+  state.touch.brake = Boolean(on);
+}
+
+function pauseToggle() {
+  if (state.mode === "play") {
+    state.mode = "paused";
+    toast("Paused");
+  } else if (state.mode === "paused") {
+    state.mode = "play";
+    toast("Route resumed");
+  }
+  updateHud(true);
+}
+
+function inputVector() {
+  let x = 0;
+  let y = 0;
+  if (state.keys.has("arrowleft") || state.keys.has("a")) x -= 1;
+  if (state.keys.has("arrowright") || state.keys.has("d")) x += 1;
+  if (state.keys.has("arrowup") || state.keys.has("w")) y -= 1;
+  if (state.keys.has("arrowdown") || state.keys.has("s")) y += 1;
+  x += state.touch.x;
+  y += state.touch.y;
+  if (state.pointer.active) {
+    const dx = state.pointer.x - player.x;
+    const dy = state.pointer.y - player.y;
+    x += clamp(dx / 180, -1, 1);
+    y += clamp(dy / 150, -1, 1);
+  }
+  const mag = Math.hypot(x, y);
+  if (mag > 1) { x /= mag; y /= mag; }
+  return { x, y };
+}
+
+function isBraking() {
+  return state.touch.brake || state.keys.has("shift");
+}
+
+function windAt(x, y) {
+  let force = { x:route().wind, y:0, power:0 };
+  for (const band of windBands) {
+    const localX = x - band.x;
+    if (localX < -40 || localX > band.w + 40) continue;
+    const centerY = band.y + Math.sin(localX / 150 + band.phase) * band.amp;
+    const dy = Math.abs(y - centerY);
+    if (dy < 58) {
+      const p = 1 - dy / 58;
+      force.x += 80 * p;
+      force.y -= 120 * p;
+      force.power = Math.max(force.power, p);
+    }
+  }
+  return force;
+}
+
+function update(dt) {
+  state.time += dt;
+  if (state.toastTimer > 0) {
+    state.toastTimer -= dt;
+    if (state.toastTimer <= 0) $("toast").classList.remove("show");
+  }
+  state.flash = Math.max(0, state.flash - dt * 2.6);
+  state.shake = Math.max(0, state.shake - dt * 28);
+  updateParticles(dt);
+  if (state.mode !== "play") return;
+
+  state.timeLeft -= dt;
+  if (!state.practice && state.timeLeft <= 0) {
+    state.timeLeft = 0;
+    failRoute("Last Bell Missed", "The route clock expired before every balcony was signed.");
+    return;
+  }
+
+  state.comboTimer = Math.max(0, state.comboTimer - dt);
+  if (state.comboTimer <= 0) state.combo = 0;
+  state.dropCooldown = Math.max(0, state.dropCooldown - dt);
+  state.flapCooldown = Math.max(0, state.flapCooldown - dt);
+  state.invuln = Math.max(0, state.invuln - dt);
+  player.wing = Math.max(0, player.wing - dt * 2.6);
+
+  const input = inputVector();
+  const wind = windAt(player.x, player.y);
+  const braking = isBraking();
+  const targetVx = braking ? 95 : 235 + input.x * 118 + wind.x;
+  player.vx = lerp(player.vx, targetVx, 1 - Math.pow(0.001, dt));
+  const glideLift = clamp((player.vx - 60) / 300, 0, 1);
+  player.vy += (112 + input.y * 340 + wind.y - glideLift * 138) * dt;
+  if (input.y < -0.15 && state.stamina > 0) {
+    player.vy -= 82 * dt;
+    state.stamina = Math.max(0, state.stamina - 7 * dt);
+  }
+  if (input.y > 0.25) player.vy += 80 * dt;
+  if (braking) {
+    player.vx *= Math.pow(0.58, dt);
+    player.vy *= Math.pow(0.8, dt);
+  }
+  state.stamina = clamp(state.stamina + (wind.power > 0 ? 35 : 18) * dt, 0, 100);
+
+  player.vx = clamp(player.vx, -130, 420);
+  player.vy = clamp(player.vy, -420, 520);
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
+  player.bank = lerp(player.bank, clamp((player.vx - 230) / 260 + input.x * 0.35, -0.9, 0.9), 1 - Math.pow(0.002, dt));
+
+  if (player.y < SKY_CEIL) {
+    impact(4, "High gust scraped the kite frame");
+    player.y = SKY_CEIL;
+    player.vy = Math.max(80, Math.abs(player.vy) * 0.35);
+  }
+  if (player.y > SKY_FLOOR) {
+    const severity = clamp((player.vy - 120) / 360, 0, 1);
+    impact(5 + severity * 15, "Cargo jolted on the lower awnings");
+    player.y = SKY_FLOOR;
+    player.vy = -160 * (0.7 + severity * 0.3);
+    player.vx *= 0.76;
+  }
+  player.x = clamp(player.x, 90, route().length + 280);
+
+  state.cameraX = lerp(state.cameraX, clamp(player.x - 120, 0, route().length - 560), 1 - Math.pow(0.006, dt));
+
+  updateGates();
+  updateHazards(dt);
+
+  if (player.x > route().length + 40 && state.delivered < deliveries.length) {
+    player.x = route().length + 40;
+    player.vx = Math.min(player.vx, 40);
+    toast("Turn back for unsigned balconies");
+  }
+}
+
+function impact(amount, message) {
+  if (state.invuln > 0) return;
+  state.invuln = 0.8;
+  state.condition = clamp(state.condition - amount, 0, 100);
+  state.combo = 0;
+  state.comboTimer = 0;
+  state.shake = Math.max(state.shake, 8 + amount * 0.3);
+  state.flash = Math.max(state.flash, 0.75);
+  spawnBurst(player.x, player.y, "#ff8a70", 18);
+  audio.hit();
+  if (message) toast(message);
+  if (state.condition <= 0) {
+    failRoute("Cargo Broken", "Too many hard knocks spoiled the fragile parcels.");
+  }
+}
+
+function updateGates() {
+  for (const gate of gates) {
+    if (gate.taken) continue;
+    const d = dist(player.x, player.y, gate.x, gate.y);
+    if (d < gate.r * 0.82) {
+      gate.taken = true;
+      const bonus = 150 + state.combo * 18;
+      state.score += bonus;
+      state.combo = Math.min(99, state.combo + 1);
+      state.comboTimer = 4.2;
+      state.stamina = clamp(state.stamina + 18, 0, 100);
+      if (!state.practice) state.timeLeft += 1.2;
+      spawnBurst(gate.x, gate.y, "#67d7d1", 18);
+      addPopup("chime +" + bonus, gate.x, gate.y - 28, "#9ff5ef", 0.88);
+      audio.gate();
+    }
+  }
+}
+
+function hazardPosition(h) {
+  const t = state.time * h.speed + h.phase;
+  if (h.type === "hook") {
+    return { x:h.x + Math.sin(t) * h.amp * 0.7, y:h.y + Math.cos(t * 0.8) * h.amp };
+  }
+  return h.vertical
+    ? { x:h.x, y:h.y + Math.sin(t) * h.amp }
+    : { x:h.x + Math.sin(t) * h.amp, y:h.y };
+}
+
+function updateHazards(dt) {
+  for (const h of hazards) {
+    const p = hazardPosition(h);
+    const d = dist(player.x, player.y, p.x, p.y);
+    if (d < player.r + h.r * 0.78) {
+      const nx = (player.x - p.x) / Math.max(1, d);
+      const ny = (player.y - p.y) / Math.max(1, d);
+      player.vx += nx * 140;
+      player.vy += ny * 180 - 35;
+      impact(h.type === "hook" ? 14 : 18, h.type === "hook" ? "Crane hook clipped the satchel" : "Storm reel battered the cargo");
+    }
+  }
+}
+
+function spawnBurst(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * TAU;
+    const s = rand(30, 170);
+    particles.push({
+      x, y,
+      vx:Math.cos(a) * s,
+      vy:Math.sin(a) * s,
+      size:rand(2, 6),
+      color,
+      life:rand(0.35, 0.9),
+      max:0.9
+    });
+  }
+}
+
+function spawnTrail(count, color) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x:player.x - 22 + rand(-8, 8),
+      y:player.y + rand(-12, 12),
+      vx:rand(-120, -30),
+      vy:rand(-45, 45),
+      size:rand(2, 5),
+      color,
+      life:rand(0.25, 0.55),
+      max:0.55
+    });
+  }
+}
+
+function addPopup(text, x, y, color, scale) {
+  popups.push({ text, x, y, vy:-34, color, life:1.05, max:1.05, scale:scale || 1 });
+}
+
+function updateParticles(dt) {
+  for (const p of particles) {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += 40 * dt;
+    p.life -= dt;
+  }
+  particles = particles.filter((p) => p.life > 0);
+  for (const p of popups) {
+    p.y += p.vy * dt;
+    p.life -= dt;
+  }
+  popups = popups.filter((p) => p.life > 0);
+}
+
+function draw() {
+  const def = route();
+  ctx.save();
+  if (state.shake > 0.5) ctx.translate(rand(-state.shake, state.shake), rand(-state.shake, state.shake));
+  const sky = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+  sky.addColorStop(0, def.skyA);
+  sky.addColorStop(0.5, "#25425a");
+  sky.addColorStop(1, def.skyB);
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  drawSkyDetails();
+  drawWindBands();
+  drawSkyline();
+  drawRouteRails();
+  drawDeliveries();
+  drawGates();
+  drawHazards();
+  drawParticles();
+  drawPlayer();
+  drawHudCanvas();
+  if (state.flash > 0) {
+    ctx.fillStyle = "rgba(255,138,112," + (state.flash * 0.36) + ")";
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  }
+  ctx.restore();
+  if (state.mode === "paused") drawPaused();
+}
+
+function drawSkyDetails() {
+  const sunX = 980 - state.cameraX * 0.05;
+  const sunY = 118;
+  const grad = ctx.createRadialGradient(sunX, sunY, 20, sunX, sunY, 190);
+  grad.addColorStop(0, "rgba(255,231,168,.65)");
+  grad.addColorStop(1, "rgba(255,231,168,0)");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 190, 0, TAU);
+  ctx.fill();
+  ctx.globalAlpha = 0.32;
+  ctx.strokeStyle = "#dffcf9";
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 9; i++) {
+    const x = ((i * 280 - state.cameraX * 0.18) % (VIEW_W + 300)) - 120;
+    const y = 84 + i % 4 * 54 + Math.sin(state.time * 0.4 + i) * 10;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x + 70, y - 20, x + 125, y + 22, x + 220, y - 4);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawWindBands() {
+  ctx.save();
+  ctx.lineCap = "round";
+  for (const band of windBands) {
+    const start = worldToScreen(band.x, band.y);
+    const end = worldToScreen(band.x + band.w, band.y);
+    if (end.x < -80 || start.x > VIEW_W + 80) continue;
+    for (let lane = 0; lane < 3; lane++) {
+      ctx.globalAlpha = 0.12 + lane * 0.055;
+      ctx.strokeStyle = band.color;
+      ctx.lineWidth = 18 - lane * 5;
+      ctx.beginPath();
+      for (let i = 0; i <= 32; i++) {
+        const lx = band.w * i / 32;
+        const x = band.x + lx;
+        const y = band.y + Math.sin(lx / 150 + band.phase + lane * 0.45 + state.time * 0.9) * band.amp + (lane - 1) * 18;
+        const p = worldToScreen(x, y);
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+function drawSkyline() {
+  ctx.save();
+  const water = ctx.createLinearGradient(0, VIEW_H - 130, 0, VIEW_H);
+  water.addColorStop(0, "rgba(33,79,92,.84)");
+  water.addColorStop(1, "rgba(7,17,29,1)");
+  ctx.fillStyle = water;
+  ctx.fillRect(0, VIEW_H - 128, VIEW_W, 128);
+  for (const b of skyline) {
+    const par = 0.18 + b.layer * 0.1;
+    const sx = b.x - state.cameraX * par + VIEW_W * 0.2;
+    if (sx > VIEW_W + 140 || sx + b.w < -140) continue;
+    const y = SKY_FLOOR - 16 - b.h * (0.58 + b.layer * 0.16);
+    ctx.fillStyle = b.color;
+    ctx.globalAlpha = 0.56 + b.layer * 0.14;
+    roundRect(ctx, sx, y, b.w, SKY_FLOOR + 80 - y, 6);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,226,160,.22)";
+    for (let wx = sx + 12; wx < sx + b.w - 12; wx += 32) {
+      for (let wy = y + 18; wy < SKY_FLOOR - 24; wy += 38) {
+        if (((wx + wy) | 0) % 3 === 0) ctx.fillRect(wx, wy, 9, 12);
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "rgba(6,13,20,.7)";
+  ctx.fillRect(0, SKY_FLOOR + 6, VIEW_W, 64);
+  ctx.strokeStyle = "rgba(255,255,255,.18)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, SKY_FLOOR + 6);
+  ctx.lineTo(VIEW_W, SKY_FLOOR + 6);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawRouteRails() {
+  const def = route();
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,.16)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([10, 12]);
+  ctx.beginPath();
+  for (let i = 0; i <= 90; i++) {
+    const x = def.length * i / 90;
+    const y = 350 + Math.sin(i * 0.35 + state.routeIndex) * 82;
+    const p = worldToScreen(x, y);
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  const finish = worldToScreen(def.length, 360);
+  if (finish.x > -80 && finish.x < VIEW_W + 80) {
+    ctx.fillStyle = "rgba(246,209,138,.18)";
+    ctx.strokeStyle = "#f6d18a";
+    ctx.lineWidth = 3;
+    roundRect(ctx, finish.x - 18, 120, 36, 490, 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#fff1c8";
+    ctx.font = "900 16px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("FINAL PIER", finish.x, 106);
+  }
+  ctx.restore();
+}
+
+function drawDeliveries() {
+  for (const target of deliveries) {
+    const p = worldToScreen(target.x, target.y);
+    if (p.x < -180 || p.x > VIEW_W + 180) continue;
+    const pulse = 0.5 + Math.sin(state.time * 4 + target.sparkle) * 0.5;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.fillStyle = "rgba(5,12,20,.54)";
+    roundRect(ctx, -98, 40, 196, 44, 8);
+    ctx.fill();
+    ctx.fillStyle = target.delivered ? "rgba(145,223,144,.18)" : "rgba(246,209,138,.16)";
+    ctx.strokeStyle = target.delivered ? "#91df90" : "#f6d18a";
+    ctx.lineWidth = target.delivered ? 3 : 2 + pulse * 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, target.r, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = target.delivered ? "#91df90" : "#ffe2a0";
+    ctx.strokeStyle = "rgba(7,17,29,.8)";
+    ctx.lineWidth = 3;
+    roundRect(ctx, -28, 12, 56, 42, 7);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "rgba(7,17,29,.55)";
+    ctx.fillRect(-18, 26, 36, 7);
+    ctx.fillStyle = "#eafffb";
+    ctx.font = "800 12px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText(target.delivered ? "SIGNED" : "DROP", 0, -target.r - 12);
+    ctx.restore();
+  }
+}
+
+function drawGates() {
+  ctx.save();
+  for (const gate of gates) {
+    if (gate.taken) continue;
+    const p = worldToScreen(gate.x, gate.y);
+    if (p.x < -90 || p.x > VIEW_W + 90) continue;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(gate.spin + state.time * 1.4);
+    ctx.strokeStyle = "#67d7d1";
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = 0.72;
+    ctx.beginPath();
+    ctx.arc(0, 0, gate.r, 0, TAU);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * TAU;
+      ctx.fillStyle = i % 2 ? "#f6d18a" : "#67d7d1";
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * gate.r, Math.sin(a) * gate.r, 5, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawHazards() {
+  for (const h of hazards) {
+    const hp = hazardPosition(h);
+    const p = worldToScreen(hp.x, hp.y);
+    if (p.x < -120 || p.x > VIEW_W + 120 || p.y < -120 || p.y > VIEW_H + 120) continue;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    if (h.type === "hook") {
+      ctx.strokeStyle = "rgba(255,224,160,.38)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, -90);
+      ctx.lineTo(0, -16);
+      ctx.stroke();
+      ctx.strokeStyle = "#ff8a70";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(0, 0, h.r, Math.PI * 0.1, Math.PI * 1.35);
+      ctx.stroke();
+      ctx.fillStyle = "#ffc0a6";
+      ctx.beginPath();
+      ctx.arc(0, -22, 9, 0, TAU);
+      ctx.fill();
+    } else {
+      ctx.rotate(state.time * 2.5 + h.phase);
+      ctx.fillStyle = "rgba(255,95,116,.18)";
+      ctx.beginPath();
+      ctx.arc(0, 0, h.r * 1.55, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = "#ff8a70";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, h.r, 0, TAU);
+      ctx.stroke();
+      for (let i = 0; i < 5; i++) {
+        const a = i / 5 * TAU;
+        ctx.strokeStyle = i % 2 ? "#ffcab8" : "#ff5f74";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * h.r, Math.sin(a) * h.r);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+}
+
+function drawPlayer() {
+  const p = worldToScreen(player.x, player.y);
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(player.bank * 0.35);
+  if (state.invuln > 0 && Math.sin(state.time * 28) > 0.2) ctx.globalAlpha = 0.58;
+  ctx.fillStyle = "rgba(0,0,0,.24)";
+  ctx.beginPath();
+  ctx.ellipse(6, 36, 50, 10, 0, 0, TAU);
+  ctx.fill();
+  const flapLift = player.wing;
+  ctx.strokeStyle = "rgba(255,255,255,.55)";
+  ctx.lineWidth = 3;
+  ctx.fillStyle = "#f6d18a";
+  ctx.beginPath();
+  ctx.moveTo(-80, -16 - flapLift * 10);
+  ctx.lineTo(0, -42 - flapLift * 18);
+  ctx.lineTo(82, -12 - flapLift * 8);
+  ctx.lineTo(18, 10);
+  ctx.lineTo(-20, 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#67d7d1";
+  ctx.beginPath();
+  ctx.moveTo(-20, 8);
+  ctx.lineTo(0, -42 - flapLift * 18);
+  ctx.lineTo(18, 10);
+  ctx.lineTo(0, 26);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#142235";
+  roundRect(ctx, -13, 6, 26, 34, 7);
+  ctx.fill();
+  ctx.fillStyle = "#ff8a70";
+  roundRect(ctx, -22, 28, 44, 24, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#ffe2a0";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-18, 32, 36, 16);
+  ctx.restore();
+}
+
+function drawParticles() {
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (const p of particles) {
+    const sp = worldToScreen(p.x, p.y);
+    ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, p.size, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  for (const p of popups) {
+    const sp = worldToScreen(p.x, p.y);
+    ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+    ctx.fillStyle = p.color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "900 " + Math.round(18 * p.scale) + "px system-ui";
+    ctx.shadowColor = "rgba(0,0,0,.72)";
+    ctx.shadowBlur = 4;
+    ctx.fillText(p.text, sp.x, sp.y);
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawHudCanvas() {
+  ctx.save();
+  ctx.fillStyle = "rgba(5,12,20,.68)";
+  roundRect(ctx, 18, 18, 344, 86, 8);
+  roundRect(ctx, VIEW_W - 364, 18, 346, 86, 8);
+  ctx.fill();
+  ctx.fillStyle = "#a8b9ba";
+  ctx.font = "800 13px system-ui";
+  ctx.textAlign = "left";
+  ctx.fillText("SCORE", 38, 42);
+  ctx.fillStyle = "#ffe2a0";
+  ctx.font = "900 30px Consolas,monospace";
+  ctx.fillText(String(state.score).padStart(6, "0"), 38, 78);
+  if (state.combo > 1) {
+    ctx.fillStyle = "#91df90";
+    ctx.font = "800 17px system-ui";
+    ctx.fillText("CHAIN x" + state.combo, 224, 77);
+  }
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#a8b9ba";
+  ctx.font = "800 13px system-ui";
+  ctx.fillText(route().name.toUpperCase(), VIEW_W - 38, 42);
+  ctx.fillStyle = state.timeLeft < 12 && !state.practice ? "#ff8a70" : "#f4fbf8";
+  ctx.font = "900 32px Consolas,monospace";
+  ctx.fillText(state.practice ? "FREE" : Math.ceil(state.timeLeft) + "s", VIEW_W - 38, 78);
+
+  const pct = deliveries.length ? state.delivered / deliveries.length : 0;
+  ctx.fillStyle = "rgba(255,255,255,.12)";
+  roundRect(ctx, 406, 36, 470, 18, 9);
+  ctx.fill();
+  const g = ctx.createLinearGradient(406, 0, 876, 0);
+  g.addColorStop(0, "#67d7d1");
+  g.addColorStop(0.68, "#f6d18a");
+  g.addColorStop(1, "#91df90");
+  ctx.fillStyle = g;
+  roundRect(ctx, 406, 36, 470 * pct, 18, 9);
+  ctx.fill();
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#e4fffb";
+  ctx.font = "800 13px system-ui";
+  ctx.fillText(state.delivered + " / " + deliveries.length + " parcels signed", 641, 82);
+  ctx.restore();
+}
+
+function drawPaused() {
+  ctx.save();
+  ctx.fillStyle = "rgba(4,9,15,.62)";
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#e4fffb";
+  ctx.font = "900 70px system-ui";
+  ctx.fillText("PAUSED", VIEW_W / 2, VIEW_H / 2 - 8);
+  ctx.fillStyle = "#c7d8d8";
+  ctx.font = "22px system-ui";
+  ctx.fillText("Press P or tap Pause to resume", VIEW_W / 2, VIEW_H / 2 + 42);
+  ctx.restore();
+}
+
+function roundRect(g, x, y, w, h, r) {
+  const rr = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+  g.beginPath();
+  g.moveTo(x + rr, y);
+  g.arcTo(x + w, y, x + w, y + h, rr);
+  g.arcTo(x + w, y + h, x, y + h, rr);
+  g.arcTo(x, y + h, x, y, rr);
+  g.arcTo(x, y, x + w, y, rr);
+  g.closePath();
+}
+
+function updateHud(force) {
+  const total = deliveries.length || route().deliveries;
+  const pct = total ? state.delivered / total : 0;
+  $("scoreStat").textContent = state.score.toLocaleString();
+  $("bestStat").textContent = state.best.toLocaleString();
+  $("routeStat").textContent = route().short;
+  $("comboStat").textContent = "x" + state.combo;
+  $("routeHud").textContent = (state.routeIndex + 1) + "/" + routeDefs.length;
+  $("parcelHud").textContent = state.delivered + "/" + total;
+  $("timeHud").textContent = state.practice ? "Free" : Math.ceil(state.timeLeft) + "s";
+  $("progressText").textContent = Math.round(pct * 100) + "%";
+  $("progressBar").style.width = (pct * 100) + "%";
+  $("conditionText").textContent = Math.round(state.condition) + "%";
+  $("conditionBar").style.width = state.condition + "%";
+  $("staminaText").textContent = Math.round(state.stamina) + "%";
+  $("staminaBar").style.width = state.stamina + "%";
+  $("muteBtn").textContent = state.muted ? "Sound Off" : "Sound On";
+  $("pauseBtn").textContent = state.mode === "paused" ? "Resume" : "Pause";
+  $("flapBtn").disabled = state.mode !== "play" || state.stamina < 15;
+  $("dropBtn").disabled = state.mode !== "play" || state.cargo <= 0;
+  $("brakeBtn").disabled = state.mode !== "play";
+  if (!force) return;
+  const list = $("deliveryList");
+  list.innerHTML = "";
+  if (!deliveries.length) {
+    list.innerHTML = '<p>Start a route to see delivery stops.</p>';
+    return;
+  }
+  const next = deliveries.find((d) => !d.delivered);
+  for (const target of deliveries) {
+    const div = document.createElement("div");
+    div.className = "delivery" + (target.delivered ? " done" : target === next ? " next" : "");
+    const status = target.delivered
+      ? "Signed with " + Math.round((target.quality || 0) * 100) + "% landing quality"
+      : target === next ? "Next balcony - center in the ring and drop" : "Pending";
+    div.innerHTML = "<strong>" + target.name + "</strong><span>" + status + "</span>";
+    list.appendChild(div);
+  }
+}
+
+const audio = {
+  ctx:null,
+  master:null,
+  music:null,
+  sfx:null,
+  next:0,
+  step:0,
+  start() {
+    this.ensure();
+    if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+  },
+  ensure() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      return;
+    }
+    this.master = this.ctx.createGain();
+    this.master.gain.value = state.muted ? 0 : 1;
+    this.master.connect(this.ctx.destination);
+    this.music = this.ctx.createGain();
+    this.music.gain.value = 0.08;
+    this.music.connect(this.master);
+    this.sfx = this.ctx.createGain();
+    this.sfx.gain.value = 0.44;
+    this.sfx.connect(this.master);
+    this.next = this.ctx.currentTime + 0.08;
+    setInterval(() => this.tick(), 120);
+  },
+  setMuted(muted) {
+    state.muted = muted;
+    storeSet(MUTE_KEY, muted ? "1" : "0");
+    if (this.master && this.ctx) this.master.gain.setTargetAtTime(muted ? 0 : 1, this.ctx.currentTime, 0.04);
+    updateHud(false);
+  },
+  tone(freq, dur, type, gain, slide, dest, when) {
+    if (!this.ctx || state.muted) return;
+    const t = when || this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type || "triangle";
+    osc.frequency.setValueAtTime(freq, t);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(30, slide), t + dur);
+    g.gain.setValueAtTime(gain || 0.08, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g);
+    g.connect(dest || this.sfx);
+    osc.start(t);
+    osc.stop(t + dur + 0.04);
+  },
+  tick() {
+    if (!this.ctx || this.ctx.state !== "running" || state.muted || (state.mode !== "play" && state.mode !== "paused")) return;
+    const stepDur = 60 / 104 / 2;
+    const chords = [
+      [196, 246.94, 329.63],
+      [220, 277.18, 369.99],
+      [174.61, 261.63, 329.63],
+      [207.65, 246.94, 392]
+    ];
+    while (this.next < this.ctx.currentTime + 0.24) {
+      const chord = chords[Math.floor(this.step / 8) % chords.length];
+      if (this.step % 4 === 0) this.tone(chord[0], 0.24, "triangle", 0.026, null, this.music, this.next);
+      if (this.step % 2 === 0) this.tone(chord[this.step % 3] * 2, 0.07, "square", 0.014, null, this.music, this.next);
+      if (this.step % 8 === 6) this.tone(chord[2] * 2.25, 0.08, "sine", 0.018, null, this.music, this.next);
+      this.step++;
+      this.next += stepDur;
+    }
+  },
+  flap(){ this.tone(210, 0.16, "sawtooth", 0.11, 510); },
+  deliver(q){ [440, 560 + q * 240, 760 + q * 260].forEach((f, i) => setTimeout(() => this.tone(f, 0.08, "triangle", 0.08), i * 65)); },
+  gate(){ this.tone(760, 0.07, "sine", 0.07, 980); },
+  hit(){ this.tone(130, 0.16, "sawtooth", 0.13, 60); },
+  warn(){ this.tone(240, 0.08, "square", 0.06, 160); },
+  clear(){ [392, 523.25, 659.25, 880].forEach((f, i) => setTimeout(() => this.tone(f, 0.15, "triangle", 0.1), i * 85)); },
+  fail(){ [220, 185, 146].forEach((f, i) => setTimeout(() => this.tone(f, 0.16, "sawtooth", 0.11), i * 110)); }
+};
+
+canvas.addEventListener("pointerdown", (event) => {
+  audio.start();
+  if (state.mode === "title") {
+    beginRun(false);
+    return;
+  }
+  if (state.mode === "paused") {
+    state.mode = "play";
+    updateHud(false);
+    return;
+  }
+  if (state.mode !== "play") return;
+  const p = screenToWorld(event.clientX, event.clientY);
+  state.pointer.active = true;
+  state.pointer.x = p.x;
+  state.pointer.y = p.y;
+  try { canvas.setPointerCapture(event.pointerId); } catch (error) {}
+});
+
+canvas.addEventListener("pointermove", (event) => {
+  if (state.mode !== "play") return;
+  if (event.pointerType === "mouse" || state.pointer.active) {
+    const p = screenToWorld(event.clientX, event.clientY);
+    state.pointer.active = true;
+    state.pointer.x = p.x;
+    state.pointer.y = p.y;
+  }
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  if (event.pointerType !== "mouse") state.pointer.active = false;
+});
+canvas.addEventListener("pointercancel", () => { state.pointer.active = false; });
+canvas.addEventListener("pointerleave", (event) => {
+  if (event.pointerType === "mouse") state.pointer.active = false;
+});
+
+window.addEventListener("keydown", (event) => {
+  const key = event.key.toLowerCase();
+  if (["arrowleft","arrowright","arrowup","arrowdown"," ","shift","enter","e","p","m","r","escape"].includes(key)) event.preventDefault();
+  if (key === "enter" && state.mode === "title") {
+    audio.start();
+    beginRun(false);
+    return;
+  }
+  if ((key === "enter" || key === "e") && state.mode === "play") {
+    audio.start();
+    dropParcel();
+    return;
+  }
+  if (key === " " && state.mode === "title") {
+    audio.start();
+    beginRun(false);
+    return;
+  }
+  if (key === " ") {
+    audio.start();
+    flap();
+  } else if (key === "p" || key === "escape") {
+    pauseToggle();
+  } else if (key === "m") {
+    audio.start();
+    audio.setMuted(!state.muted);
+  } else if (key === "r") {
+    beginRun(state.practice);
+  }
+  state.keys.add(key);
+});
+window.addEventListener("keyup", (event) => {
+  state.keys.delete(event.key.toLowerCase());
+});
+
+for (const btn of document.querySelectorAll(".touch-pad button")) {
+  const dir = btn.dataset.dir;
+  const set = (on) => {
+    if (dir === "left") state.touch.x = on ? -1 : state.touch.x === -1 ? 0 : state.touch.x;
+    if (dir === "right") state.touch.x = on ? 1 : state.touch.x === 1 ? 0 : state.touch.x;
+    if (dir === "up") state.touch.y = on ? -1 : state.touch.y === -1 ? 0 : state.touch.y;
+    if (dir === "down") state.touch.y = on ? 1 : state.touch.y === 1 ? 0 : state.touch.y;
+  };
+  btn.addEventListener("pointerdown", (event) => { event.preventDefault(); audio.start(); set(true); try { btn.setPointerCapture(event.pointerId); } catch (error) {} });
+  btn.addEventListener("pointerup", () => set(false));
+  btn.addEventListener("pointercancel", () => set(false));
+  btn.addEventListener("pointerleave", () => set(false));
+}
+
+for (const btn of document.querySelectorAll(".touch-actions button")) {
+  btn.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    audio.start();
+    if (btn.dataset.act === "flap") flap();
+    if (btn.dataset.act === "drop") dropParcel();
+    if (btn.dataset.act === "brake") setBrake(true);
+    if (btn.dataset.act === "pause") pauseToggle();
+    if (btn.dataset.act === "restart") beginRun(state.practice);
+  });
+  btn.addEventListener("pointerup", () => {
+    if (btn.dataset.act === "brake") setBrake(false);
+  });
+  btn.addEventListener("pointercancel", () => {
+    if (btn.dataset.act === "brake") setBrake(false);
+  });
+}
+
+$("startBtn").addEventListener("click", () => beginRun(false));
+$("practiceBtn").addEventListener("click", () => beginRun(true));
+$("nextBtn").addEventListener("click", nextRoute);
+$("replayBtn").addEventListener("click", replayRun);
+$("flapBtn").addEventListener("click", () => { audio.start(); flap(); });
+$("dropBtn").addEventListener("click", () => { audio.start(); dropParcel(); });
+$("brakeBtn").addEventListener("pointerdown", (event) => { event.preventDefault(); setBrake(true); });
+$("brakeBtn").addEventListener("pointerup", () => setBrake(false));
+$("brakeBtn").addEventListener("pointerleave", () => setBrake(false));
+$("muteBtn").addEventListener("click", () => { audio.start(); audio.setMuted(!state.muted); });
+$("pauseBtn").addEventListener("click", pauseToggle);
+$("restartBtn").addEventListener("click", () => beginRun(state.practice));
+
+splash.addEventListener("load", () => { $("loading").hidden = true; });
+splash.addEventListener("error", () => {
+  $("loading").textContent = "Generated art could not load. Live canvas art is ready.";
+  setTimeout(() => { $("loading").hidden = true; }, 2200);
+});
+setTimeout(() => {
+  if (!splash.complete) $("loading").textContent = "Still loading high-resolution key art...";
+}, 1600);
+if (splash.complete && splash.naturalWidth > 0) $("loading").hidden = true;
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && state.mode === "play") state.mode = "paused";
+});
+
+let last = performance.now();
+let hudTimer = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  update(dt);
+  draw();
+  hudTimer += dt;
+  if (hudTimer > 0.12) {
+    updateHud(false);
+    hudTimer = 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+function boot() {
+  createRoute(0);
+  state.mode = "title";
+  state.timeLeft = route().time;
+  state.totalTime = route().time;
+  $("routeNote").textContent = route().note;
+  $("mobileControls").hidden = true;
+  updateHud(true);
+  requestAnimationFrame(frame);
+}
+boot();
+
+const kiteglassCourierApi = {
+  start:(practice = false) => beginRun(practice),
+  next:nextRoute,
+  flap,
+  drop:dropParcel,
+  pause:pauseToggle,
+  step:(seconds = 1 / 60) => {
+    const steps = Math.max(1, Math.ceil(seconds / 0.05));
+    for (let i = 0; i < steps; i++) update(Math.min(0.05, seconds / steps));
+    draw();
+    updateHud(true);
+  },
+  deliverNext:() => {
+    const target = deliveries.find((d) => !d.delivered);
+    if (!target) return false;
+    player.x = target.x;
+    player.y = target.y;
+    player.vx = 210;
+    player.vy = 20;
+    state.dropCooldown = 0;
+    return dropParcel();
+  },
+  setCondition:(value) => { state.condition = clamp(value, 0, 100); updateHud(false); },
+  setTime:(value) => { state.timeLeft = Math.max(0, value); updateHud(false); },
+  getState:() => ({
+    mode:state.mode,
+    routeIndex:state.routeIndex,
+    score:state.score,
+    best:state.best,
+    timeLeft:state.timeLeft,
+    delivered:state.delivered,
+    cargo:state.cargo,
+    condition:state.condition,
+    stamina:state.stamina,
+    combo:state.combo,
+    player:{ x:player.x, y:player.y, vx:player.vx, vy:player.vy },
+    deliveries:deliveries.map((d) => ({ name:d.name, x:d.x, y:d.y, delivered:d.delivered })),
+    gates:gates.length,
+    hazards:hazards.length
+  })
+};
+try { globalThis.__KITEGLASS_COURIER__ = kiteglassCourierApi; } catch (error) {}
+try { window.__KITEGLASS_COURIER__ = kiteglassCourierApi; } catch (error) {}
+</script>
+</body>
+</html>

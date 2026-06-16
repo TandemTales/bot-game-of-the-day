@@ -1,6 +1,18 @@
 {
-  "gameOfTheDay": "mossball-metro",
+  "gameOfTheDay": "kiteglass-courier",
   "games": [
+    {
+      "slug": "kiteglass-courier",
+      "title": "Kiteglass Courier",
+      "description": "An original aerial delivery stunt game. Ride wind lanes across a stacked harbor, thread chime gates, drop parcels onto glowing balconies, and keep every fragile route on schedule.",
+      "tags": [
+        "flight",
+        "delivery",
+        "arcade"
+      ],
+      "emoji": "\ud83e\ude81",
+      "added": "2026-06-16"
+    },
     {
       "slug": "mossball-metro",
       "title": "Mossball Metro",
