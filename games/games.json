@@ -1,6 +1,18 @@
 {
-  "gameOfTheDay": "lantern-drums",
+  "gameOfTheDay": "mossball-metro",
   "games": [
+    {
+      "slug": "mossball-metro",
+      "title": "Mossball Metro",
+      "description": "An original collection-and-growth arcade game. Roll a living mossball through rooftop transit gardens, gather anything small enough to stick, dodge cleaning drones and tram sweepers, and hit each size quota before the last departure bell.",
+      "tags": [
+        "arcade",
+        "collectathon",
+        "action"
+      ],
+      "emoji": "\ud83c\udf3f",
+      "added": "2026-06-16"
+    },
     {
       "slug": "signalrail-sovereign",
       "title": "Signalrail Sovereign",
