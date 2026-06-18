@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Moonstamp Dispatch - Bot Built Arcade</title>
+<meta name="description" content="An original supernatural postal-sorting game. Read shifting ordinances, inspect concealed parcel traits, and route unstable night mail before the moon clock runs out.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23100d24'/><circle cx='50' cy='50' r='30' fill='%23f5cf78'/><circle cx='62' cy='39' r='30' fill='%23100d24'/><circle cx='34' cy='64' r='6' fill='%236fe0d3'/></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#f8f1df;
+  --muted:#b8afc5;
+  --night:#090b1c;
+  --night-2:#12102b;
+  --panel:rgba(20,16,42,.86);
+  --panel-solid:#17132f;
+  --line:rgba(244,225,181,.17);
+  --gold:#f5cf78;
+  --amber:#f3aa59;
+  --teal:#68dfd0;
+  --coral:#f47d91;
+  --violet:#9f87f5;
+  --good:#8ce59d;
+  --bad:#ff7184;
+  --shadow:0 24px 70px rgba(0,0,0,.45);
+  --radius:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;overflow-x:hidden}
+body{
+  min-height:100vh;
+  color:var(--ink);
+  font-family:Inter,ui-rounded,"Segoe UI",system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 14% 3%,rgba(159,135,245,.18),transparent 27%),
+    radial-gradient(circle at 90% 12%,rgba(104,223,208,.12),transparent 28%),
+    linear-gradient(180deg,#15102c 0%,#090b1c 54%,#060712 100%);
+  padding:14px;
+}
+button{font:inherit}
+button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.back{
+  display:block;width:min(1440px,100%);margin:0 auto 9px;color:#d9d0e3;
+  text-decoration:none;font-size:.9rem
+}
+.back:hover{color:var(--gold)}
+.app{
+  position:relative;width:min(1440px,100%);margin:0 auto;
+  display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:14px;align-items:start
+}
+.game-shell,.side-panel{
+  border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);
+  border-radius:var(--radius);overflow:hidden
+}
+.game-shell{min-width:0}
+.desk{
+  position:relative;min-height:690px;overflow:hidden;
+  background:
+    radial-gradient(circle at 50% -8%,rgba(104,223,208,.11),transparent 35%),
+    linear-gradient(180deg,#13122d 0 64%,#321e2d 64% 100%);
+}
+.stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.star{
+  position:absolute;width:3px;height:3px;border-radius:50%;background:#dffefa;
+  opacity:.35;animation:twinkle var(--twinkle,3s) ease-in-out infinite alternate
+}
+@keyframes twinkle{to{opacity:.95;transform:scale(1.8)}}
+.moon{
+  position:absolute;right:5%;top:4%;width:120px;height:120px;border-radius:50%;
+  background:#f6f0c7;box-shadow:0 0 70px rgba(150,236,230,.24)
+}
+.moon::after{
+  content:"";position:absolute;width:112px;height:112px;left:33px;top:-18px;
+  border-radius:50%;background:#17142f
+}
+.shelf{
+  position:absolute;inset:0 0 auto;height:170px;opacity:.35;
+  background:
+    linear-gradient(90deg,transparent 8%,#6b4c52 8% 9%,transparent 9% 91%,#6b4c52 91% 92%,transparent 92%),
+    repeating-linear-gradient(90deg,transparent 0 12%,rgba(145,97,104,.55) 12% 19%,transparent 19% 24%),
+    linear-gradient(180deg,transparent 63%,#6b4c52 63% 67%,transparent 67%)
+}
+.hud{
+  position:relative;z-index:3;display:grid;grid-template-columns:1.35fr repeat(4,minmax(78px,.55fr));
+  gap:8px;padding:12px;background:linear-gradient(180deg,rgba(7,7,20,.92),rgba(10,9,25,.74));
+  border-bottom:1px solid var(--line)
+}
+.shift-title,.stat{
+  min-width:0;border:1px solid rgba(255,255,255,.09);border-radius:13px;
+  background:rgba(255,255,255,.045);padding:8px 10px
+}
+.shift-title span,.stat span{display:block;color:var(--muted);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase}
+.shift-title strong,.stat strong{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-top:2px;font-size:.94rem;font-variant-numeric:tabular-nums
+}
+.integrity{display:flex;gap:4px;margin-top:4px}
+.heart{color:var(--coral);filter:drop-shadow(0 0 6px rgba(244,125,145,.38))}
+.heart.empty{color:#4f4357;filter:none}
+.work-area{
+  position:relative;z-index:2;min-height:500px;padding:22px 22px 16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between
+}
+.belt{
+  position:absolute;left:5%;right:5%;top:49%;height:158px;border-radius:34px;
+  border:1px solid rgba(224,195,155,.16);
+  background:
+    repeating-linear-gradient(100deg,rgba(255,255,255,.035) 0 28px,rgba(0,0,0,.08) 28px 56px),
+    linear-gradient(180deg,#2d2637,#181522);
+  box-shadow:inset 0 18px 30px rgba(0,0,0,.3),0 16px 38px rgba(0,0,0,.22);
+  overflow:hidden
+}
+.belt::before,.belt::after{
+  content:"";position:absolute;left:0;right:0;height:12px;
+  background:repeating-linear-gradient(90deg,#9a775c 0 24px,#382c35 24px 46px)
+}
+.belt::before{top:7px}.belt::after{bottom:7px}
+.belt.running{animation:beltPulse 1s linear infinite}
+@keyframes beltPulse{50%{filter:brightness(1.08)}}
+.patience-wrap{
+  width:min(540px,92%);position:relative;z-index:2;margin-top:8px;text-align:center
+}
+.patience-label{
+  display:flex;justify-content:space-between;color:#d8d0df;font-size:.72rem;
+  letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px
+}
+.meter{height:9px;border-radius:999px;background:#2a2439;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.meter>i{display:block;height:100%;width:100%;border-radius:inherit;background:linear-gradient(90deg,var(--coral),var(--gold),var(--teal));transition:width .1s linear}
+.parcel-zone{
+  position:relative;z-index:4;width:min(390px,82vw);height:290px;
+  display:grid;place-items:center;margin-top:24px
+}
+.parcel{
+  --paper:#5d345f;--paper2:#321e40;position:relative;width:290px;min-height:205px;
+  border:0;border-radius:18px;padding:0;color:var(--ink);cursor:grab;
+  background:linear-gradient(135deg,var(--paper),var(--paper2));
+  box-shadow:0 26px 50px rgba(0,0,0,.42),inset 0 0 0 2px rgba(255,255,255,.09);
+  transform:translate3d(var(--drag-x,0),var(--drag-y,0),0) rotate(var(--tilt,-2deg));
+  transition:transform .28s cubic-bezier(.2,.9,.2,1),opacity .24s,filter .2s;
+  touch-action:none;user-select:none;overflow:hidden
+}
+.parcel::before{
+  content:"";position:absolute;inset:0;opacity:.42;
+  background:
+    repeating-linear-gradient(18deg,transparent 0 13px,rgba(255,255,255,.035) 13px 15px),
+    linear-gradient(90deg,transparent 45%,rgba(221,175,112,.9) 45% 55%,transparent 55%)
+}
+.parcel::after{
+  content:"";position:absolute;left:0;right:0;top:47%;height:24px;
+  background:rgba(215,172,113,.88);box-shadow:0 1px rgba(255,255,255,.2)
+}
+.parcel.dragging{cursor:grabbing;transition:none;filter:brightness(1.08);z-index:8}
+.parcel.enter{animation:parcelEnter .42s cubic-bezier(.15,.95,.25,1)}
+@keyframes parcelEnter{from{opacity:.38;transform:translate3d(var(--drag-x,0),var(--drag-y,0),0) rotate(-7deg) scale(.92)}}
+.parcel.sort-ember{transform:translate(-360px,230px) rotate(-24deg) scale(.45);opacity:0}
+.parcel.sort-tide{transform:translate(0,280px) rotate(12deg) scale(.45);opacity:0}
+.parcel.sort-veil{transform:translate(360px,230px) rotate(24deg) scale(.45);opacity:0}
+.parcel.reject{animation:reject .36s ease}
+@keyframes reject{20%,60%{transform:translateX(-18px) rotate(-5deg)}40%,80%{transform:translateX(18px) rotate(5deg)}}
+.parcel-inner{position:relative;z-index:2;padding:21px 20px 23px;text-align:left}
+.parcel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.parcel-code{font-size:.72rem;color:#ead4c2;letter-spacing:.14em;text-transform:uppercase}
+.parcel-name{font-family:Georgia,serif;font-size:1.43rem;line-height:1.05;margin-top:4px;text-shadow:0 2px 9px rgba(0,0,0,.35)}
+.wax{
+  flex:none;width:53px;height:53px;border-radius:48% 52% 45% 55%;
+  display:grid;place-items:center;background:#a74361;border:3px solid #d37a83;
+  box-shadow:0 5px 12px rgba(0,0,0,.3),inset 0 0 0 5px rgba(82,20,47,.28);
+  font-size:1.45rem;color:#ffe0a0;transform:rotate(8deg)
+}
+.traits{display:flex;flex-wrap:wrap;gap:7px;margin-top:24px}
+.trait{
+  display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);background:rgba(9,7,20,.42);
+  padding:6px 9px;font-size:.75rem;font-weight:750
+}
+.trait b{font-size:.9rem;color:var(--gold)}
+.trait.hidden{border-style:dashed;color:#ded0e1}
+.parcel-foot{margin-top:14px;color:#d8cbd9;font-size:.72rem}
+.stamp-ring{
+  position:absolute;right:16px;bottom:16px;width:54px;height:54px;border:3px double rgba(246,217,145,.36);
+  border-radius:50%;opacity:.7;transform:rotate(-13deg)
+}
+.stamp-ring::after{content:"";position:absolute;inset:9px;border:2px dotted rgba(246,217,145,.42);border-radius:50%}
+.chutes{
+  position:relative;z-index:5;width:min(850px,100%);display:grid;grid-template-columns:repeat(3,1fr);
+  gap:12px;margin-top:-8px
+}
+.chute{
+  --chute:var(--gold);position:relative;min-height:102px;border:1px solid color-mix(in srgb,var(--chute) 52%,transparent);
+  border-radius:17px;padding:12px 10px;color:var(--ink);cursor:pointer;overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--chute) 15%,#171326),#100d20);
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 9px 22px rgba(0,0,0,.22);
+  transition:transform .15s,border-color .15s,filter .15s
+}
+.chute::before{
+  content:"";position:absolute;left:15%;right:15%;top:11px;height:18px;border-radius:50%;
+  background:#060712;box-shadow:0 0 18px var(--chute)
+}
+.chute:hover,.chute.hover{transform:translateY(-4px);filter:brightness(1.13);border-color:var(--chute)}
+.chute b{display:block;margin-top:27px;font-family:Georgia,serif;font-size:1rem}
+.chute span{display:block;color:var(--muted);font-size:.72rem;margin-top:3px}
+.chute em{
+  position:absolute;right:9px;top:8px;font-style:normal;font-size:.66rem;font-weight:900;
+  color:#130f20;background:var(--chute);border-radius:7px;padding:3px 6px
+}
+.chute.ember{--chute:var(--amber)}.chute.tide{--chute:var(--teal)}.chute.veil{--chute:var(--coral)}
+.desk-actions{position:relative;z-index:5;display:flex;gap:9px;margin-top:12px;justify-content:center;flex-wrap:wrap}
+.action{
+  min-height:44px;border:1px solid rgba(255,255,255,.14);border-radius:13px;
+  background:#211a3a;color:var(--ink);font-weight:850;padding:0 14px;cursor:pointer
+}
+.action:hover{border-color:var(--teal);filter:brightness(1.08)}
+.action.primary{color:#130f20;background:linear-gradient(135deg,var(--gold),var(--teal));border-color:#fff4}
+.action:disabled{opacity:.42;cursor:not-allowed;filter:none}
+.scan-pips{display:inline-flex;gap:3px;margin-left:6px}
+.scan-pips i{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 7px #68dfd088}
+.scan-pips i.empty{background:#51465d;box-shadow:none}
+.rush-bar{
+  position:relative;z-index:4;width:min(520px,90%);height:7px;border-radius:99px;
+  background:#251f38;margin:8px auto 0;overflow:hidden
+}
+.rush-bar i{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--violet),var(--gold));transition:width .2s}
+.rush-active .desk{animation:rushGlow .8s ease-in-out infinite alternate}
+@keyframes rushGlow{to{box-shadow:inset 0 0 80px rgba(159,135,245,.19)}}
+.rush-active .belt{animation-duration:.2s}
+.toast{
+  position:absolute;z-index:12;left:50%;top:150px;max-width:min(540px,88%);transform:translate(-50%,-14px);
+  border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(9,7,22,.92);
+  box-shadow:0 16px 40px rgba(0,0,0,.35);padding:10px 18px;text-align:center;
+  color:var(--ink);font-weight:850;opacity:0;pointer-events:none;transition:.22s
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.good{border-color:#8ce59d66;color:#c9ffd3}.toast.bad{border-color:#ff718477;color:#ffd0d6}
+.side-panel{position:sticky;top:14px}
+.side-head{padding:20px 20px 15px;border-bottom:1px solid var(--line)}
+.kicker{color:var(--teal);font-size:.7rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+.side-head h1{font-family:Georgia,serif;font-size:2rem;line-height:.94;margin:8px 0 9px;font-weight:700}
+.side-head p{margin:0;color:var(--muted);line-height:1.48;font-size:.87rem}
+.rules{padding:16px 18px}
+.rules h2,.help h2{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:#e8d8b1;margin:0 0 10px}
+.rule-list{list-style:none;margin:0;padding:0;counter-reset:rule}
+.rule{
+  position:relative;display:grid;grid-template-columns:29px 1fr auto;gap:9px;align-items:center;
+  min-height:48px;padding:8px;border-bottom:1px solid rgba(255,255,255,.07)
+}
+.rule::before{
+  counter-increment:rule;content:counter(rule);display:grid;place-items:center;width:27px;height:27px;
+  border-radius:50%;background:#2c2444;color:var(--gold);font-size:.72rem;font-weight:900
+}
+.rule b{display:block;font-size:.83rem}.rule small{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}
+.route-chip{font-size:.67rem;font-weight:900;border-radius:999px;padding:5px 7px;color:#120e20}
+.route-chip.ember{background:var(--amber)}.route-chip.tide{background:var(--teal)}.route-chip.veil{background:var(--coral)}
+.fallback{margin-top:10px;border-radius:12px;background:rgba(255,255,255,.045);padding:10px;color:#d6cbd9;font-size:.76rem}
+.help{padding:2px 18px 18px}
+.help-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.help-card{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:9px;background:rgba(255,255,255,.03)}
+.help-card b{display:block;font-size:.76rem}.help-card span{display:block;color:var(--muted);font-size:.67rem;margin-top:2px}
+.mini-buttons{display:flex;gap:7px;margin-top:14px}
+.mini-buttons button{flex:1;min-height:38px;padding:0 8px}
+.overlay{
+  position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:clamp(14px,3vw,34px);
+  background:rgba(5,5,15,.62);backdrop-filter:blur(7px)
+}
+.overlay[hidden]{display:none}
+.title-card{
+  position:relative;width:min(1040px,100%);min-height:min(660px,84vh);overflow:hidden;
+  border:1px solid rgba(255,255,255,.23);border-radius:22px;background:#100d24;
+  box-shadow:0 32px 100px rgba(0,0,0,.62)
+}
+.title-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.title-card::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(5,5,15,.94),rgba(5,5,15,.69) 48%,rgba(5,5,15,.1)),
+             linear-gradient(0deg,rgba(5,5,15,.86),transparent 58%)
+}
+.title-copy{
+  position:relative;z-index:2;min-height:min(660px,84vh);display:flex;flex-direction:column;
+  justify-content:flex-end;padding:clamp(24px,5vw,54px)
+}
+.title-copy .seal{align-self:flex-start;color:#0d0b1a;background:linear-gradient(135deg,var(--gold),var(--teal));border-radius:999px;padding:6px 11px;font-size:.69rem;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+.title-copy h2{font-family:Georgia,serif;font-size:clamp(3rem,8vw,6rem);line-height:.85;margin:15px 0 12px;max-width:690px;text-shadow:0 8px 34px #000}
+.title-copy p{max-width:620px;margin:0 0 19px;color:#eee6ec;line-height:1.52}
+.title-buttons{display:flex;gap:9px;flex-wrap:wrap}
+.title-buttons button{padding:0 19px}
+.loading{
+  position:absolute;z-index:3;top:14px;left:14px;border:1px solid #ffffff26;border-radius:999px;
+  background:#090719cc;padding:8px 12px;color:#ded5e5;font-size:.75rem
+}
+.loading[hidden]{display:none}
+.modal{
+  width:min(520px,100%);border:1px solid rgba(255,255,255,.2);border-radius:20px;
+  background:linear-gradient(160deg,#231a3c,#0e0c21);box-shadow:var(--shadow);padding:28px;text-align:center
+}
+.modal-icon{font-size:3rem}.modal h2{font-family:Georgia,serif;font-size:2.2rem;margin:8px 0}.modal p{color:var(--muted);line-height:1.48}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.summary{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#ffffff08;padding:10px}
+.summary span{display:block;color:var(--muted);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em}
+.summary b{display:block;font-size:1.18rem;margin-top:3px}
+.confetti{position:absolute;pointer-events:none;z-index:30;width:8px;height:14px;border-radius:2px;animation:confetti .9s ease-out forwards}
+@keyframes confetti{to{transform:translate(var(--x),var(--y)) rotate(520deg);opacity:0}}
+@media (max-width:1050px){
+  .app{grid-template-columns:minmax(0,1fr) 310px}
+  .hud{grid-template-columns:1.2fr repeat(2,1fr)}.hud .stat:nth-last-child(-n+2){display:none}
+}
+@media (max-width:820px){
+  body{padding:8px}.app{display:flex;flex-direction:column}.game-shell,.side-panel{width:100%}
+  .side-panel{position:static}.desk{min-height:650px}.side-head{display:none}
+  .rules{padding:14px}.rule-list{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.rule{border:1px solid rgba(255,255,255,.07);border-radius:11px}
+  .help{display:none}.title-card{min-height:min(650px,88vh)}.title-copy{min-height:min(650px,88vh)}
+}
+@media (max-width:560px){
+  .back{font-size:.8rem}.hud{grid-template-columns:1fr repeat(2,.72fr);padding:8px;gap:5px}
+  .shift-title,.stat{padding:6px 7px}.shift-title strong,.stat strong{font-size:.8rem}
+  .hud .stat:nth-child(4),.hud .stat:nth-child(5){display:none}
+  .desk{min-height:620px}.work-area{padding:14px 8px 10px;min-height:520px}
+  .moon{width:80px;height:80px}.moon::after{width:78px;height:78px;left:23px;top:-13px}
+  .parcel-zone{height:280px;margin-top:18px}.parcel{width:min(278px,78vw);min-height:198px}
+  .parcel-inner{padding:18px 16px 21px}.parcel-name{font-size:1.25rem}.traits{margin-top:21px}
+  .chutes{gap:6px}.chute{min-height:94px;padding:8px 4px}.chute b{font-size:.82rem}.chute span{font-size:.61rem}.chute em{font-size:.58rem;right:5px}
+  .desk-actions{gap:6px}.action{min-height:42px;padding:0 10px;font-size:.76rem}
+  .rules{padding:10px}.rule-list{grid-template-columns:1fr}.rule{min-height:43px}.fallback{margin-top:6px}
+  .toast{top:118px;font-size:.76rem}.title-card{min-height:86vh}.title-copy{min-height:86vh;padding:22px}
+  .title-copy h2{font-size:clamp(2.8rem,16vw,4.7rem)}.title-copy p{font-size:.85rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Back to Bot Built Arcade</a>
+<main class="app" id="app">
+  <section class="game-shell" aria-label="Moonstamp Dispatch game">
+    <div class="desk" id="desk">
+      <div class="stars" id="stars" aria-hidden="true"></div>
+      <div class="moon" aria-hidden="true"></div>
+      <div class="shelf" aria-hidden="true"></div>
+      <header class="hud">
+        <div class="shift-title"><span>Night route</span><strong id="shiftName">Apprentice Window</strong></div>
+        <div class="stat"><span>Sorted</span><strong id="quotaText">0 / 10</strong></div>
+        <div class="stat"><span>Score</span><strong id="scoreText">0</strong></div>
+        <div class="stat"><span>Combo</span><strong id="comboText">x1</strong></div>
+        <div class="stat"><span>Integrity</span><div class="integrity" id="integrity"></div></div>
+      </header>
+      <div class="work-area">
+        <div class="patience-wrap">
+          <div class="patience-label"><span>Parcel stability</span><span id="stabilityText">Stable</span></div>
+          <div class="meter"><i id="patienceMeter"></i></div>
+        </div>
+        <div class="belt running" id="belt" aria-hidden="true"></div>
+        <div class="parcel-zone" id="parcelZone">
+          <button class="parcel enter" id="parcel" aria-label="Current parcel. Drag it to a chute or choose a destination.">
+            <span class="parcel-inner">
+              <span class="parcel-head">
+                <span><span class="parcel-code" id="parcelCode">Night post</span><span class="parcel-name" id="parcelName">Waiting for mail...</span></span>
+                <span class="wax" id="wax">&loz;</span>
+              </span>
+              <span class="traits" id="traits"></span>
+              <span class="parcel-foot" id="parcelFoot">Read the ordinances before routing.</span>
+              <span class="stamp-ring" aria-hidden="true"></span>
+            </span>
+          </button>
+        </div>
+        <div class="chutes" aria-label="Parcel destinations">
+          <button class="chute ember" data-route="ember"><em>A / 1</em><b>Ember Ward</b><span>Warm-lamp district</span></button>
+          <button class="chute tide" data-route="tide"><em>S / 2</em><b>Tide Archive</b><span>Below the canal clocks</span></button>
+          <button class="chute veil" data-route="veil"><em>D / 3</em><b>Veil Annex</b><span>Through the quiet door</span></button>
+        </div>
+        <div class="desk-actions">
+          <button class="action primary" id="scanBtn">Inspect [Space] <span class="scan-pips" id="scanPips"></span></button>
+          <button class="action" id="rushBtn" disabled>Moonstamp Rush [Q]</button>
+          <button class="action" id="pauseBtn">Pause [P]</button>
+        </div>
+        <div class="rush-bar" aria-label="Moonstamp Rush meter"><i id="rushMeter"></i></div>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+      <div class="overlay" id="titleOverlay">
+        <article class="title-card">
+          <img class="title-art" id="titleArt" src="assets/moonstamp-dispatch-splash.svg" alt="Original key art of an enchanted moonlit postal sorting desk">
+          <div class="loading" id="loading">Loading dispatch art...</div>
+          <div class="title-copy">
+            <span class="seal">Original sorting arcade</span>
+            <h2>Moonstamp<br>Dispatch</h2>
+            <p>Read each route's ordinances from top to bottom. Inspect sealed parcels, then drag, tap, or key-route every unstable delivery before its moonlight fades.</p>
+            <div class="title-buttons">
+              <button class="action primary" id="startBtn">Begin Night Route</button>
+              <button class="action" id="practiceBtn">Practice Desk</button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="overlay" id="modalOverlay" hidden>
+        <article class="modal">
+          <div class="modal-icon" id="modalIcon">&#9790;</div>
+          <h2 id="modalTitle">Route Complete</h2>
+          <p id="modalText"></p>
+          <div class="summary-grid">
+            <div class="summary"><span>Score</span><b id="modalScore">0</b></div>
+            <div class="summary"><span>Accuracy</span><b id="modalAccuracy">100%</b></div>
+            <div class="summary"><span>Best combo</span><b id="modalCombo">0</b></div>
+          </div>
+          <div class="title-buttons" style="justify-content:center">
+            <button class="action primary" id="continueBtn">Continue</button>
+            <button class="action" id="replayBtn">Restart Route</button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side-panel">
+    <div class="side-head">
+      <div class="kicker">Ordinance board</div>
+      <h1>Moonstamp Dispatch</h1>
+      <p>Use the first matching rule. Concealed traits must be inspected before you can route with certainty.</p>
+    </div>
+    <section class="rules">
+      <h2>Current priority order</h2>
+      <ol class="rule-list" id="ruleList"></ol>
+      <div class="fallback" id="fallbackRule"></div>
+    </section>
+    <section class="help">
+      <h2>Desk controls</h2>
+      <div class="help-grid">
+        <div class="help-card"><b>Route</b><span>A/S/D or 1/2/3</span></div>
+        <div class="help-card"><b>Inspect</b><span>Space reveals seals</span></div>
+        <div class="help-card"><b>Rush</b><span>Q freezes decay</span></div>
+        <div class="help-card"><b>Drag</b><span>Drop parcel on chute</span></div>
+      </div>
+      <div class="mini-buttons">
+        <button class="action" id="muteBtn">Sound: On</button>
+        <button class="action" id="restartBtn">Restart</button>
+      </div>
+    </section>
+  </aside>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = (arr) => {
+  const out = arr.slice();
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}
+  return out;
+};
+const routes = {
+  ember:{name:"Ember Ward",className:"ember"},
+  tide:{name:"Tide Archive",className:"tide"},
+  veil:{name:"Veil Annex",className:"veil"}
+};
+const traits = {
+  warm:{name:"Warm to touch",icon:"&#9788;"},
+  fragile:{name:"Glass chime",icon:"&#9671;"},
+  spectral:{name:"Soft whisper",icon:"&#9790;"},
+  damp:{name:"Canal droplets",icon:"&#9679;"},
+  valuable:{name:"Gilt seal",icon:"&#10022;"},
+  living:{name:"Tiny heartbeat",icon:"&#9829;"},
+  heavy:{name:"Gravity knot",icon:"&#9878;"},
+  urgent:{name:"Red quick-twine",icon:"&#9889;"}
+};
+const shifts = [
+  {
+    name:"Apprentice Window",note:"Three simple ordinances. Learn the priority order.",quota:10,patience:12.5,hidden:.16,
+    rules:[["spectral","veil"],["damp","tide"],["warm","ember"]],fallback:"ember"
+  },
+  {
+    name:"Canal Bell Rush",note:"Urgent twine now overrides every other marking.",quota:12,patience:10.8,hidden:.24,
+    rules:[["urgent","ember"],["fragile","tide"],["spectral","veil"]],fallback:"tide"
+  },
+  {
+    name:"Curator's Moon",note:"Living mail travels first; valuables never enter the archive.",quota:14,patience:9.4,hidden:.3,
+    rules:[["living","ember"],["valuable","veil"],["heavy","tide"]],fallback:"veil"
+  },
+  {
+    name:"Last Lantern",note:"Every seal matters. Keep the post intact until dawn.",quota:16,patience:8.2,hidden:.36,
+    rules:[["urgent","veil"],["damp","tide"],["warm","ember"],["spectral","veil"]],fallback:"tide"
+  }
+];
+const parcelNames = [
+  "Hushglass Teapot","Cloudseed Envelope","Clockmoth Crate","Borrowed Thunder",
+  "Singing Button Jar","Pocket-Sized Eclipse","Drowsy Compass","Unfinished Sunrise",
+  "Polite Polterparcel","Rainkeeper's Lunch","Velvet Meteor","Seven Small Tuesdays",
+  "Umbrella for a Ghost","Lanternfish Letter","Cathedral Acorn","Last Echo in a Tin",
+  "Moonmilk Flask","Clockmaker's Fog","Murmuring Mittens","A Very Patient Comet"
+];
+const paperPairs = [
+  ["#653865","#321f42"],["#24535e","#132e3d"],["#75483f","#3b252f"],
+  ["#4d4774","#262745"],["#5a5136","#302d28"],["#684154","#342333"]
+];
+const BEST_KEY = "moonstamp-dispatch-best-v1";
+const MUTE_KEY = "moonstamp-dispatch-muted-v1";
+const state = {
+  mode:"title",practice:false,shiftIndex:0,score:0,best:Number(localStorage.getItem(BEST_KEY))||0,
+  combo:0,bestCombo:0,sorted:0,integrity:3,total:0,correct:0,patience:1,current:null,
+  scanCharges:2,scanProgress:0,rush:0,rushTime:0,locked:false,muted:localStorage.getItem(MUTE_KEY)==="1",
+  drag:null,timeoutId:0
+};
+
+function currentShift(){return shifts[state.shiftIndex]}
+function routeFor(parcel){
+  const cfg=currentShift();
+  for(const [trait,route] of cfg.rules) if(parcel.allTraits.includes(trait)) return route;
+  return cfg.fallback;
+}
+function decisiveTrait(parcel){
+  const cfg=currentShift();
+  for(const [trait] of cfg.rules) if(parcel.allTraits.includes(trait)) return trait;
+  return null;
+}
+function makeParcel(){
+  const cfg=currentShift();
+  const ruleTraits=cfg.rules.map(r=>r[0]);
+  const chosen=[];
+  if(Math.random()<.82) chosen.push(pick(ruleTraits));
+  else chosen.push(pick(Object.keys(traits).filter(t=>!ruleTraits.includes(t))));
+  const pool=shuffle(Object.keys(traits).filter(t=>!chosen.includes(t)));
+  const count=2+(Math.random()<.55?1:0);
+  while(chosen.length<count) chosen.push(pool.pop());
+  const temp={allTraits:chosen};
+  const decisive=decisiveTrait(temp);
+  const canHide=state.scanCharges>0 || state.scanProgress>=2;
+  const hiddenTrait=canHide && decisive && Math.random()<cfg.hidden ? decisive : null;
+  const pair=pick(paperPairs);
+  return {
+    id:Math.random().toString(36).slice(2,8).toUpperCase(),
+    name:pick(parcelNames),allTraits:shuffle(chosen),hiddenTrait,revealed:!hiddenTrait,
+    route:routeFor(temp),paper:pair[0],paper2:pair[1],tilt:(Math.random()*5-2.5).toFixed(2)+"deg"
+  };
+}
+function renderRules(){
+  const cfg=currentShift();
+  $("shiftName").textContent=cfg.name;
+  $("ruleList").innerHTML=cfg.rules.map(([trait,route])=>`
+    <li class="rule"><span><b>${traits[trait].name}</b><small>First match wins</small></span>
+    <span class="route-chip ${route}">${routes[route].name}</span></li>`).join("");
+  $("fallbackRule").innerHTML=`No listed trait? Route to <b>${routes[cfg.fallback].name}</b>.`;
+}
+function renderParcel(resetStability=true){
+  const p=state.current;
+  const el=$("parcel");
+  el.className="parcel enter";
+  el.style.setProperty("--paper",p.paper);
+  el.style.setProperty("--paper2",p.paper2);
+  el.style.setProperty("--tilt",p.tilt);
+  el.style.setProperty("--drag-x","0px");
+  el.style.setProperty("--drag-y","0px");
+  $("parcelCode").textContent=`Night post ${p.id}`;
+  $("parcelName").textContent=p.name;
+  $("wax").innerHTML=pick(["&#9790;","&#10022;","&#9671;","&#9788;"]);
+  const visible=p.allTraits.filter(t=>p.revealed || t!==p.hiddenTrait);
+  $("traits").innerHTML=visible.map(t=>`<span class="trait"><b>${traits[t].icon}</b>${traits[t].name}</span>`).join("")
+    +(p.revealed||!p.hiddenTrait?"":`<span class="trait hidden"><b>?</b>Sealed trait</span>`);
+  $("parcelFoot").textContent=p.hiddenTrait&&!p.revealed?"Inspection recommended: one ordinance mark is concealed.":"All observable traits recorded.";
+  el.setAttribute("aria-label",`${p.name}. ${visible.map(t=>traits[t].name).join(", ")}${p.hiddenTrait&&!p.revealed?", one sealed trait":""}.`);
+  setTimeout(()=>el.classList.remove("enter"),460);
+  if(resetStability)state.patience=1;
+  state.locked=false;
+  updateHud();
+}
+function newParcel(){
+  if(state.mode!=="play")return;
+  state.current=makeParcel();
+  renderParcel();
+}
+function beginRun(practice=false){
+  audio.start();
+  clearTimeout(state.timeoutId);
+  Object.assign(state,{
+    mode:"play",practice,shiftIndex:0,score:0,combo:0,bestCombo:0,sorted:0,integrity:3,
+    total:0,correct:0,patience:1,scanCharges:2,scanProgress:0,rush:0,rushTime:0,locked:false
+  });
+  $("titleOverlay").hidden=true;$("modalOverlay").hidden=true;
+  $("app").classList.remove("rush-active");
+  renderRules();newParcel();updateHud();showToast(practice?"Practice desk: mistakes do not end the run.":"Night route opened. Read from rule 1 downward.","good");
+}
+function updateHud(){
+  const cfg=currentShift();
+  $("quotaText").textContent=`${state.sorted} / ${cfg.quota}`;
+  $("scoreText").textContent=state.score.toLocaleString();
+  $("comboText").textContent=`x${Math.max(1,state.combo)}`;
+  $("patienceMeter").style.width=`${clamp(state.patience,0,1)*100}%`;
+  $("stabilityText").textContent=state.rushTime>0?"Moonlocked":state.patience>.6?"Stable":state.patience>.28?"Fading":"Unraveling";
+  $("integrity").innerHTML=[0,1,2].map(i=>`<span class="heart ${i<state.integrity?"":"empty"}">&#10022;</span>`).join("");
+  $("rushMeter").style.width=`${state.rush}%`;
+  $("rushBtn").disabled=state.rush<100 || state.mode!=="play" || state.rushTime>0;
+  $("scanPips").innerHTML=[0,1].map(i=>`<i class="${i<state.scanCharges?"":"empty"}"></i>`).join("");
+  $("scanBtn").disabled=state.mode!=="play" || !state.current || state.current.revealed || state.scanCharges<=0;
+  $("muteBtn").textContent=`Sound: ${state.muted?"Off":"On"}`;
+}
+function inspectParcel(){
+  if(state.mode!=="play"||state.locked||!state.current||state.current.revealed)return;
+  if(state.scanCharges<=0){showToast("Inspection lens is recharging.","bad");audio.no();return}
+  state.scanCharges--;state.current.revealed=true;
+  renderParcel(false);state.patience=Math.min(1,state.patience+.12);
+  showToast(`${traits[state.current.hiddenTrait].name} revealed.`, "good");audio.scan();updateHud();
+}
+function awardScan(){
+  if(state.scanCharges>=2)return;
+  state.scanProgress++;
+  if(state.scanProgress>=3){state.scanCharges++;state.scanProgress=0;showToast("Inspection lens recharged.","good")}
+}
+function sortParcel(route,source="button"){
+  if(state.mode!=="play"||state.locked||!state.current)return false;
+  state.locked=true;state.total++;
+  const correct=route===state.current.route;
+  const el=$("parcel");
+  el.classList.remove("enter","reject");
+  if(correct){
+    state.correct++;state.sorted++;state.combo++;state.bestCombo=Math.max(state.bestCombo,state.combo);
+    const speed=Math.round(280*state.patience);
+    const comboBonus=Math.min(600,state.combo*35);
+    const rushBonus=state.rushTime>0?350:0;
+    const points=450+speed+comboBonus+rushBonus;
+    state.score+=points;
+    state.rush=clamp(state.rush+12+Math.min(8,state.combo),0,100);
+    awardScan();
+    el.classList.add(`sort-${route}`);
+    showToast(`Correct to ${routes[route].name}  +${points}`, "good");
+    audio.correct(state.combo);
+    burst(route);
+    updateHud();
+    state.timeoutId=setTimeout(()=>{
+      if(state.sorted>=currentShift().quota)completeShift();
+      else newParcel();
+    },330);
+  }else{
+    state.combo=0;state.rush=Math.max(0,state.rush-22);
+    if(!state.practice)state.integrity--;
+    el.classList.add("reject");
+    showToast(`Ordinance mismatch. This parcel belongs in ${routes[state.current.route].name}.`,"bad");
+    audio.wrong();updateHud();
+    state.timeoutId=setTimeout(()=>{
+      if(state.integrity<=0&&!state.practice)endRun(false);
+      else newParcel();
+    },620);
+  }
+  return correct;
+}
+function expireParcel(){
+  if(state.locked||state.mode!=="play")return;
+  state.locked=true;state.total++;state.combo=0;
+  if(!state.practice)state.integrity--;
+  $("parcel").classList.add("reject");
+  showToast(`Parcel unraveled. It was bound for ${routes[state.current.route].name}.`,"bad");
+  audio.wrong();updateHud();
+  state.timeoutId=setTimeout(()=>{
+    if(state.integrity<=0&&!state.practice)endRun(false);else newParcel();
+  },650);
+}
+function activateRush(){
+  if(state.mode!=="play"||state.rush<100||state.rushTime>0)return;
+  state.rush=0;state.rushTime=7;
+  $("app").classList.add("rush-active");
+  showToast("Moonstamp Rush: stability frozen and points doubled.","good");
+  audio.rush();updateHud();
+}
+function completeShift(){
+  state.mode="between";state.locked=true;
+  const final=state.shiftIndex===shifts.length-1;
+  if(final){endRun(true);return}
+  showModal("&#10022;","Route Sealed",`${currentShift().name} is complete. The next bell brings stricter ordinances.`,"Open Next Window");
+  audio.clear();
+}
+function nextShift(){
+  state.shiftIndex++;state.sorted=0;state.integrity=Math.min(3,state.integrity+1);
+  state.scanCharges=2;state.scanProgress=0;state.rush=Math.min(70,state.rush+25);state.rushTime=0;
+  state.mode="play";$("modalOverlay").hidden=true;$("app").classList.remove("rush-active");
+  renderRules();newParcel();showToast(currentShift().note,"good");
+}
+function endRun(won){
+  state.mode="ended";state.locked=true;$("app").classList.remove("rush-active");
+  if(state.score>state.best){state.best=state.score;try{localStorage.setItem(BEST_KEY,String(state.best))}catch(error){}}
+  const accuracy=state.total?Math.round(state.correct/state.total*100):100;
+  showModal(won?"&#9790;":"&#10007;",won?"Dawn Delivery Complete":"Dispatch Desk Closed",
+    won?`Every moon route is sealed. Final score ${state.score.toLocaleString()}; best score ${state.best.toLocaleString()}.`:
+    `The post lost its warding, but your manifest is ready for another attempt. Best score ${state.best.toLocaleString()}.`,
+    "Run Again");
+  $("continueBtn").onclick=()=>beginRun(state.practice);
+  if(won){audio.clear();for(let i=0;i<26;i++)setTimeout(()=>burst(pick(["ember","tide","veil"])),i*34)}else audio.fail();
+  $("modalAccuracy").textContent=`${accuracy}%`;
+}
+function showModal(icon,title,text,buttonText){
+  $("modalIcon").innerHTML=icon;$("modalTitle").textContent=title;$("modalText").textContent=text;
+  $("modalScore").textContent=state.score.toLocaleString();
+  $("modalAccuracy").textContent=`${state.total?Math.round(state.correct/state.total*100):100}%`;
+  $("modalCombo").textContent=state.bestCombo;
+  $("continueBtn").textContent=buttonText;
+  $("continueBtn").onclick=nextShift;
+  $("modalOverlay").hidden=false;
+}
+function pauseToggle(){
+  if(state.mode==="play"){
+    state.mode="paused";showModal("&#8214;","Desk Paused","The moon clock is holding. Review the ordinance board, then resume when ready.","Resume");
+    $("continueBtn").onclick=()=>{state.mode="play";$("modalOverlay").hidden=true;last=performance.now()};
+  }else if(state.mode==="paused"){
+    state.mode="play";$("modalOverlay").hidden=true;last=performance.now();
+  }
+}
+let toastTimer=0;
+function showToast(text,type=""){
+  const t=$("toast");t.textContent=text;t.className=`toast show ${type}`;
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="toast",1900);
+}
+function burst(route){
+  const colors={ember:["#f3aa59","#f5cf78"],tide:["#68dfd0","#b6fff4"],veil:["#f47d91","#bd8af3"]}[route];
+  const rect=$("desk").getBoundingClientRect();
+  for(let i=0;i<10;i++){
+    const bit=document.createElement("i");bit.className="confetti";bit.style.background=pick(colors);
+    bit.style.left=`${rect.width/2+Math.random()*90-45}px`;bit.style.top=`${rect.height*.72}px`;
+    bit.style.setProperty("--x",`${Math.random()*260-130}px`);bit.style.setProperty("--y",`${-80-Math.random()*160}px`);
+    $("desk").appendChild(bit);setTimeout(()=>bit.remove(),950);
+  }
+}
+function setMute(value){
+  state.muted=value;try{localStorage.setItem(MUTE_KEY,value?"1":"0")}catch(error){}
+  audio.setMuted(value);updateHud();
+}
+const audio={
+  ctx:null,master:null,music:null,next:0,step:0,
+  start(){
+    if(!this.ctx){
+      try{
+        this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+        this.master=this.ctx.createGain();this.master.gain.value=state.muted?0:.2;this.master.connect(this.ctx.destination);
+        this.music=this.ctx.createGain();this.music.gain.value=.23;this.music.connect(this.master);
+      }catch(error){return}
+    }
+    if(this.ctx.state==="suspended")this.ctx.resume();
+  },
+  setMuted(v){if(this.master)this.master.gain.setTargetAtTime(v?0:.2,this.ctx.currentTime,.03)},
+  tone(freq,dur=.12,type="sine",gain=.12,end=null,delay=0,bus=null){
+    if(!this.ctx||state.muted)return;
+    const t=this.ctx.currentTime+delay,o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type=type;o.frequency.setValueAtTime(freq,t);if(end)o.frequency.exponentialRampToValueAtTime(end,t+dur);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(gain,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g);g.connect(bus||this.master);o.start(t);o.stop(t+dur+.03);
+  },
+  correct(combo){[440,554,659+Math.min(combo,8)*18].forEach((f,i)=>this.tone(f,.11,"triangle",.14,null,i*.055))},
+  wrong(){this.tone(170,.22,"sawtooth",.18,82);this.tone(122,.25,"square",.06,75,.08)},
+  scan(){this.tone(260,.28,"sine",.1,960);this.tone(620,.13,"triangle",.07,920,.16)},
+  rush(){[294,392,523,698].forEach((f,i)=>this.tone(f,.3,"triangle",.12,null,i*.07))},
+  clear(){[392,494,587,784].forEach((f,i)=>this.tone(f,.26,"triangle",.14,null,i*.09))},
+  fail(){[220,174,130].forEach((f,i)=>this.tone(f,.3,"sawtooth",.1,null,i*.13))},
+  no(){this.tone(150,.1,"square",.07,120)},
+  tick(){
+    if(!this.ctx||state.muted||state.mode!=="play")return;
+    if(this.next<this.ctx.currentTime)this.next=this.ctx.currentTime+.04;
+    const chords=[[146.8,220,293.7],[164.8,246.9,329.6],[130.8,196,261.6],[174.6,261.6,349.2]];
+    while(this.next<this.ctx.currentTime+.12){
+      const c=chords[Math.floor(this.step/8)%chords.length];
+      if(this.step%4===0)this.tone(c[0],.45,"sine",.025,null,this.next-this.ctx.currentTime,this.music);
+      if(this.step%4===2)this.tone(c[1]*2,.08,"triangle",.02,null,this.next-this.ctx.currentTime,this.music);
+      this.step++;this.next+=.28;
+    }
+  }
+};
+
+const parcelEl=$("parcel");
+parcelEl.addEventListener("pointerdown",(event)=>{
+  if(state.mode!=="play"||state.locked)return;
+  audio.start();event.preventDefault();
+  state.drag={id:event.pointerId,startX:event.clientX,startY:event.clientY,x:0,y:0};
+  parcelEl.classList.add("dragging");
+  try{parcelEl.setPointerCapture(event.pointerId)}catch(error){}
+});
+parcelEl.addEventListener("pointermove",(event)=>{
+  if(!state.drag||state.drag.id!==event.pointerId)return;
+  state.drag.x=event.clientX-state.drag.startX;state.drag.y=event.clientY-state.drag.startY;
+  parcelEl.style.setProperty("--drag-x",`${state.drag.x}px`);parcelEl.style.setProperty("--drag-y",`${state.drag.y}px`);
+  document.querySelectorAll(".chute").forEach(c=>{
+    const r=c.getBoundingClientRect();c.classList.toggle("hover",event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom)
+  });
+});
+function endDrag(event){
+  if(!state.drag||state.drag.id!==event.pointerId)return;
+  let target=null;
+  document.querySelectorAll(".chute").forEach(c=>{const r=c.getBoundingClientRect();if(event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom)target=c});
+  document.querySelectorAll(".chute").forEach(c=>c.classList.remove("hover"));
+  state.drag=null;parcelEl.classList.remove("dragging");
+  parcelEl.style.setProperty("--drag-x","0px");parcelEl.style.setProperty("--drag-y","0px");
+  if(target)sortParcel(target.dataset.route,"drag");
+}
+parcelEl.addEventListener("pointerup",endDrag);
+window.addEventListener("pointerup",endDrag);
+parcelEl.addEventListener("pointercancel",(event)=>{if(state.drag&&state.drag.id===event.pointerId){state.drag=null;parcelEl.classList.remove("dragging");parcelEl.style.setProperty("--drag-x","0px");parcelEl.style.setProperty("--drag-y","0px")}});
+window.addEventListener("pointercancel",(event)=>{if(state.drag&&state.drag.id===event.pointerId){state.drag=null;parcelEl.classList.remove("dragging");parcelEl.style.setProperty("--drag-x","0px");parcelEl.style.setProperty("--drag-y","0px")}});
+document.querySelectorAll(".chute").forEach(btn=>btn.addEventListener("click",()=>{audio.start();sortParcel(btn.dataset.route)}));
+$("scanBtn").addEventListener("click",()=>{audio.start();inspectParcel()});
+$("rushBtn").addEventListener("click",()=>{audio.start();activateRush()});
+$("pauseBtn").addEventListener("click",pauseToggle);
+$("startBtn").addEventListener("click",()=>beginRun(false));
+$("practiceBtn").addEventListener("click",()=>beginRun(true));
+$("replayBtn").addEventListener("click",()=>beginRun(state.practice));
+$("restartBtn").addEventListener("click",()=>beginRun(state.practice));
+$("muteBtn").addEventListener("click",()=>{audio.start();setMute(!state.muted)});
+window.addEventListener("keydown",(event)=>{
+  const key=event.key.toLowerCase();
+  if(["a","s","d","1","2","3"," ","q","p","escape","m","r","enter"].includes(key))event.preventDefault();
+  if(key==="enter"&&state.mode==="title"){beginRun(false);return}
+  if(key==="enter"&&state.mode==="between"){$("continueBtn").click();return}
+  if(key==="a"||key==="1")sortParcel("ember");
+  else if(key==="s"||key==="2")sortParcel("tide");
+  else if(key==="d"||key==="3")sortParcel("veil");
+  else if(key===" "){audio.start();inspectParcel()}
+  else if(key==="q"){audio.start();activateRush()}
+  else if(key==="p"||key==="escape")pauseToggle();
+  else if(key==="m"){audio.start();setMute(!state.muted)}
+  else if(key==="r")beginRun(state.practice);
+});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&state.mode==="play")pauseToggle()});
+$("titleArt").addEventListener("load",()=>{$("loading").hidden=true});
+$("titleArt").addEventListener("error",()=>{$("loading").textContent="Key art unavailable. The live dispatch desk is ready.";setTimeout(()=>{$("loading").hidden=true},2200)});
+if($("titleArt").complete&&$("titleArt").naturalWidth)$("loading").hidden=true;
+for(let i=0;i<38;i++){
+  const s=document.createElement("i");s.className="star";s.style.left=`${Math.random()*100}%`;s.style.top=`${Math.random()*58}%`;
+  s.style.setProperty("--twinkle",`${1.8+Math.random()*4}s`);s.style.animationDelay=`${-Math.random()*5}s`;$("stars").appendChild(s);
+}
+renderRules();updateHud();
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(state.mode==="play"){
+    if(state.rushTime>0){
+      state.rushTime=Math.max(0,state.rushTime-dt);
+      if(state.rushTime===0)$("app").classList.remove("rush-active");
+    }else if(!state.locked){
+      state.patience-=dt/currentShift().patience;
+      if(state.patience<=0){state.patience=0;expireParcel()}
+    }
+    updateHud();audio.tick();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+const moonstampApi={
+  start:(practice=false)=>beginRun(practice),
+  sort:sortParcel,
+  inspect:inspectParcel,
+  rush:activateRush,
+  pause:pauseToggle,
+  step:(seconds=1/60)=>{
+    if(state.mode==="play"&&!state.locked&&state.rushTime<=0){state.patience-=seconds/currentShift().patience;if(state.patience<=0){state.patience=0;expireParcel()}}
+    updateHud();
+  },
+  setPatience:(value)=>{state.patience=clamp(value,0,1);updateHud()},
+  forceParcel:(allTraits,hiddenTrait=null)=>{
+    const pair=paperPairs[0];state.current={id:"TEST",name:"Test Parcel",allTraits:allTraits.slice(),hiddenTrait,revealed:!hiddenTrait,route:null,paper:pair[0],paper2:pair[1],tilt:"0deg"};
+    state.current.route=routeFor(state.current);renderParcel();return state.current.route;
+  },
+  getState:()=>({
+    mode:state.mode,practice:state.practice,shiftIndex:state.shiftIndex,shift:currentShift().name,
+    score:state.score,best:state.best,combo:state.combo,bestCombo:state.bestCombo,sorted:state.sorted,
+    quota:currentShift().quota,integrity:state.integrity,total:state.total,correct:state.correct,
+    patience:state.patience,scanCharges:state.scanCharges,rush:state.rush,rushTime:state.rushTime,
+    parcel:state.current?{name:state.current.name,traits:state.current.allTraits.slice(),hiddenTrait:state.current.hiddenTrait,revealed:state.current.revealed,route:state.current.route}:null
+  })
+};
+try{globalThis.__MOONSTAMP_DISPATCH__=moonstampApi}catch(error){}
+</script>
+</body>
+</html>

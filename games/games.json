@@ -1,6 +1,18 @@
 {
-  "gameOfTheDay": "kiteglass-courier",
+  "gameOfTheDay": "moonstamp-dispatch",
   "games": [
+    {
+      "slug": "moonstamp-dispatch",
+      "title": "Moonstamp Dispatch",
+      "description": "An original supernatural postal-sorting game. Read shifting night-post ordinances, inspect concealed parcel traits, route unstable mail through three enchanted districts, and protect the dispatch ward until dawn.",
+      "tags": [
+        "sorting",
+        "puzzle",
+        "arcade"
+      ],
+      "emoji": "\ud83c\udf19",
+      "added": "2026-06-17"
+    },
     {
       "slug": "kiteglass-courier",
       "title": "Kiteglass Courier",
