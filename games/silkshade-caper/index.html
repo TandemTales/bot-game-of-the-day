@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Silkshade Caper - Bot Built Arcade</title>
+<meta name="description" content="An original stealth-action score game. Slip between moving shadows, steal glowing memory seals, distract brass sentries, and escape each moonlit archive before the alarm thread snaps.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a0b1e'/><path d='M50 15 78 42 65 84 50 68 35 84 22 42Z' fill='%237be8df'/><circle cx='50' cy='43' r='14' fill='%23ead8c8'/><path d='M35 39q15-13 30 0l-5 13q-10-8-20 0Z' fill='%23111126'/></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#070814;--panel:rgba(12,12,29,.88);--panel2:rgba(25,18,42,.82);
+  --line:rgba(226,211,230,.16);--text:#f3edf4;--muted:#b7aabb;
+  --cyan:#79eee5;--cyan2:#25bfc5;--amber:#f2bc69;--plum:#a8619b;
+  --rose:#f06b82;--good:#78dfac;--shadow:0 24px 80px rgba(0,0,0,.46);--r:12px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;overflow-x:hidden}
+body{
+  min-height:100vh;padding:12px;color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 16% -10%,rgba(112,61,116,.3),transparent 35%),
+    radial-gradient(circle at 92% 8%,rgba(29,133,143,.16),transparent 31%),
+    linear-gradient(180deg,#111025,#060711 70%);
+}
+a.back{display:block;width:min(1440px,100%);margin:0 auto 8px;color:#d2c8d4;text-decoration:none;font-size:.88rem}
+a.back:hover{color:var(--cyan)}
+button{font:inherit;color:var(--text);cursor:pointer;min-height:42px;border:1px solid var(--line);border-radius:10px;background:rgba(37,25,54,.9);font-weight:850;transition:transform .12s,border-color .12s,filter .12s}
+button:hover{border-color:rgba(121,238,229,.6);filter:brightness(1.08)}
+button:active{transform:translateY(1px) scale(.99)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+button.primary{color:#071215;background:linear-gradient(135deg,#fff0bc,var(--cyan));border-color:rgba(255,255,255,.45);box-shadow:0 12px 32px rgba(37,191,197,.18)}
+.app{width:min(1440px,100%);margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
+.stage,.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);box-shadow:var(--shadow)}
+.stage{min-width:0;overflow:hidden}
+.canvas-wrap{position:relative;width:100%;aspect-ratio:16/10;min-height:430px;background:#080916;overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(7,8,20,.92);border-top:1px solid var(--line)}
+.hint{color:#c5b9c8;font-size:.82rem;line-height:1.4;max-width:680px}.hint b{color:#fff}
+.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{min-width:83px;padding:6px 9px;border:1px solid rgba(255,255,255,.09);border-radius:9px;background:rgba(255,255,255,.04);color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.07em}
+.pill strong{display:block;color:var(--text);font-size:.94rem;letter-spacing:0;font-variant-numeric:tabular-nums}
+.overlay{position:absolute;inset:0;z-index:12;display:grid;place-items:center;padding:clamp(12px,3vw,28px);background:rgba(4,5,14,.58);backdrop-filter:blur(5px)}
+.overlay[hidden]{display:none}
+.title-card{position:relative;width:min(960px,100%);height:100%;max-height:590px;min-height:0;overflow:hidden;border:1px solid rgba(255,255,255,.22);border-radius:12px;background:#0a0b20;box-shadow:0 30px 90px rgba(0,0,0,.62)}
+.title-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(1.06) contrast(1.04)}
+.title-card::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,6,16,.96),rgba(5,6,16,.76) 46%,rgba(5,6,16,.12) 78%),linear-gradient(0deg,rgba(5,6,16,.88),transparent 58%)}
+.title-copy{position:relative;z-index:1;height:100%;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;width:min(650px,100%);padding:clamp(22px,4vw,46px)}
+.eyebrow{align-self:flex-start;padding:5px 10px;border:1px solid rgba(121,238,229,.45);border-radius:999px;color:#dffffb;background:rgba(8,11,24,.68);font-size:.68rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+h1{margin:13px 0 8px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(3rem,8vw,6.5rem);font-weight:700;line-height:.82;letter-spacing:-.055em;text-shadow:0 6px 28px #000}
+h1 span{display:block;color:var(--cyan);font-style:italic}
+.title-copy p{margin:4px 0 18px;color:#e2d9e4;line-height:1.52;max-width:590px}
+.button-row{display:flex;gap:9px;flex-wrap:wrap}.button-row button{padding:0 18px}
+.result-stats{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 18px}.result-stats span{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.05);color:var(--muted);font-size:.78rem}.result-stats b{color:var(--text)}
+.loading,.toast{position:absolute;z-index:20;left:14px;right:14px;display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.loading{top:14px;min-height:40px;border:1px solid rgba(121,238,229,.24);border-radius:999px;color:#dcfffb;background:rgba(4,7,17,.82);font-size:.82rem}.loading[hidden]{display:none}
+.toast{bottom:16px;min-height:44px;padding:9px 14px;border:1px solid rgba(242,188,105,.35);border-radius:10px;color:#fff0ca;background:rgba(7,7,18,.92);opacity:0;transform:translateY(14px);transition:.18s}
+.toast.show{opacity:1;transform:translateY(0)}.toast.danger{color:#ffd4dc;border-color:rgba(240,107,130,.55)}
+.side{display:grid;gap:10px}.panel{padding:12px;backdrop-filter:blur(12px)}
+.brand{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:10px;align-items:start}.brand h2{margin:0;font-family:Georgia,serif;font-size:1.22rem}.brand p,.panel p,.panel li{color:#c8bdca;font-size:.84rem;line-height:1.42}.brand p{margin:4px 0 0}
+.mark{width:54px;height:54px;position:relative;border-radius:50%;background:radial-gradient(circle,#fff 0 4%,var(--cyan) 5% 14%,transparent 15%),conic-gradient(from 45deg,var(--plum),var(--cyan),var(--amber),var(--plum));box-shadow:0 0 28px rgba(121,238,229,.2)}
+.mark::after{content:"";position:absolute;inset:12px;background:#0b0b1e;clip-path:polygon(50% 0,100% 45%,75% 100%,50% 71%,25% 100%,0 45%)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.stat{padding:8px 9px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.04)}.stat .k{color:var(--muted);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase}.stat .v{margin-top:3px;font-size:1.07rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.section-title{margin:0 0 8px!important;color:#ecfdfa!important;font-size:.69rem!important;font-weight:900;text-transform:uppercase;letter-spacing:.12em}
+.meters{display:grid;gap:9px}.meter-label{display:flex;justify-content:space-between;gap:10px;margin-bottom:4px;color:var(--muted);font-size:.72rem}.bar{height:9px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.06)}.bar span{display:block;height:100%;width:0;border-radius:inherit;transition:width .16s}.alertbar{background:linear-gradient(90deg,var(--cyan),var(--amber) 55%,var(--rose))}.dashbar{background:linear-gradient(90deg,var(--plum),var(--cyan))}
+.objective{display:grid;gap:7px}.objective-row{display:flex;justify-content:space-between;gap:8px;padding:8px 9px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.035);font-size:.8rem}.objective-row span{color:var(--muted)}.objective-row b{color:var(--text)}
+.panel ul{margin:0;padding-left:18px;display:grid;gap:6px}.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.actions button{min-height:43px}
+.touch-actions{position:absolute;z-index:10;left:10px;right:10px;bottom:10px;display:none;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.touch-cluster{display:flex;gap:8px;pointer-events:auto}.touch-actions button{min-width:72px;min-height:58px;padding:0 10px;background:rgba(12,12,31,.82);backdrop-filter:blur(8px);border-color:rgba(255,255,255,.22);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+.touch-actions button.dash{background:rgba(37,191,197,.24);border-color:rgba(121,238,229,.5)}.touch-actions button.bell{background:rgba(168,97,155,.25);border-color:rgba(211,129,194,.5)}
+@media(max-width:1080px){.app{grid-template-columns:1fr}.side{grid-template-columns:repeat(2,minmax(0,1fr))}.brand-panel,.how-panel{grid-column:1/-1}}
+@media(max-width:720px){
+  body{padding:7px}.canvas-wrap{aspect-ratio:3/4;min-height:570px}.side{grid-template-columns:1fr}.title-card>img{object-position:58% center}.title-card::after{background:linear-gradient(0deg,rgba(5,6,16,.97),rgba(5,6,16,.7) 60%,rgba(5,6,16,.18))}.title-copy{justify-content:flex-end;padding:22px}.touch-actions{display:flex}.toast{bottom:82px}.topbar .hint{display:none}.pills{width:100%}.pill{flex:1;min-width:0}.actions{display:none}
+}
+@media(max-width:390px){.canvas-wrap{min-height:540px}.touch-actions button{min-width:63px;min-height:54px}.brand{grid-template-columns:1fr}.mark{display:none}h1{font-size:3.25rem}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.toast{transition:none}}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Bot Built Arcade</a>
+<main class="app" id="app">
+  <section class="stage" aria-label="Silkshade Caper stealth game">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="game" aria-label="Top-down moonlit archive stealth game"></canvas>
+      <div class="loading" id="loading">Loading original Silkshade Caper key art...</div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <div class="overlay" id="titleOverlay">
+        <div class="title-card">
+          <img id="titleArt" src="assets/silkshade-caper-key-art.svg" alt="Original key art of a masked silkshade thief evading sentry beams in a moonlit archive">
+          <div class="title-copy">
+            <span class="eyebrow">Original stealth-action score game</span>
+            <h1>Silkshade <span>Caper</span></h1>
+            <p>Steal the archive's glowing memory seals without snapping the alarm thread. Cross moving shadows, veil-step through danger, ring decoys, and escape four increasingly guarded galleries.</p>
+            <div class="button-row">
+              <button class="primary" id="startBtn" type="button">Begin the Caper</button>
+              <button id="practiceBtn" type="button">Shadow Practice</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay" id="resultOverlay" hidden>
+        <div class="title-card">
+          <img src="assets/silkshade-caper-key-art.svg" alt="">
+          <div class="title-copy">
+            <span class="eyebrow" id="resultKicker">Gallery clear</span>
+            <h1 id="resultTitle">Clean <span>Escape</span></h1>
+            <p id="resultText">The stolen memories never touched the light.</p>
+            <div class="result-stats">
+              <span>Score <b id="resultScore">0</b></span>
+              <span>Silence <b id="resultSilence">100%</b></span>
+              <span>Time <b id="resultTime">0s</b></span>
+            </div>
+            <div class="button-row">
+              <button class="primary" id="nextBtn" type="button">Next Gallery</button>
+              <button id="replayBtn" type="button">Restart Caper</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="touch-actions" id="touchActions" aria-label="Touch controls">
+        <div class="touch-cluster"><button class="dash" id="touchDash" type="button">Veil Step</button></div>
+        <div class="touch-cluster"><button class="bell" id="touchBell" type="button">Decoy Bell</button><button id="touchPause" type="button">Pause</button></div>
+      </div>
+    </div>
+    <div class="topbar">
+      <div class="hint"><b>Move</b> WASD/arrows or tap/drag the floor. <b>Veil Step</b> Space/Shift. <b>Decoy Bell</b> E. <b>Pause</b> P/Esc.</div>
+      <div class="pills">
+        <div class="pill">Gallery<strong id="galleryHud">1/4</strong></div>
+        <div class="pill">Seals<strong id="sealsHud">0/3</strong></div>
+        <div class="pill">Time<strong id="timeHud">75s</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="panel brand-panel">
+      <div class="brand"><div><h2>Silkshade Caper</h2><p>A complete four-gallery stealth run with moving sentries, dynamic shadows, decoys, scoring chains, synthesized audio, persistent best score, and responsive pointer, touch, and keyboard controls.</p></div><div class="mark" aria-hidden="true"></div></div>
+    </section>
+    <section class="panel">
+      <div class="stats">
+        <div class="stat"><div class="k">Score</div><div class="v" id="scoreStat">0</div></div>
+        <div class="stat"><div class="k">Best</div><div class="v" id="bestStat">0</div></div>
+        <div class="stat"><div class="k">Silence Chain</div><div class="v" id="chainStat">x1</div></div>
+        <div class="stat"><div class="k">Veil Threads</div><div class="v" id="livesStat">3</div></div>
+      </div>
+    </section>
+    <section class="panel meters">
+      <div><div class="meter-label"><span>Alarm thread</span><span id="alertText">0%</span></div><div class="bar"><span class="alertbar" id="alertBar"></span></div></div>
+      <div><div class="meter-label"><span>Veil step</span><span id="dashText">Ready</span></div><div class="bar"><span class="dashbar" id="dashBar"></span></div></div>
+    </section>
+    <section class="panel">
+      <p class="section-title">Current Gallery</p>
+      <div class="objective">
+        <div class="objective-row"><span>Floor</span><b id="floorName">Ink Atrium</b></div>
+        <div class="objective-row"><span>Memory seals</span><b id="objectiveSeals">0 / 3</b></div>
+        <div class="objective-row"><span>Decoy bells</span><b id="bellsStat">2</b></div>
+        <div class="objective-row"><span>Escape arch</span><b id="exitStat">Locked</b></div>
+      </div>
+    </section>
+    <section class="panel how-panel">
+      <p class="section-title">Archive Rules</p>
+      <ul>
+        <li>Amber cones raise the alarm. Deep violet shadow slows detection to a whisper.</li>
+        <li>Veil Step bursts through light without raising the alarm, then needs time to mend.</li>
+        <li>A decoy bell turns nearby sentries toward its ringing point for a few seconds.</li>
+        <li>Take every cyan seal, then reach the gold arch. Clean thefts build the score chain.</li>
+      </ul>
+    </section>
+    <section class="panel actions">
+      <button id="dashBtn" type="button">Veil Step</button>
+      <button id="bellBtn" type="button">Decoy Bell</button>
+      <button id="pauseBtn" type="button">Pause</button>
+      <button id="muteBtn" type="button">Sound On</button>
+      <button id="restartBtn" type="button">Restart</button>
+    </section>
+  </aside>
+</main>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const canvas=$("game"),ctx=canvas.getContext("2d",{alpha:false});
+const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
+const BEST_KEY="silkshade-caper-best-v1",MUTE_KEY="silkshade-caper-muted-v1";
+const storeGet=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:v}catch(e){return f}};
+const storeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+let W=1000,H=650,dpr=1,last=performance.now(),hudClock=0,toastTimer=0;
+
+const levels=[
+  {name:"Ink Atrium",time:75,seals:3,bells:2,start:[.09,.84],exit:[.91,.11],
+   walls:[[.2,.12,.08,.52],[.43,.37,.29,.09],[.72,.13,.08,.46],[.17,.73,.36,.08]],
+   shadows:[[.11,.62,.15,.02,.02],[.39,.19,.13,.025,.015],[.61,.72,.14,.018,.025],[.87,.42,.12,.02,.018]],
+   relics:[[.12,.18],[.56,.58],[.88,.72]],
+   guards:[[[.34,.18],[.64,.18]],[[.62,.84],[.87,.65]]]},
+  {name:"Hush Conservatory",time:82,seals:4,bells:2,start:[.08,.12],exit:[.92,.86],
+   walls:[[.17,.27,.26,.08],[.56,.18,.08,.35],[.26,.55,.1,.33],[.53,.68,.3,.08],[.79,.28,.08,.27]],
+   shadows:[[.1,.43,.13,.035,.012],[.47,.2,.11,.02,.03],[.48,.54,.15,.028,.018],[.78,.62,.13,.022,.03],[.9,.34,.09,.03,.015]],
+   relics:[[.29,.15],[.48,.43],[.72,.55],[.85,.16]],
+   guards:[[[.12,.72],[.43,.72]],[[.48,.12],[.48,.58]],[[.71,.15],[.91,.42],[.69,.61]]]},
+  {name:"Brass Stacks",time:90,seals:5,bells:3,start:[.08,.88],exit:[.93,.12],
+   walls:[[.15,.08,.08,.66],[.32,.25,.08,.67],[.49,.08,.08,.66],[.66,.25,.08,.67],[.83,.08,.08,.66]],
+   shadows:[[.1,.32,.09,.015,.035],[.275,.76,.09,.02,.03],[.445,.18,.09,.018,.03],[.615,.78,.09,.022,.03],[.78,.17,.09,.015,.03],[.91,.58,.08,.018,.035]],
+   relics:[[.27,.15],[.45,.82],[.61,.15],[.78,.82],[.94,.42]],
+   guards:[[[.1,.18],[.1,.7]],[[.27,.82],[.27,.35]],[[.44,.18],[.44,.7]],[[.61,.82],[.61,.35]],[[.78,.18],[.78,.7]]]},
+  {name:"Archive Heart",time:100,seals:6,bells:3,start:[.08,.5],exit:[.92,.5],
+   walls:[[.22,.16,.1,.25],[.22,.59,.1,.25],[.43,.08,.12,.28],[.43,.64,.12,.28],[.68,.16,.1,.25],[.68,.59,.1,.25],[.39,.44,.22,.12]],
+   shadows:[[.12,.22,.1,.02,.025],[.12,.78,.1,.02,.025],[.37,.51,.11,.025,.02],[.63,.49,.11,.022,.025],[.87,.22,.1,.02,.025],[.87,.78,.1,.02,.025]],
+   relics:[[.28,.49],[.38,.16],[.38,.84],[.72,.49],[.86,.1],[.86,.9]],
+   guards:[[[.14,.12],[.38,.12],[.38,.4]],[[.14,.88],[.38,.88],[.38,.6]],[[.62,.12],[.86,.12],[.86,.4]],[[.62,.88],[.86,.88],[.86,.6]],[[.5,.39],[.65,.5],[.5,.61],[.35,.5]]]}
+];
+
+const state={
+  mode:"title",practice:false,level:0,score:0,best:+storeGet(BEST_KEY,"0")||0,
+  lives:3,time:75,alert:0,chain:1,bells:2,dash:1,dashTime:0,grace:0,seenTime:0,
+  exposure:0,totalPlay:0,collected:0,keys:new Set(),pointer:{active:false,hasTarget:false,x:.5,y:.5},
+  decoy:null,particles:[],popups:[],shake:0,muted:storeGet(MUTE_KEY,"0")==="1",lastSafe:null
+};
+const player={x:.1,y:.8,vx:0,vy:0,r:13,angle:0,trail:[]};
+let walls=[],shadows=[],relics=[],guards=[],exit={x:.9,y:.1,open:false};
+
+function resize(){
+  const r=$("canvasWrap").getBoundingClientRect();W=Math.max(320,Math.round(r.width));H=Math.max(320,Math.round(r.height));
+  dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+"px";canvas.style.height=H+"px";
+}
+const px=p=>p.x*W,py=p=>p.y*H,rad=()=>Math.min(W,H);
+function metric(a,b){return Math.hypot((a.x-b.x)*W,(a.y-b.y)*H)}
+function fromClient(e){const r=canvas.getBoundingClientRect();return{x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1)}}
+function angleDiff(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
+function pointInWall(x,y,pad=0){
+  const pxPad=pad/W,pyPad=pad/H;
+  return walls.some(w=>x>w.x-pxPad&&x<w.x+w.w+pxPad&&y>w.y-pyPad&&y<w.y+w.h+pyPad);
+}
+function lineBlocked(a,b){
+  const d=metric(a,b),steps=Math.ceil(d/10);
+  for(let i=1;i<steps;i++){const t=i/steps;if(pointInWall(lerp(a.x,b.x,t),lerp(a.y,b.y,t),2))return true}
+  return false;
+}
+function currentShadow(){
+  let best=null;
+  for(const s of shadows){const d=metric(player,s);if(d<s.radius&&(!best||d<best.d))best={s,d}}
+  return best;
+}
+function resolveMove(nx,ny){
+  const rr=player.r;
+  if(!pointInWall(nx,player.y,rr))player.x=clamp(nx,rr/W,1-rr/W);
+  if(!pointInWall(player.x,ny,rr))player.y=clamp(ny,rr/H,1-rr/H);
+}
+function normalize(dx,dy){const m=Math.hypot(dx,dy)||1;return{x:dx/m,y:dy/m}}
+
+function createLevel(index){
+  const def=levels[index];walls=def.walls.map(v=>({x:v[0],y:v[1],w:v[2],h:v[3]}));
+  shadows=def.shadows.map((v,i)=>({baseX:v[0],baseY:v[1],x:v[0],y:v[1],radius:v[2]*rad(),ox:v[3],oy:v[4],phase:i*1.73}));
+  relics=def.relics.map((v,i)=>({x:v[0],y:v[1],taken:false,phase:i*1.4}));
+  guards=def.guards.map((path,i)=>({path:path.map(v=>({x:v[0],y:v[1]})),x:path[0][0],y:path[0][1],target:1,angle:i%2?Math.PI:0,speed:.055+i*.004,cone:.58,range:(.27+(i%2)*.025)*rad(),alerted:0}));
+  player.x=def.start[0];player.y=def.start[1];player.vx=player.vy=0;player.trail=[];
+  exit={x:def.exit[0],y:def.exit[1],open:false};state.time=def.time;state.alert=0;state.dash=1;state.dashTime=0;
+  state.bells=def.bells;state.collected=0;state.decoy=null;state.particles=[];state.popups=[];state.grace=0;state.lastSafe={x:player.x,y:player.y};
+  updateHud(true);
+}
+function beginRun(practice=false){
+  audio.start();state.practice=practice;state.level=0;state.score=0;state.lives=practice?99:3;state.chain=1;state.exposure=0;state.totalPlay=0;
+  createLevel(0);state.mode="play";$("titleOverlay").hidden=true;$("resultOverlay").hidden=true;last=performance.now();
+  showToast(practice?"Practice veil active: alarm catches do not end the run.":"The Ink Atrium is listening.");
+}
+function nextLevel(){
+  if(state.level>=levels.length-1){finishRun();return}
+  state.level++;createLevel(state.level);state.mode="play";$("resultOverlay").hidden=true;last=performance.now();audio.floor();
+  showToast(levels[state.level].name+" opened.");
+}
+function finishRun(){
+  state.mode="complete";if(state.score>state.best){state.best=state.score;storeSet(BEST_KEY,String(state.best))}
+  $("resultKicker").textContent="Caper complete";$("resultTitle").innerHTML="Archive <span>Unthreaded</span>";
+  $("resultText").textContent="Four galleries emptied, every memory recovered, and no sentry can explain the missing moonlight.";
+  $("nextBtn").textContent="Play Again";$("nextBtn").onclick=()=>beginRun(state.practice);showResults();audio.win();
+}
+function failRun(reason){
+  state.mode="gameover";$("resultKicker").textContent="Alarm thread snapped";$("resultTitle").innerHTML="Caper <span>Ended</span>";
+  $("resultText").textContent=reason;$("nextBtn").textContent="Try Again";$("nextBtn").onclick=()=>beginRun(state.practice);showResults();audio.fail();
+}
+function showResults(){
+  $("resultScore").textContent=state.score.toLocaleString();$("resultSilence").textContent=Math.max(0,Math.round(100-state.exposure/Math.max(1,state.totalPlay)*100))+"%";
+  $("resultTime").textContent=Math.ceil(state.time)+"s";$("resultOverlay").hidden=false;updateHud(true);
+}
+function clearFloor(){
+  state.mode="between";const bonus=Math.round(state.time*32*state.chain);state.score+=bonus;if(state.score>state.best){state.best=state.score;storeSet(BEST_KEY,String(state.best))}
+  $("resultKicker").textContent="Gallery clear";$("resultTitle").innerHTML=state.alert<12?"Clean <span>Escape</span>":"Threadbare <span>Escape</span>";
+  $("resultText").textContent=`${levels[state.level].name} surrendered every memory seal. Time bonus: ${bonus.toLocaleString()}.`;
+  $("nextBtn").textContent=state.level===levels.length-1?"Finish Caper":"Next Gallery";$("nextBtn").onclick=nextLevel;showResults();audio.floor();
+}
+function caught(reason="A sentry caught the silkshade in full light."){
+  if(state.dashTime>0||state.mode!=="play")return;
+  state.lives--;state.alert=0;state.chain=1;state.shake=16;burst(player.x,player.y,"#f06b82",22);audio.caught();
+  if(state.lives<=0&&!state.practice){failRun(reason);return}
+  const safe=state.lastSafe||{x:levels[state.level].start[0],y:levels[state.level].start[1]};player.x=safe.x;player.y=safe.y;
+  state.grace=.9;state.time=Math.max(8,state.time-7);showToast(state.practice?"Caught — practice rewind.":"Veil thread lost. Rewound to the last shadow.","danger");updateHud(true);
+}
+
+function dash(){
+  if(state.mode!=="play"||state.dash<1)return;
+  audio.start();state.dash=0;state.dashTime=.34;let dx=0,dy=0;
+  if(state.keys.has("a")||state.keys.has("arrowleft"))dx--;if(state.keys.has("d")||state.keys.has("arrowright"))dx++;
+  if(state.keys.has("w")||state.keys.has("arrowup"))dy--;if(state.keys.has("s")||state.keys.has("arrowdown"))dy++;
+  if(!dx&&!dy&&state.pointer.hasTarget){dx=(state.pointer.x-player.x)*W;dy=(state.pointer.y-player.y)*H}
+  if(!dx&&!dy){dx=Math.cos(player.angle);dy=Math.sin(player.angle)}
+  const n=normalize(dx,dy);player.vx=n.x;player.vy=n.y;burst(player.x,player.y,"#79eee5",12);audio.dash();
+}
+function bell(){
+  if(state.mode!=="play"||state.bells<=0)return;
+  audio.start();state.bells--;let x=player.x+Math.cos(player.angle)*.16*H/W,y=player.y+Math.sin(player.angle)*.16;
+  if(state.pointer.hasTarget){x=state.pointer.x;y=state.pointer.y}
+  state.decoy={x:clamp(x,.03,.97),y:clamp(y,.04,.96),time:3.5,pulse:0};burst(x,y,"#d882c7",16);audio.bell();showToast("Decoy bell ringing.");updateHud(true);
+}
+function togglePause(){
+  if(state.mode==="play"){state.mode="paused";$("resultKicker").textContent="Caper paused";$("resultTitle").innerHTML="Hold the <span>Shadow</span>";$("resultText").textContent="The archive clock is stopped. Resume when your route is clear.";$("nextBtn").textContent="Resume";$("nextBtn").onclick=()=>{state.mode="play";$("resultOverlay").hidden=true;last=performance.now()};showResults()}
+  else if(state.mode==="paused"){$("nextBtn").click()}
+}
+function restart(){beginRun(state.practice)}
+function setMute(v){state.muted=v;storeSet(MUTE_KEY,v?"1":"0");audio.setMuted(v);updateHud(true)}
+
+function update(dt){
+  for(const s of shadows){s.phase+=dt;s.x=s.baseX+Math.sin(s.phase*.63)*s.ox;s.y=s.baseY+Math.cos(s.phase*.51)*s.oy}
+  for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt/W;p.y+=p.vy*dt/H;p.vx*=.96;p.vy*=.96}
+  state.particles=state.particles.filter(p=>p.life>0);for(const p of state.popups){p.life-=dt;p.y-=dt*.035}state.popups=state.popups.filter(p=>p.life>0);
+  state.shake*=Math.pow(.005,dt);if(state.mode!=="play")return;
+  state.totalPlay+=dt;state.time-=dt;if(state.time<=0){state.time=0;failRun("The archive clock reached dawn before the escape arch opened.");return}
+  if(state.decoy){state.decoy.time-=dt;state.decoy.pulse+=dt;if(state.decoy.time<=0)state.decoy=null}
+  state.grace=Math.max(0,state.grace-dt);
+  if(state.dashTime>0)state.dashTime=Math.max(0,state.dashTime-dt);else state.dash=Math.min(1,state.dash+dt/.92);
+
+  let dx=0,dy=0;
+  if(state.keys.has("a")||state.keys.has("arrowleft"))dx--;if(state.keys.has("d")||state.keys.has("arrowright"))dx++;
+  if(state.keys.has("w")||state.keys.has("arrowup"))dy--;if(state.keys.has("s")||state.keys.has("arrowdown"))dy++;
+  if(dx||dy)state.pointer.hasTarget=false;
+  if(!dx&&!dy&&state.pointer.hasTarget){const tx=(state.pointer.x-player.x)*W,ty=(state.pointer.y-player.y)*H;if(Math.hypot(tx,ty)>12){dx=tx;dy=ty}else state.pointer.hasTarget=false}
+  if(state.dashTime>0){dx=player.vx;dy=player.vy}
+  if(dx||dy){
+    const n=normalize(dx,dy),speed=(state.dashTime>0?390:165)*dt;player.angle=Math.atan2(n.y,n.x);
+    resolveMove(player.x+n.x*speed/W,player.y+n.y*speed/H);
+    if(state.dashTime>0)player.trail.push({x:player.x,y:player.y,life:.28});
+  }
+  for(const t of player.trail)t.life-=dt;player.trail=player.trail.filter(t=>t.life>0);
+
+  const shade=currentShadow();if(shade&&state.dashTime<=0)state.lastSafe={x:player.x,y:player.y};
+  let visible=false;
+  for(const g of guards){
+    if(state.decoy&&metric(g,state.decoy)<.48*rad()){g.alerted=Math.max(g.alerted,state.decoy.time);const a=Math.atan2((state.decoy.y-g.y)*H,(state.decoy.x-g.x)*W);g.angle+=angleDiff(a,g.angle)*Math.min(1,dt*5)}
+    else{
+      g.alerted=Math.max(0,g.alerted-dt);const target=g.path[g.target],ddx=(target.x-g.x)*W,ddy=(target.y-g.y)*H,d=Math.hypot(ddx,ddy);
+      if(d<9)g.target=(g.target+1)%g.path.length;else{const n=normalize(ddx,ddy);g.x+=n.x*g.speed*dt*H/W;g.y+=n.y*g.speed*dt;const a=Math.atan2(n.y,n.x);g.angle+=angleDiff(a,g.angle)*Math.min(1,dt*4)}
+    }
+    const d=metric(g,player),a=Math.atan2((player.y-g.y)*H,(player.x-g.x)*W);
+    const sees=d<g.range&&Math.abs(angleDiff(a,g.angle))<g.cone/2&&!lineBlocked(g,player);
+    if(sees&&state.dashTime<=0&&state.grace<=0){visible=true;const shadowFactor=shade?.s?.radius?clamp(.18+shade.d/shade.s.radius*.24,.18,.42):1;state.alert+=dt*47*shadowFactor;state.exposure+=dt*shadowFactor}
+    if(d<player.r+13&&state.dashTime<=0&&state.grace<=0){caught("A brass sentry intercepted the silkshade.");if(state.mode!=="play")return}
+  }
+  if(visible){state.seenTime+=dt;if(state.seenTime>.24&&state.seenTime-dt<=.24){audio.spotted();showToast(shade?"The shadow is thinning the alarm.":"Sentry light found you!","danger")}}
+  else{state.seenTime=0;state.alert=Math.max(0,state.alert-dt*(shade?24:13))}
+  if(state.alert>=100){state.alert=100;caught();if(state.mode!=="play")return}
+
+  for(const r of relics){
+    if(!r.taken&&metric(player,r)<player.r+18){r.taken=true;state.collected++;const clean=state.alert<18;state.chain=clean?Math.min(8,state.chain+1):1;const gain=Math.round((420+state.level*120)*state.chain);state.score+=gain;state.bells=Math.min(levels[state.level].bells+1,state.bells+1);state.popups.push({x:r.x,y:r.y,text:`+${gain}`,life:1,color:"#bafff8"});burst(r.x,r.y,"#79eee5",22);audio.relic(state.chain);if(state.collected===relics.length){exit.open=true;showToast("All seals recovered. The escape arch is open.");audio.open()}else showToast(`Memory seal ${state.collected}/${relics.length}. Silence chain x${state.chain}.`)}
+  }
+  if(exit.open&&metric(player,exit)<player.r+24)clearFloor();
+}
+
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.save();
+  if(state.shake>0)ctx.translate((Math.random()*2-1)*state.shake,(Math.random()*2-1)*state.shake);
+  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#17142d");bg.addColorStop(.52,"#0c0d20");bg.addColorStop(1,"#251329");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="rgba(166,123,163,.09)";ctx.lineWidth=1;
+  const tile=Math.max(38,rad()*.075);for(let x=0;x<W;x+=tile){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=tile){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  for(let i=0;i<18;i++){const x=(i*173+state.level*97)%W,y=(i*i*47+63)%H;ctx.fillStyle="rgba(168,97,155,.08)";ctx.beginPath();ctx.arc(x,y,1.5+(i%3),0,TAU);ctx.fill()}
+
+  for(const s of shadows){
+    const g=ctx.createRadialGradient(px(s),py(s),0,px(s),py(s),s.radius);g.addColorStop(0,"rgba(0,1,10,.86)");g.addColorStop(.58,"rgba(5,3,18,.72)");g.addColorStop(1,"rgba(56,24,70,0)");
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(px(s),py(s),s.radius,0,TAU);ctx.fill();
+  }
+  for(const g of guards)drawCone(g);
+  for(const w of walls){
+    const x=w.x*W,y=w.y*H,ww=w.w*W,hh=w.h*H;ctx.shadowColor="#000";ctx.shadowBlur=16;ctx.fillStyle="#151024";rr(x,y,ww,hh,6);ctx.fill();ctx.shadowBlur=0;
+    const grad=ctx.createLinearGradient(x,y,x+ww,y+hh);grad.addColorStop(0,"#553248");grad.addColorStop(.18,"#2d1b35");grad.addColorStop(1,"#120e22");ctx.fillStyle=grad;rr(x+3,y+3,ww-6,hh-6,5);ctx.fill();
+    ctx.strokeStyle="rgba(224,166,95,.28)";ctx.lineWidth=3;rr(x+5,y+5,ww-10,hh-10,4);ctx.stroke();
+    const vertical=hh>ww;ctx.strokeStyle="rgba(255,215,147,.13)";ctx.lineWidth=2;const count=Math.max(2,Math.floor((vertical?hh:ww)/28));
+    for(let i=1;i<count;i++){ctx.beginPath();if(vertical){ctx.moveTo(x+7,y+i*hh/count);ctx.lineTo(x+ww-7,y+i*hh/count)}else{ctx.moveTo(x+i*ww/count,y+7);ctx.lineTo(x+i*ww/count,y+hh-7)}ctx.stroke()}
+  }
+  drawExit();
+  for(const r of relics)if(!r.taken)drawRelic(r);
+  if(state.decoy)drawDecoy();
+  for(const g of guards)drawGuard(g);
+  for(const t of player.trail){ctx.globalAlpha=t.life/.28*.32;drawPlayer(t.x,t.y,player.angle,true)}ctx.globalAlpha=1;drawPlayer(player.x,player.y,player.angle,false);
+  for(const p of state.particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(px(p),py(p),p.size,0,TAU);ctx.fill()}ctx.globalAlpha=1;
+  for(const p of state.popups){ctx.globalAlpha=clamp(p.life,0,1);ctx.fillStyle=p.color;ctx.font=`900 ${Math.max(14,rad()*.027)}px system-ui`;ctx.textAlign="center";ctx.shadowColor=p.color;ctx.shadowBlur=10;ctx.fillText(p.text,px(p),py(p));ctx.shadowBlur=0}ctx.globalAlpha=1;
+  const vg=ctx.createRadialGradient(W/2,H/2,rad()*.2,W/2,H/2,rad()*.78);vg.addColorStop(.55,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,8,.63)");ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+  if(state.mode==="paused"){ctx.fillStyle="rgba(4,4,13,.3)";ctx.fillRect(0,0,W,H)}
+  ctx.restore();
+}
+function drawCone(g){
+  const x=px(g),y=py(g),len=g.range,half=g.cone/2;ctx.save();ctx.translate(x,y);ctx.rotate(g.angle);
+  const grad=ctx.createRadialGradient(0,0,0,0,0,len);grad.addColorStop(0,"rgba(255,208,116,.42)");grad.addColorStop(.72,"rgba(242,188,105,.17)");grad.addColorStop(1,"rgba(242,188,105,0)");
+  ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,len,-half,half);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(255,220,145,.22)";ctx.lineWidth=1;ctx.stroke();ctx.restore();
+}
+function drawGuard(g){
+  const x=px(g),y=py(g),r=Math.max(10,rad()*.022);ctx.save();ctx.translate(x,y);ctx.rotate(g.angle);
+  ctx.shadowColor="#f2bc69";ctx.shadowBlur=10;ctx.fillStyle="#d59a54";ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle="#171226";ctx.beginPath();ctx.arc(-2,0,r*.68,0,TAU);ctx.fill();
+  ctx.fillStyle="#ffe3a4";ctx.beginPath();ctx.arc(r*.55,0,r*.25,0,TAU);ctx.fill();ctx.strokeStyle="#9b6740";ctx.lineWidth=3;for(const sy of[-1,1]){ctx.beginPath();ctx.moveTo(-r*.4,sy*r*.55);ctx.lineTo(-r*.9,sy*r*.92);ctx.stroke()}ctx.restore();
+}
+function drawPlayer(xn,yn,a,ghost){
+  const x=xn*W,y=yn*H,r=Math.max(11,rad()*.025);ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);ctx.shadowColor=ghost?"#79eee5":"#000";ctx.shadowBlur=ghost?18:10;
+  if(!ghost&&state.grace>0)ctx.globalAlpha=.45+Math.sin(performance.now()*.025)*.28;
+  ctx.fillStyle=ghost?"rgba(121,238,229,.8)":"#151126";ctx.beginPath();ctx.moveTo(0,-r*1.35);ctx.lineTo(r*1.16,r*.82);ctx.lineTo(0,r*.42);ctx.lineTo(-r*1.16,r*.82);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle=ghost?"#dffffb":"#a8619b";ctx.lineWidth=Math.max(2,r*.15);ctx.beginPath();ctx.moveTo(0,-r*.15);ctx.lineTo(r*.87,r*.65);ctx.moveTo(0,-r*.15);ctx.lineTo(-r*.87,r*.65);ctx.stroke();
+  ctx.fillStyle=ghost?"#dffffb":"#ead7c7";ctx.beginPath();ctx.arc(0,-r*.68,r*.42,0,TAU);ctx.fill();ctx.fillStyle="#0d0d20";ctx.beginPath();ctx.arc(0,-r*.72,r*.38,Math.PI,TAU);ctx.lineTo(r*.28,-r*.55);ctx.quadraticCurveTo(0,-r*.74,-r*.28,-r*.55);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#79eee5";ctx.beginPath();ctx.arc(-r*.13,-r*.69,r*.055,0,TAU);ctx.arc(r*.13,-r*.69,r*.055,0,TAU);ctx.fill();ctx.restore();
+}
+function drawRelic(r){
+  const x=px(r),y=py(r),s=Math.max(10,rad()*.021),pulse=1+Math.sin(performance.now()*.004+r.phase)*.08;ctx.save();ctx.translate(x,y);ctx.rotate(performance.now()*.0005+r.phase);ctx.scale(pulse,pulse);
+  ctx.shadowColor="#79eee5";ctx.shadowBlur=22;ctx.fillStyle="#9dfff6";ctx.beginPath();for(let i=0;i<6;i++){const a=-Math.PI/2+i/6*TAU,rr=i%2?s*.58:s;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle="#edfffd";ctx.lineWidth=2;ctx.stroke();ctx.restore();
+}
+function drawExit(){
+  const x=exit.x*W,y=exit.y*H,s=Math.max(18,rad()*.038);ctx.save();ctx.translate(x,y);ctx.shadowColor=exit.open?"#f2bc69":"#68556c";ctx.shadowBlur=exit.open?26:6;ctx.strokeStyle=exit.open?"#ffd98e":"#5b4a61";ctx.lineWidth=Math.max(5,s*.18);ctx.beginPath();ctx.arc(0,0,s,-Math.PI,0);ctx.lineTo(s,s*.95);ctx.lineTo(-s,s*.95);ctx.closePath();ctx.stroke();ctx.fillStyle=exit.open?"rgba(242,188,105,.14)":"rgba(25,20,37,.7)";ctx.fill();if(exit.open){ctx.fillStyle="#fff2c3";ctx.beginPath();ctx.arc(0,s*.18,3,0,TAU);ctx.fill()}ctx.restore();
+}
+function drawDecoy(){
+  const d=state.decoy,x=px(d),y=py(d),p=(d.pulse%1);ctx.save();ctx.strokeStyle=`rgba(216,130,199,${1-p})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,10+p*58,0,TAU);ctx.stroke();ctx.fillStyle="#e498d4";ctx.shadowColor="#d882c7";ctx.shadowBlur=16;ctx.beginPath();ctx.arc(x,y,8+Math.sin(d.pulse*8)*2,0,TAU);ctx.fill();ctx.restore();
+}
+function burst(x,y,color,count){for(let i=0;i<count;i++){const a=Math.random()*TAU,sp=25+Math.random()*150;state.particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:.35+Math.random()*.45,max:.8,size:1.5+Math.random()*3,color})}}
+
+function updateHud(force=false){
+  $("galleryHud").textContent=`${state.level+1}/${levels.length}`;$("sealsHud").textContent=`${state.collected}/${relics.length||levels[state.level].seals}`;$("timeHud").textContent=Math.ceil(state.time)+"s";
+  $("scoreStat").textContent=state.score.toLocaleString();$("bestStat").textContent=state.best.toLocaleString();$("chainStat").textContent="x"+state.chain;$("livesStat").textContent=state.practice?"∞":state.lives;
+  $("alertText").textContent=Math.round(state.alert)+"%";$("alertBar").style.width=state.alert+"%";$("dashText").textContent=state.dash>=1?"Ready":Math.ceil(state.dash*100)+"%";$("dashBar").style.width=state.dash*100+"%";
+  $("floorName").textContent=levels[state.level].name;$("objectiveSeals").textContent=`${state.collected} / ${relics.length||levels[state.level].seals}`;$("bellsStat").textContent=state.bells;$("exitStat").textContent=exit.open?"Open":"Locked";
+  for(const id of["dashBtn","touchDash"])$(id).disabled=state.dash<1||state.mode!=="play";for(const id of["bellBtn","touchBell"])$(id).disabled=state.bells<=0||state.mode!=="play";
+  $("muteBtn").textContent=state.muted?"Sound Off":"Sound On";if(force){$("pauseBtn").textContent=state.mode==="paused"?"Resume":"Pause"}
+}
+function showToast(text,type=""){const t=$("toast");t.textContent=text;t.className=`toast show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="toast",1800)}
+
+const audio={
+  ctx:null,master:null,music:null,next:0,step:0,
+  start(){if(!this.ctx){try{this.ctx=new(AudioContext||webkitAudioContext)();this.master=this.ctx.createGain();this.master.gain.value=state.muted?0:.2;this.master.connect(this.ctx.destination);this.music=this.ctx.createGain();this.music.gain.value=.18;this.music.connect(this.master)}catch(e){return}}if(this.ctx.state==="suspended")this.ctx.resume()},
+  setMuted(v){if(this.master)this.master.gain.setTargetAtTime(v?0:.2,this.ctx.currentTime,.03)},
+  tone(f,d=.12,type="sine",g=.1,end=null,delay=0,bus=null){if(!this.ctx||state.muted)return;const t=this.ctx.currentTime+delay,o=this.ctx.createOscillator(),gain=this.ctx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(end)o.frequency.exponentialRampToValueAtTime(end,t+d);gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(g,t+.01);gain.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(gain);gain.connect(bus||this.master);o.start(t);o.stop(t+d+.03)},
+  dash(){this.tone(180,.18,"sine",.13,820);this.tone(620,.13,"triangle",.05,990,.04)},bell(){[740,554,392].forEach((f,i)=>this.tone(f,.38,"sine",.1,null,i*.07))},
+  relic(c){[330,440,660+Math.min(c,8)*20].forEach((f,i)=>this.tone(f,.16,"triangle",.12,null,i*.055))},spotted(){this.tone(240,.18,"sawtooth",.11,420);this.tone(510,.12,"square",.04,690,.06)},
+  caught(){this.tone(220,.35,"sawtooth",.15,70);this.tone(150,.4,"square",.06,55,.08)},open(){[260,390,520,780].forEach((f,i)=>this.tone(f,.3,"sine",.09,null,i*.07))},
+  floor(){[330,415,523,698].forEach((f,i)=>this.tone(f,.32,"triangle",.1,null,i*.08))},win(){[261,329,392,523,659,784].forEach((f,i)=>this.tone(f,.35,"triangle",.1,null,i*.08))},
+  fail(){[247,196,147,110].forEach((f,i)=>this.tone(f,.4,"sawtooth",.075,null,i*.11))},
+  tick(){if(!this.ctx||state.muted||state.mode!=="play")return;if(this.next<this.ctx.currentTime)this.next=this.ctx.currentTime+.03;const roots=[110,130.8,98,146.8];while(this.next<this.ctx.currentTime+.1){const root=roots[Math.floor(this.step/8)%4];if(this.step%4===0)this.tone(root,.55,"sine",.02,null,this.next-this.ctx.currentTime,this.music);if(this.step%8===3)this.tone(root*3,.07,"triangle",.013,null,this.next-this.ctx.currentTime,this.music);this.step++;this.next+=.32}}
+};
+
+canvas.addEventListener("pointerdown",e=>{if(state.mode!=="play")return;audio.start();state.pointer={active:true,hasTarget:true,...fromClient(e)};try{canvas.setPointerCapture(e.pointerId)}catch(err){}});
+canvas.addEventListener("pointermove",e=>{if(state.pointer.active)Object.assign(state.pointer,fromClient(e))});
+const releasePointer=e=>{if(e.pointerType!=="mouse"||e.buttons===0)state.pointer.active=false};
+canvas.addEventListener("pointerup",releasePointer);canvas.addEventListener("pointercancel",()=>state.pointer.active=false);canvas.addEventListener("pointerleave",releasePointer);
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowleft","arrowright","arrowup","arrowdown"," ","shift","e","p","escape","m","r","enter"].includes(k))e.preventDefault();
+  if((k==="enter"||k===" ")&&state.mode==="title"){beginRun(false);return}if(k===" "||k==="shift"){dash();return}if(k==="e"){bell();return}if(k==="p"||k==="escape"){togglePause();return}if(k==="m"){audio.start();setMute(!state.muted);return}if(k==="r"){restart();return}state.keys.add(k)});
+window.addEventListener("keyup",e=>state.keys.delete(e.key.toLowerCase()));
+$("startBtn").addEventListener("click",()=>beginRun(false));$("practiceBtn").addEventListener("click",()=>beginRun(true));$("replayBtn").addEventListener("click",()=>beginRun(state.practice));
+for(const id of["dashBtn","touchDash"])$(id).addEventListener("click",dash);for(const id of["bellBtn","touchBell"])$(id).addEventListener("click",bell);
+$("pauseBtn").addEventListener("click",togglePause);$("touchPause").addEventListener("click",togglePause);$("restartBtn").addEventListener("click",restart);$("muteBtn").addEventListener("click",()=>{audio.start();setMute(!state.muted)});
+$("titleArt").addEventListener("load",()=>$("loading").hidden=true);$("titleArt").addEventListener("error",()=>{$("loading").textContent="Key art unavailable. The live archive is ready.";setTimeout(()=>$("loading").hidden=true,1800)});if($("titleArt").complete&&$("titleArt").naturalWidth)$("loading").hidden=true;
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&state.mode==="play")togglePause()});new ResizeObserver(resize).observe($("canvasWrap"));window.addEventListener("resize",resize);
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();audio.tick();hudClock+=dt;if(hudClock>.1){updateHud();hudClock=0}requestAnimationFrame(frame)}
+resize();createLevel(0);state.mode="title";updateHud(true);requestAnimationFrame(frame);
+
+const testApi={
+  start:(practice=false)=>beginRun(practice),step:(seconds=1/60)=>{const n=Math.max(1,Math.ceil(seconds/.05));for(let i=0;i<n;i++)update(Math.min(.05,seconds/n));draw();updateHud(true)},
+  dash,bell,pause:togglePause,collectAll:()=>{for(const r of relics){r.taken=true}state.collected=relics.length;exit.open=true;updateHud(true)},
+  moveTo:(x,y)=>{player.x=clamp(x,0,1);player.y=clamp(y,0,1);updateHud(true)},escape:()=>{player.x=exit.x;player.y=exit.y;update(.016)},
+  catch:caught,setAlert:v=>{state.alert=clamp(v,0,100);updateHud(true)},getState:()=>({mode:state.mode,practice:state.practice,level:state.level,floor:levels[state.level].name,score:state.score,best:state.best,lives:state.lives,time:state.time,alert:state.alert,chain:state.chain,bells:state.bells,dash:state.dash,grace:state.grace,collected:state.collected,total:relics.length,exitOpen:exit.open,player:{x:player.x,y:player.y},guards:guards.length,shadows:shadows.length})};
+try{globalThis.__SILKSHADE_CAPER__=testApi}catch(e){}
+</script>
+</body>
+</html>

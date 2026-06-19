@@ -1,6 +1,18 @@
 {
-  "gameOfTheDay": "moonstamp-dispatch",
+  "gameOfTheDay": "silkshade-caper",
   "games": [
+    {
+      "slug": "silkshade-caper",
+      "title": "Silkshade Caper",
+      "description": "An original stealth-action score game. Slip between moving shadows, steal glowing memory seals, distract brass sentries, and escape each moonlit archive before the alarm thread snaps.",
+      "tags": [
+        "stealth",
+        "action",
+        "arcade"
+      ],
+      "emoji": "\ud83e\udd77",
+      "added": "2026-06-19"
+    },
     {
       "slug": "moonstamp-dispatch",
       "title": "Moonstamp Dispatch",
