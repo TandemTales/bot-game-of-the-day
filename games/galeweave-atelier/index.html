@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Galeweave Atelier - Bot Built Arcade</title>
+<meta name="description" content="An original kinetic-sculpture balance game. Arrange weighted glass ornaments by torque, then trim the counterweight through a living wind test.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='21' fill='%23081320'/><path d='M18 43h64' stroke='%23e5bb68' stroke-width='8' stroke-linecap='round'/><path d='M50 17v27' stroke='%2376e7df' stroke-width='7'/><path d='M28 48v20M72 48v17' stroke='%23f4e2b4' stroke-width='4'/><path d='M17 73c7-18 18-18 24 0-7 14-18 14-24 0Z' fill='%23f39b78'/><circle cx='72' cy='73' r='12' fill='%2376e7df'/></svg>">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#07101b;--bg2:#101b2a;--panel:rgba(10,20,31,.91);--panel2:rgba(21,34,46,.88);
+  --line:rgba(227,220,190,.16);--ink:#f7f1dc;--muted:#aebcc1;--cyan:#72e4db;
+  --cyan2:#2b9ca8;--gold:#e9bc69;--coral:#f08e76;--rose:#df6d88;--good:#8cdda1;
+  --bad:#ff7180;--shadow:0 24px 76px rgba(0,0,0,.48);--radius:17px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;overflow-x:hidden}
+body{
+  min-height:100vh;padding:12px;color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 78% -10%,rgba(49,142,154,.2),transparent 35%),
+    radial-gradient(circle at 8% 10%,rgba(178,93,102,.13),transparent 31%),
+    linear-gradient(180deg,#132334,#07101b 64%,#050a11);
+}
+button{font:inherit}
+button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.back{display:block;width:min(1460px,100%);margin:0 auto 9px;color:#d3dcdb;text-decoration:none;font-size:.88rem}
+.back:hover{color:var(--cyan)}
+.app{width:min(1460px,100%);margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 348px;gap:13px;align-items:start}
+.game-shell,.panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);box-shadow:var(--shadow)}
+.game-shell{min-width:0;overflow:hidden}
+.canvas-wrap{position:relative;width:100%;aspect-ratio:16/10;min-height:520px;overflow:hidden;background:#07121e}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.hud{
+  position:absolute;z-index:5;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;
+  gap:8px;pointer-events:none
+}
+.hud-group{display:flex;gap:7px;flex-wrap:wrap}
+.hud-card{
+  min-width:91px;padding:7px 10px;border:1px solid rgba(255,255,255,.13);border-radius:11px;
+  background:rgba(4,11,18,.72);backdrop-filter:blur(9px);box-shadow:0 8px 22px rgba(0,0,0,.22)
+}
+.hud-card span{display:block;color:#aebcc1;font-size:.61rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.hud-card strong{display:block;margin-top:1px;color:#fff7dc;font-size:.95rem;font-variant-numeric:tabular-nums}
+.toast{
+  position:absolute;z-index:16;left:50%;bottom:16px;max-width:min(620px,88%);padding:10px 16px;
+  transform:translate(-50%,15px);opacity:0;pointer-events:none;text-align:center;
+  border:1px solid rgba(114,228,219,.35);border-radius:999px;color:#dcfffb;background:rgba(4,12,20,.93);
+  box-shadow:0 13px 36px rgba(0,0,0,.35);font-size:.82rem;font-weight:800;transition:.2s
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}.toast.bad{color:#ffd1d6;border-color:#ff718077}
+.loading{
+  position:absolute;z-index:25;top:14px;left:50%;transform:translateX(-50%);
+  border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(4,11,18,.88);
+  padding:8px 13px;color:#dbe8e6;font-size:.76rem
+}
+.loading[hidden]{display:none}
+.overlay{
+  position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:clamp(12px,3vw,28px);
+  background:rgba(4,9,16,.59);backdrop-filter:blur(6px)
+}
+.overlay[hidden]{display:none}
+.title-card{
+  position:relative;width:min(1050px,100%);height:100%;max-height:660px;min-height:0;overflow:hidden;
+  border:1px solid rgba(255,255,255,.22);border-radius:18px;background:#091521;box-shadow:0 32px 100px rgba(0,0,0,.62)
+}
+.title-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.title-card::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(3,9,16,.97),rgba(3,9,16,.74) 45%,rgba(3,9,16,.08) 79%),
+             linear-gradient(0deg,rgba(3,9,16,.9),transparent 58%)
+}
+.title-copy{
+  position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:flex-end;
+  width:min(690px,100%);padding:clamp(23px,5vw,54px)
+}
+.eyebrow{
+  align-self:flex-start;padding:6px 10px;border:1px solid rgba(114,228,219,.48);border-radius:999px;
+  color:#dcfffb;background:rgba(4,14,22,.66);font-size:.67rem;font-weight:950;letter-spacing:.14em;text-transform:uppercase
+}
+h1{margin:13px 0 8px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(3.3rem,8vw,6.5rem);line-height:.82;letter-spacing:-.055em;text-shadow:0 8px 30px #000}
+h1 span{display:block;color:var(--cyan);font-style:italic}
+.title-copy p{max-width:620px;margin:5px 0 18px;color:#e5e8e1;line-height:1.5}
+.button-row{display:flex;gap:9px;flex-wrap:wrap}
+.button-row button,.action{
+  min-height:44px;padding:0 17px;border:1px solid rgba(255,255,255,.15);border-radius:11px;
+  color:var(--ink);background:#1b2a38;font-weight:900;cursor:pointer;transition:transform .12s,filter .12s,border-color .12s
+}
+.button-row button:hover,.action:hover{filter:brightness(1.12);border-color:rgba(114,228,219,.58)}
+.button-row button:active,.action:active{transform:translateY(1px) scale(.99)}
+.primary{color:#071318!important;background:linear-gradient(135deg,#ffe4a0,var(--cyan))!important;border-color:#fff7!important}
+.workbench{padding:11px 12px 12px;border-top:1px solid var(--line);background:rgba(5,13,21,.96)}
+.workbench-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.workbench-head div:first-child{min-width:0}
+.workbench-head b{display:block;font-family:Georgia,serif;font-size:1.03rem}
+.workbench-head span{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
+.workbench-actions{display:flex;gap:7px;flex-wrap:wrap}.workbench-actions .action{min-height:38px;padding:0 11px;font-size:.76rem}
+.pieces{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.piece{
+  --piece:#72e4db;position:relative;min-width:0;min-height:66px;padding:7px 5px;border:1px solid color-mix(in srgb,var(--piece) 40%,transparent);
+  border-radius:11px;color:var(--ink);background:linear-gradient(160deg,color-mix(in srgb,var(--piece) 12%,#162532),#0c1721);
+  cursor:pointer;text-align:left;overflow:hidden
+}
+.piece:hover,.piece.selected{border-color:var(--piece);filter:brightness(1.13)}
+.piece.selected{box-shadow:0 0 0 2px color-mix(in srgb,var(--piece) 27%,transparent),0 8px 22px rgba(0,0,0,.28)}
+.piece.placed{opacity:.34;cursor:default;filter:saturate(.5)}
+.piece strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.72rem}
+.piece span{display:block;color:#c4d0cf;font-size:.62rem;margin-top:3px}
+.piece i{position:absolute;right:6px;bottom:5px;width:15px;height:15px;border-radius:50%;background:var(--piece);box-shadow:0 0 12px var(--piece)}
+.trim-controls{
+  position:absolute;z-index:10;left:12px;right:12px;bottom:12px;display:none;align-items:flex-end;justify-content:space-between;
+  pointer-events:none
+}
+.trim-controls.show{display:flex}
+.trim-controls button{
+  pointer-events:auto;min-width:110px;min-height:62px;border:1px solid rgba(255,255,255,.24);border-radius:14px;
+  color:#f8f1dc;background:rgba(10,25,37,.83);backdrop-filter:blur(9px);font-weight:950;touch-action:none;
+  box-shadow:0 10px 28px rgba(0,0,0,.3)
+}
+.trim-controls button:active,.trim-controls button.active{background:rgba(114,228,219,.28);border-color:var(--cyan)}
+.side{display:grid;gap:10px}.panel{padding:13px;backdrop-filter:blur(12px)}
+.brand{display:flex;justify-content:space-between;gap:12px}.brand h2{margin:0;font-family:Georgia,serif;font-size:1.33rem}.brand p{margin:5px 0 0;color:#b9c5c6;font-size:.82rem;line-height:1.43}
+.brand-mark{
+  flex:none;width:56px;height:56px;border-radius:50%;position:relative;
+  background:conic-gradient(from 45deg,var(--coral),var(--gold),var(--cyan),var(--coral));box-shadow:0 0 28px rgba(114,228,219,.22)
+}
+.brand-mark::before{content:"";position:absolute;left:7px;right:7px;top:26px;height:5px;border-radius:9px;background:#07101b;transform:rotate(-8deg)}
+.brand-mark::after{content:"";position:absolute;left:25px;top:7px;width:6px;height:27px;border-radius:7px;background:#07101b}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.stat{padding:8px 9px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.035)}
+.stat span{display:block;color:var(--muted);font-size:.61rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
+.stat strong{display:block;margin-top:3px;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.section-title{margin:0 0 9px;color:#dffdfa;font-size:.68rem;font-weight:950;letter-spacing:.13em;text-transform:uppercase}
+.meter-block{margin-top:10px}.meter-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;color:#b7c4c5;font-size:.72rem}
+.bar{height:10px;border:1px solid rgba(255,255,255,.08);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.055)}
+.bar i{display:block;height:100%;width:0;border-radius:inherit;transition:width .15s}
+.balance-bar{background:linear-gradient(90deg,var(--bad),var(--gold) 38%,var(--good) 50%,var(--gold) 62%,var(--bad))}
+.stability-bar{background:linear-gradient(90deg,var(--rose),var(--gold),var(--cyan))}
+.wind-bar{background:linear-gradient(90deg,#355f79,var(--cyan),#fff2b4)}
+.commission{display:grid;gap:7px}.commission-row{display:flex;justify-content:space-between;gap:12px;padding:8px 9px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.03);font-size:.78rem}
+.commission-row span{color:var(--muted)}.commission-row b{text-align:right}
+.rules{margin:0;padding-left:18px;display:grid;gap:7px;color:#bcc8c8;font-size:.8rem;line-height:1.4}
+.side-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.side-actions .action{padding:0 8px}
+.result-card{
+  width:min(540px,100%);padding:28px;border:1px solid rgba(255,255,255,.2);border-radius:18px;
+  background:linear-gradient(145deg,#162a39,#09131f);box-shadow:var(--shadow);text-align:center
+}
+.result-icon{font-size:3rem}.result-card h2{margin:7px 0;font-family:Georgia,serif;font-size:2.25rem}.result-card p{color:#bac6c7;line-height:1.45}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:16px 0}
+.summary div{padding:9px 7px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.04)}
+.summary span{display:block;color:var(--muted);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase}.summary b{display:block;margin-top:3px}
+@media(max-width:1080px){.app{grid-template-columns:1fr}.side{grid-template-columns:repeat(2,minmax(0,1fr))}.brand-panel,.rules-panel{grid-column:1/-1}}
+@media(max-width:720px){
+  body{padding:7px}.canvas-wrap{aspect-ratio:3/4;min-height:570px}.side{grid-template-columns:1fr}.title-card>img{object-position:57% center}
+  .title-card::after{background:linear-gradient(0deg,rgba(3,9,16,.98),rgba(3,9,16,.72) 63%,rgba(3,9,16,.14))}
+  .title-copy{padding:22px}.pieces{grid-template-columns:repeat(4,minmax(0,1fr))}.hud-card{min-width:74px;padding:6px 8px}
+  .hud-group:last-child .hud-card:first-child{display:none}.trim-controls button{min-width:98px;min-height:58px}.toast{bottom:82px}
+}
+@media(max-width:420px){
+  .canvas-wrap{min-height:540px}.workbench{padding:9px}.workbench-head{align-items:flex-start;flex-direction:column}.pieces{gap:5px}
+  .piece{min-height:62px}.trim-controls button{min-width:88px}.brand-mark{display:none}h1{font-size:3.45rem}.summary{grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.toast{transition:none}}
+</style>
+</head>
+<body>
+<a class="back" href="../../index.html">&larr; Back to Bot Built Arcade</a>
+<main class="app">
+  <section class="game-shell" aria-label="Galeweave Atelier kinetic sculpture game">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="game" aria-label="A suspended brass mobile with hooks for weighted glass ornaments"></canvas>
+      <div class="hud">
+        <div class="hud-group">
+          <div class="hud-card"><span>Commission</span><strong id="stageHud">1 / 5</strong></div>
+          <div class="hud-card"><span>Phase</span><strong id="phaseHud">Design</strong></div>
+        </div>
+        <div class="hud-group">
+          <div class="hud-card"><span>Score</span><strong id="scoreHud">0</strong></div>
+          <div class="hud-card"><span>Wind test</span><strong id="timeHud">--</strong></div>
+        </div>
+      </div>
+      <div class="loading" id="loading">Loading original Galeweave Atelier key art...</div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <div class="overlay" id="titleOverlay">
+        <div class="title-card">
+          <img id="titleArt" src="assets/galeweave-atelier-key-art.svg" alt="Original key art of a chimewright balancing brass arms and luminous glass ornaments in a stormlit workshop">
+          <div class="title-copy">
+            <span class="eyebrow">Original kinetic-sculpture balance game</span>
+            <h1>Galeweave <span>Atelier</span></h1>
+            <p>Build five wind-borne sculptures. Place every weighted ornament so the beam reaches equilibrium, then ride the gust test by sliding one brass counterweight before the mobile tears free.</p>
+            <div class="button-row">
+              <button class="primary" id="startBtn" type="button">Open the Atelier</button>
+              <button id="guidedBtn" type="button">Gentle Wind Mode</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay" id="resultOverlay" hidden>
+        <div class="result-card">
+          <div class="result-icon" id="resultIcon">✦</div>
+          <span class="eyebrow" id="resultKicker">Commission complete</span>
+          <h2 id="resultTitle">Balanced in Motion</h2>
+          <p id="resultText">The sculpture held its song through the gale.</p>
+          <div class="summary">
+            <div><span>Score</span><b id="resultScore">0</b></div>
+            <div><span>Stability</span><b id="resultStability">100%</b></div>
+            <div><span>Wind bias</span><b id="resultBias">0.0</b></div>
+          </div>
+          <div class="button-row" style="justify-content:center">
+            <button class="primary" id="nextBtn" type="button">Next Commission</button>
+            <button id="retryBtn" type="button">Retry Design</button>
+          </div>
+        </div>
+      </div>
+      <div class="trim-controls" id="trimControls" aria-label="Counterweight touch controls">
+        <button id="trimLeft" type="button">◀ Trim Left</button>
+        <button id="trimRight" type="button">Trim Right ▶</button>
+      </div>
+    </div>
+    <div class="workbench" id="workbench">
+      <div class="workbench-head">
+        <div><b id="benchTitle">Select an ornament</b><span id="benchHint">Choose a piece, then tap a glowing hook. Tap a hanging piece to retrieve it.</span></div>
+        <div class="workbench-actions">
+          <button class="action" id="hintBtn" type="button">Draft Hint (2)</button>
+          <button class="action" id="resetBtn" type="button">Reset Layout</button>
+          <button class="action primary" id="testBtn" type="button">Begin Wind Test</button>
+        </div>
+      </div>
+      <div class="pieces" id="pieces" aria-label="Available ornaments"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="panel brand-panel">
+      <div class="brand"><div><h2>Galeweave Atelier</h2><p>A five-commission torque puzzle and active balance challenge with responsive pointer, touch, and keyboard controls, synthesized chimes, persistent scores, and dynamic wind physics.</p></div><div class="brand-mark" aria-hidden="true"></div></div>
+    </section>
+    <section class="panel">
+      <div class="stats">
+        <div class="stat"><span>Total score</span><strong id="scoreStat">0</strong></div>
+        <div class="stat"><span>Best run</span><strong id="bestStat">0</strong></div>
+        <div class="stat"><span>Static torque</span><strong id="torqueStat">0.0</strong></div>
+        <div class="stat"><span>Wind bias</span><strong id="biasStat">0.0</strong></div>
+      </div>
+      <div class="meter-block"><div class="meter-label"><span>Equilibrium</span><b id="balanceText">Place all pieces</b></div><div class="bar"><i class="balance-bar" id="balanceBar"></i></div></div>
+      <div class="meter-block"><div class="meter-label"><span>Structural stability</span><b id="stabilityText">100%</b></div><div class="bar"><i class="stability-bar" id="stabilityBar"></i></div></div>
+      <div class="meter-block"><div class="meter-label"><span>Current gust</span><b id="windText">Still</b></div><div class="bar"><i class="wind-bar" id="windBar"></i></div></div>
+    </section>
+    <section class="panel">
+      <p class="section-title">Current Commission</p>
+      <div class="commission">
+        <div class="commission-row"><span>Design</span><b id="commissionName">Dawn Cantilever</b></div>
+        <div class="commission-row"><span>Brief</span><b id="commissionBrief">A first lesson in leverage.</b></div>
+        <div class="commission-row"><span>Ornaments</span><b id="placedStat">0 / 3</b></div>
+        <div class="commission-row"><span>Wind window</span><b id="durationStat">12 seconds</b></div>
+      </div>
+    </section>
+    <section class="panel rules-panel">
+      <p class="section-title">Atelier Method</p>
+      <ul class="rules">
+        <li>Torque is weight × distance from the pivot. Equal left and right torque unlocks the test.</li>
+        <li>Sailier glass catches more wind. Low wind bias makes the live test calmer and earns a bonus.</li>
+        <li>During the test, hold A/D, arrow keys, or the touch buttons to slide the brass counterweight.</li>
+        <li>Keep the beam near level until the clock expires. Stability recovers whenever the mobile settles.</li>
+      </ul>
+    </section>
+    <section class="panel side-actions">
+      <button class="action" id="pauseBtn" type="button">Pause</button>
+      <button class="action" id="muteBtn" type="button">Sound On</button>
+      <button class="action" id="restartBtn" type="button">Restart Run</button>
+      <button class="action" id="titleBtn" type="button">Title</button>
+    </section>
+  </aside>
+</main>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const canvas=$("game"),ctx=canvas.getContext("2d",{alpha:false});
+const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
+const BEST_KEY="galeweave-atelier-best-v1",MUTE_KEY="galeweave-atelier-muted-v1";
+const storeGet=(k,f)=>{try{const v=localStorage.getItem(k);return v===null?f:v}catch(e){return f}};
+const storeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+
+const shapeColors={cyan:"#72e4db",coral:"#f08e76",gold:"#e9bc69",rose:"#df6d88",violet:"#9a8be8",mint:"#8cdda1",ice:"#c6f4ee"};
+const stages=[
+  {name:"Dawn Cantilever",brief:"A first lesson in leverage.",duration:12,gust:.76,crosswind:1.05,slots:[-3,-2,-1,1,2,3],
+   pieces:[
+    {id:"dew",name:"Dew Leaf",weight:1,sail:2.2,color:"cyan",shape:"leaf",solution:-3},
+    {id:"keel",name:"Brass Keel",weight:3,sail:.6,color:"gold",shape:"drop",solution:-1},
+    {id:"cloud",name:"Cloud Lens",weight:2,sail:1.4,color:"ice",shape:"disc",solution:3}
+   ]},
+  {name:"Heron Measure",brief:"Mass near the heart; air at the edge.",duration:15,gust:.92,crosswind:1.18,slots:[-3,-2,-1,0,1,2,3],
+   pieces:[
+    {id:"anchor",name:"Night Anchor",weight:4,sail:.5,color:"violet",shape:"diamond",solution:-2},
+    {id:"feather",name:"Heron Feather",weight:1,sail:2.8,color:"cyan",shape:"leaf",solution:-1},
+    {id:"moon",name:"Moon Bead",weight:2,sail:1.4,color:"gold",shape:"disc",solution:0},
+    {id:"rose",name:"Rose Bell",weight:3,sail:1.2,color:"coral",shape:"bell",solution:3}
+   ]},
+  {name:"Rain Parliament",brief:"Five voices share one storm.",duration:18,gust:1.04,crosswind:1.32,slots:[-3,-2,-1,0,1,2,3],
+   pieces:[
+    {id:"basalt",name:"Basalt Tear",weight:4,sail:.7,color:"violet",shape:"drop",solution:-3},
+    {id:"ribbon",name:"Rain Ribbon",weight:1,sail:3,color:"cyan",shape:"leaf",solution:-1},
+    {id:"pearl",name:"Still Pearl",weight:2,sail:1.4,color:"ice",shape:"disc",solution:0},
+    {id:"fan",name:"Copper Fan",weight:2,sail:2.5,color:"coral",shape:"fan",solution:2},
+    {id:"bell",name:"Deep Bell",weight:3,sail:.8,color:"gold",shape:"bell",solution:3}
+   ]},
+  {name:"Solstice Engine",brief:"A long arm magnifies every choice.",duration:21,gust:1.16,crosswind:1.48,slots:[-3,-2,-1,0,1,2,3],
+   pieces:[
+    {id:"heart",name:"Iron Heart",weight:5,sail:.5,color:"violet",shape:"diamond",solution:-3},
+    {id:"sail",name:"Sun Sail",weight:2,sail:2.4,color:"gold",shape:"fan",solution:-2},
+    {id:"seed",name:"Glass Seed",weight:2,sail:1.3,color:"mint",shape:"drop",solution:0},
+    {id:"kite",name:"Ember Kite",weight:1,sail:3,color:"coral",shape:"diamond",solution:1},
+    {id:"halo",name:"Tide Halo",weight:3,sail:1.2,color:"cyan",shape:"disc",solution:2},
+    {id:"gong",name:"Low Gong",weight:4,sail:.7,color:"gold",shape:"bell",solution:3}
+   ]},
+  {name:"Gale Crown",brief:"The master's mobile must sing as one.",duration:25,gust:1.3,crosswind:1.66,slots:[-3,-2,-1,0,1,2,3],
+   pieces:[
+    {id:"crown",name:"Storm Crown",weight:6,sail:.45,color:"violet",shape:"diamond",solution:-3},
+    {id:"wing",name:"Albatross Wing",weight:3,sail:2.35,color:"ice",shape:"fan",solution:-2},
+    {id:"whisper",name:"Wind Whisper",weight:1,sail:3.2,color:"cyan",shape:"leaf",solution:-1},
+    {id:"axis",name:"Axis Pearl",weight:3,sail:1.1,color:"gold",shape:"disc",solution:0},
+    {id:"flare",name:"Coral Flare",weight:2,sail:2.6,color:"coral",shape:"fan",solution:1},
+    {id:"tide",name:"Tide Drop",weight:4,sail:1.2,color:"mint",shape:"drop",solution:2},
+    {id:"sun",name:"Sun Bell",weight:5,sail:.75,color:"gold",shape:"bell",solution:3}
+   ]}
+];
+
+const state={
+  mode:"title",guided:false,stage:0,score:0,best:+storeGet(BEST_KEY,"0")||0,hints:2,attempts:0,
+  placements:new Map(),selected:null,focusSlot:0,keys:new Set(),touch:{left:false,right:false},
+  angle:0,angularVelocity:0,trim:0,wind:0,targetWind:0,gustClock:0,time:0,stability:100,
+  dangerTime:0,windSamples:0,trimMotion:0,lastTrim:0,pausedFrom:null,particles:[],chimes:[],shake:0,
+  muted:storeGet(MUTE_KEY,"0")==="1"
+};
+let W=1000,H=620,dpr=1,last=performance.now(),hudClock=0,toastTimer=0;
+
+function stage(){return stages[state.stage]}
+function pieceById(id){return stage().pieces.find(p=>p.id===id)}
+function placedCount(){return state.placements.size}
+function torque(){
+  let total=0;for(const [slot,id] of state.placements)total+=pieceById(id).weight*stage().slots[slot];return total;
+}
+function windBias(){
+  let total=0;for(const [slot,id] of state.placements)total+=pieceById(id).sail*stage().slots[slot];return total;
+}
+function ready(){return placedCount()===stage().pieces.length&&Math.abs(torque())<.01}
+function pieceSlot(id){for(const [slot,pid] of state.placements)if(pid===id)return slot;return -1}
+function colorOf(p){return shapeColors[p.color]||shapeColors.cyan}
+
+function resize(){
+  const r=$("canvasWrap").getBoundingClientRect();W=Math.max(320,Math.round(r.width));H=Math.max(360,Math.round(r.height));
+  dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+"px";canvas.style.height=H+"px";
+}
+function beamGeometry(){
+  const mobile=innerWidth<=720,half=W*(mobile?.41:.4),cx=W*.5,cy=H*(mobile?.31:.33);
+  return{cx,cy,half,unit:half/3};
+}
+function slotPoint(slotIndex,angle=state.angle){
+  const g=beamGeometry(),pos=stage().slots[slotIndex],dx=pos*g.unit;
+  return{x:g.cx+Math.cos(angle)*dx,y:g.cy+Math.sin(angle)*dx,pos};
+}
+function showToast(text,type=""){
+  const t=$("toast");t.textContent=text;t.className="toast show "+type;clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.className="toast",1900);
+}
+function modeName(){return state.mode==="build"?"Design":state.mode==="test"?"Wind Test":state.mode==="paused"?"Paused":state.mode==="cleared"?"Complete":state.mode==="failed"?"Repair":"Atelier"}
+
+function createStage(index,keepScore=true){
+  state.stage=index;state.mode="build";state.placements=new Map();state.selected=null;state.focusSlot=0;
+  state.angle=0;state.angularVelocity=0;state.trim=0;state.wind=0;state.targetWind=0;state.gustClock=0;
+  state.time=stage().duration;state.stability=100;state.dangerTime=0;state.windSamples=0;state.trimMotion=0;state.lastTrim=0;
+  state.particles=[];state.chimes=[];if(!keepScore)state.score=0;
+  $("resultOverlay").hidden=true;$("titleOverlay").hidden=true;$("workbench").hidden=false;$("trimControls").classList.remove("show");$("toast").textContent="";
+  renderPieces();updateHud(true);
+}
+function beginRun(guided=false){
+  audio.start();state.guided=guided;state.score=0;state.hints=2;state.attempts=0;createStage(0,false);
+  showToast(guided?"Gentle Wind Mode: slower gusts and softer strain.":"Commission book opened. Balance the first mobile.");
+}
+function restartRun(){beginRun(state.guided)}
+function toTitle(){
+  state.mode="title";$("titleOverlay").hidden=false;$("resultOverlay").hidden=true;$("trimControls").classList.remove("show");
+  $("workbench").hidden=false;updateHud(true);
+}
+
+function renderPieces(){
+  const box=$("pieces");box.innerHTML="";
+  stage().pieces.forEach((p,i)=>{
+    const b=document.createElement("button");b.type="button";b.className="piece";b.style.setProperty("--piece",colorOf(p));
+    b.dataset.id=p.id;b.setAttribute("aria-label",`${p.name}, mass ${p.weight}, sail ${p.sail}`);
+    b.innerHTML=`<strong>${i+1}. ${p.name}</strong><span>Mass ${p.weight} · Sail ${p.sail}</span><i aria-hidden="true"></i>`;
+    if(pieceSlot(p.id)>=0){b.classList.add("placed");b.disabled=true}
+    if(state.selected===p.id)b.classList.add("selected");
+    b.addEventListener("click",()=>selectPiece(p.id));box.appendChild(b);
+  });
+}
+function selectPiece(id){
+  if(state.mode!=="build"||pieceSlot(id)>=0)return;audio.start();state.selected=state.selected===id?null:id;
+  renderPieces();updateHud(false);if(state.selected)showToast(`${pieceById(id).name} selected. Tap a hook.`);
+}
+function placeAt(slotIndex){
+  if(state.mode!=="build")return;
+  const existing=state.placements.get(slotIndex);
+  if(state.selected){
+    const previous=pieceSlot(state.selected);if(previous>=0)state.placements.delete(previous);
+    if(existing)state.placements.delete(slotIndex);
+    state.placements.set(slotIndex,state.selected);audio.place(pieceById(state.selected).weight);
+    burstAtSlot(slotIndex,colorOf(pieceById(state.selected)),12);state.selected=null;
+  }else if(existing){
+    state.placements.delete(slotIndex);audio.remove();showToast(`${pieceById(existing).name} returned to the tray.`);
+  }else{showToast("Choose an ornament from the workbench first.");return}
+  renderPieces();updateHud(true);
+  if(placedCount()===stage().pieces.length){
+    if(ready()){showToast("Equilibrium found. The wind test is ready.");audio.ready()}
+    else showToast(`All pieces placed. Static torque is ${formatSigned(torque())}; keep adjusting.`);
+  }
+}
+function resetLayout(){
+  if(state.mode!=="build")return;state.placements.clear();state.selected=null;state.angle=0;state.angularVelocity=0;audio.remove();renderPieces();updateHud(true);showToast("The design table is clear.");
+}
+function useHint(){
+  if(state.mode!=="build"||state.hints<=0)return;
+  let target=stage().pieces.find(p=>pieceSlot(p.id)<0||stage().slots[pieceSlot(p.id)]!==p.solution);
+  if(!target){showToast("The draft is already matched.");return}
+  const targetSlot=stage().slots.indexOf(target.solution),current=pieceSlot(target.id),occupant=state.placements.get(targetSlot);
+  if(current>=0)state.placements.delete(current);if(occupant)state.placements.delete(targetSlot);state.placements.set(targetSlot,target.id);
+  state.hints--;state.score=Math.max(0,state.score-150);state.selected=null;audio.hint();burstAtSlot(targetSlot,colorOf(target),18);
+  renderPieces();updateHud(true);showToast(`${target.name} marked at lever ${formatLever(target.solution)}. Hint cost: 150.`);
+}
+
+function launchTest(){
+  if(state.mode!=="build")return;
+  if(placedCount()!==stage().pieces.length){showToast(`Place every ornament first (${placedCount()}/${stage().pieces.length}).`,"bad");return}
+  if(!ready()){showToast(`Static torque ${formatSigned(torque())} will tip the pivot. Equalize both sides.`,"bad");audio.warn();return}
+  audio.start();audio.launch();state.mode="test";state.time=stage().duration;state.stability=100;state.angle=0;state.angularVelocity=0;
+  state.trim=0;state.wind=0;state.targetWind=0;state.gustClock=.7;state.dangerTime=0;state.windSamples=0;state.trimMotion=0;
+  $("trimControls").classList.add("show");$("workbench").hidden=true;updateHud(true);showToast("Wind released. Slide the brass counterweight to keep the beam level.");
+}
+function failTest(){
+  if(state.mode!=="test")return;state.mode="failed";state.attempts++;audio.fail();state.shake=16;$("trimControls").classList.remove("show");
+  $("resultIcon").textContent="⚒";$("resultKicker").textContent="Structure caught";$("resultTitle").textContent="Back to the Bench";
+  $("resultText").textContent="The safety lines held, but the mobile lost equilibrium. Adjust the ornament layout or retry the same wind test.";
+  $("resultScore").textContent=state.score.toLocaleString();$("resultStability").textContent="0%";$("resultBias").textContent=formatSigned(windBias());
+  $("nextBtn").textContent="Retry Wind Test";$("nextBtn").onclick=retryWind;$("retryBtn").textContent="Redesign";$("retryBtn").onclick=redesign;
+  $("resultOverlay").hidden=false;updateHud(true);
+}
+function clearStage(){
+  if(state.mode!=="test")return;state.mode="cleared";audio.clear();$("trimControls").classList.remove("show");
+  const calmBonus=Math.max(0,Math.round((12-Math.abs(windBias()))*28));
+  const award=1200+state.stage*420+Math.round(state.stability*8)+calmBonus-Math.min(350,state.attempts*70);
+  state.score=Math.max(0,state.score+award);
+  $("resultIcon").textContent=state.stage===stages.length-1?"♕":"✦";
+  $("resultKicker").textContent=state.stage===stages.length-1?"Masterwork complete":"Commission complete";
+  $("resultTitle").textContent=state.stage===stages.length-1?"The Gale Crown Sings":"Balanced in Motion";
+  $("resultText").textContent=state.stage===stages.length-1?"Five sculptures hold one continuous chord. The atelier doors open to the storm.":`The ${stage().name} held through its full wind window and earned ${award.toLocaleString()} points.`;
+  $("resultScore").textContent=state.score.toLocaleString();$("resultStability").textContent=Math.round(state.stability)+"%";$("resultBias").textContent=formatSigned(windBias());
+  if(state.stage===stages.length-1){
+    if(state.score>state.best){state.best=state.score;storeSet(BEST_KEY,String(state.best))}
+    $("nextBtn").textContent="Play Again";$("nextBtn").onclick=()=>beginRun(state.guided);
+  }else{$("nextBtn").textContent="Next Commission";$("nextBtn").onclick=nextStage}
+  $("retryBtn").textContent="Replay Commission";$("retryBtn").onclick=()=>{state.score=Math.max(0,state.score-award);createStage(state.stage,true)};
+  $("resultOverlay").hidden=false;updateHud(true);confetti();
+}
+function nextStage(){state.attempts=0;createStage(state.stage+1,true);showToast(`New brief: ${stage().name}. Arrange every ornament.`)}
+function retryWind(){
+  $("resultOverlay").hidden=true;state.mode="test";state.time=stage().duration;state.stability=100;state.angle=0;state.angularVelocity=0;
+  state.trim=0;state.wind=0;state.targetWind=0;state.gustClock=.8;state.dangerTime=0;state.windSamples=0;
+  $("trimControls").classList.add("show");$("workbench").hidden=true;audio.launch();updateHud(true);
+}
+function redesign(){
+  $("resultOverlay").hidden=true;state.mode="build";state.angle=0;state.angularVelocity=0;state.stability=100;state.wind=0;
+  $("workbench").hidden=false;renderPieces();updateHud(true);showToast("Design unlocked. Try reducing both torque and wind bias.");
+}
+
+function togglePause(){
+  if(state.mode==="test"){state.pausedFrom="test";state.mode="paused";state.touch.left=state.touch.right=false;audio.pause();showToast("Wind test paused.");updateHud(true)}
+  else if(state.mode==="build"){state.pausedFrom="build";state.mode="paused";showToast("Atelier paused.");updateHud(true)}
+  else if(state.mode==="paused"){state.mode=state.pausedFrom||"build";last=performance.now();showToast("Atelier resumed.");updateHud(true)}
+}
+function setMute(v){state.muted=v;storeSet(MUTE_KEY,v?"1":"0");audio.setMuted(v);updateHud(false)}
+function nudgeTrim(dir){if(state.mode==="test")state.trim=clamp(state.trim+dir*.34,-3.25,3.25)}
+
+function update(dt){
+  updateParticles(dt);state.shake*=Math.pow(.006,dt);
+  if(state.mode==="build"){
+    const target=clamp(torque()*.018,-.25,.25);state.angle+=(target-state.angle)*Math.min(1,dt*4.5);state.angularVelocity=0;return;
+  }
+  if(state.mode!=="test")return;
+  const s=stage(),gentle=state.guided?.78:1;
+  state.gustClock-=dt;if(state.gustClock<=0){
+    const direction=Math.random()<.5?-1:1;state.targetWind=direction*(.42+Math.random()*.58)*s.gust*gentle;
+    state.gustClock=(1.25+Math.random()*1.65)/(state.guided?.86:1);audio.gust(Math.abs(state.targetWind));
+  }
+  state.wind+=(state.targetWind-state.wind)*Math.min(1,dt*(1.2+state.stage*.08));
+  state.wind+=Math.sin(performance.now()*.0031+state.stage)*dt*.08*s.gust;
+  let input=0;if(state.keys.has("a")||state.keys.has("arrowleft")||state.touch.left)input--;if(state.keys.has("d")||state.keys.has("arrowright")||state.touch.right)input++;
+  const before=state.trim;state.trim=clamp(state.trim+input*dt*(2.9+state.stage*.08),-3.25,3.25);
+  state.trimMotion+=Math.abs(state.trim-before);state.lastTrim=state.trim;
+  const dynamic=state.wind*(s.crosswind+windBias()*.08)*2.15+state.trim*1.34;
+  const acceleration=dynamic*.76-state.angle*8.2-state.angularVelocity*2.75;
+  state.angularVelocity+=acceleration*dt;state.angle+=state.angularVelocity*dt;state.angle=clamp(state.angle,-.62,.62);
+  const safe=(state.guided?.16:.12)-state.stage*(state.guided?.003:.0035),tilt=Math.abs(state.angle);
+  if(tilt>safe){
+    const pressure=clamp((tilt-safe)/(.46-safe),0,1.8);state.stability-=dt*(4+pressure*24)*(state.guided?.72:1);state.dangerTime+=dt;
+    if(Math.random()<dt*12)burstPivot(tilt>.37?"#ff7180":"#e9bc69",2);
+    if(tilt>.36&&Math.random()<dt*4)audio.strain();
+  }else state.stability=Math.min(100,state.stability+dt*(2.4+state.stage*.15));
+  state.time-=dt;state.windSamples+=dt;
+  if(state.stability<=0||tilt>.58){state.stability=0;failTest();return}
+  if(state.time<=0){state.time=0;clearStage();return}
+}
+
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.save();
+  if(state.shake>0)ctx.translate((Math.random()*2-1)*state.shake,(Math.random()*2-1)*state.shake);
+  drawWorkshop();drawWind();drawMobile();drawParticles();drawGauge();
+  if(state.mode==="paused"){ctx.fillStyle="rgba(3,9,16,.68)";ctx.fillRect(0,0,W,H);ctx.fillStyle="#f7f1dc";ctx.textAlign="center";ctx.font=`900 ${Math.max(34,W*.055)}px Georgia`;ctx.fillText("ATELIER PAUSED",W/2,H/2);ctx.font=`${Math.max(14,W*.018)}px system-ui`;ctx.fillStyle="#b9c7c7";ctx.fillText("Press P or tap Pause to resume",W/2,H/2+40)}
+  ctx.restore();
+}
+function drawWorkshop(){
+  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#10283a");bg.addColorStop(.5,"#0a1825");bg.addColorStop(1,"#251d27");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const sky=ctx.createLinearGradient(0,0,W,0);sky.addColorStop(0,"#17384c");sky.addColorStop(.57,"#29526a");sky.addColorStop(1,"#a46065");
+  ctx.fillStyle=sky;roundRect(W*.1,H*.12,W*.8,H*.68,Math.min(70,W*.07));ctx.fill();
+  ctx.fillStyle="rgba(5,13,21,.62)";ctx.fillRect(0,H*.72,W,H*.28);
+  ctx.strokeStyle="rgba(225,193,137,.17)";ctx.lineWidth=Math.max(8,W*.012);roundRect(W*.1,H*.12,W*.8,H*.68,Math.min(70,W*.07));ctx.stroke();
+  ctx.strokeStyle="rgba(7,20,30,.7)";ctx.lineWidth=Math.max(6,W*.008);ctx.beginPath();ctx.moveTo(W*.5,H*.12);ctx.lineTo(W*.5,H*.8);ctx.moveTo(W*.1,H*.45);ctx.lineTo(W*.9,H*.45);ctx.stroke();
+  ctx.fillStyle="rgba(2,9,15,.43)";ctx.beginPath();ctx.moveTo(0,H*.7);ctx.quadraticCurveTo(W*.18,H*.57,W*.37,H*.72);ctx.quadraticCurveTo(W*.6,H*.55,W,H*.67);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+  for(let i=0;i<24;i++){const x=(i*193+state.stage*71)%W,y=(i*i*47+80)%Math.max(120,H*.52);ctx.fillStyle=`rgba(220,255,248,${.08+(i%4)*.03})`;ctx.beginPath();ctx.arc(x,y,1+i%2,0,TAU);ctx.fill()}
+  const lamp=ctx.createRadialGradient(W*.82,H*.16,0,W*.82,H*.16,W*.28);lamp.addColorStop(0,"rgba(255,218,145,.18)");lamp.addColorStop(1,"rgba(255,218,145,0)");ctx.fillStyle=lamp;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="rgba(219,178,104,.16)";for(let i=0;i<7;i++){roundRect(W*(.03+i*.145),H*.84,W*.11,H*.055,5);ctx.fill()}
+}
+function drawWind(){
+  if(state.mode!=="test"&&state.mode!=="paused")return;
+  const dir=Math.sign(state.wind)||1,strength=Math.abs(state.wind);
+  ctx.save();ctx.strokeStyle=`rgba(182,255,248,${.08+strength*.16})`;ctx.lineCap="round";
+  for(let i=0;i<16;i++){
+    const phase=(performance.now()*.00018*(.5+strength)+i*.137)%1;
+    const x=dir>0?-W*.2+phase*W*1.4:W*1.2-phase*W*1.4,y=H*(.16+(i%9)*.065)+Math.sin(i*2.1+phase*8)*10;
+    ctx.lineWidth=1+(i%3);ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+dir*55,y-9,x+dir*(105+strength*60),y+3);ctx.stroke();
+  }ctx.restore();
+}
+function drawMobile(){
+  const g=beamGeometry(),angle=state.angle;
+  ctx.save();ctx.translate(g.cx,g.cy);ctx.rotate(angle);
+  ctx.strokeStyle="#d7b16b";ctx.lineWidth=Math.max(4,W*.006);ctx.lineCap="round";ctx.shadowColor="rgba(0,0,0,.5)";ctx.shadowBlur=13;
+  ctx.beginPath();ctx.moveTo(-g.half,0);ctx.quadraticCurveTo(0,-10,g.half,0);ctx.stroke();ctx.shadowBlur=0;
+  for(let i=0;i<stage().slots.length;i++){
+    const pos=stage().slots[i],x=pos*g.unit,occupied=state.placements.get(i);
+    if(state.mode==="build"){
+      const active=i===state.focusSlot,can=!!state.selected;
+      ctx.fillStyle=occupied?"rgba(233,188,105,.18)":can?"rgba(114,228,219,.2)":"rgba(255,255,255,.06)";
+      ctx.strokeStyle=active?"#fff3bd":occupied?"rgba(233,188,105,.65)":can?"rgba(114,228,219,.75)":"rgba(255,255,255,.24)";
+      ctx.lineWidth=active?3:2;ctx.beginPath();ctx.arc(x,0,Math.max(9,W*.012),0,TAU);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#e9ded0";ctx.font=`800 ${Math.max(10,W*.011)}px system-ui`;ctx.textAlign="center";ctx.fillText(pos===0?"0":pos>0?`+${pos}`:`${pos}`,x,-17);
+    }
+    if(occupied)drawHangingPiece(pieceById(occupied),x,i);
+  }
+  if(state.mode==="test"||state.mode==="paused")drawCounterweight(g);
+  ctx.restore();
+  ctx.save();ctx.strokeStyle="#d8fdf5";ctx.lineWidth=Math.max(3,W*.004);ctx.beginPath();ctx.moveTo(g.cx,H*.02);ctx.lineTo(g.cx,g.cy-17);ctx.stroke();
+  const glow=ctx.createRadialGradient(g.cx,g.cy,0,g.cx,g.cy,42);glow.addColorStop(0,"rgba(236,255,241,.9)");glow.addColorStop(.35,"rgba(114,228,219,.72)");glow.addColorStop(1,"rgba(114,228,219,0)");ctx.fillStyle=glow;ctx.beginPath();ctx.arc(g.cx,g.cy,42,0,TAU);ctx.fill();
+  ctx.fillStyle="#fff7d0";ctx.beginPath();ctx.arc(g.cx,g.cy,7,0,TAU);ctx.fill();ctx.restore();
+}
+function drawHangingPiece(p,x,index){
+  const cord=Math.min(H*.29,125+((index*29)%55)),sway=(state.mode==="test"?state.wind*7+state.angularVelocity*18:Math.sin(performance.now()*.0015+index)*2);
+  ctx.strokeStyle="rgba(238,231,210,.72)";ctx.lineWidth=Math.max(1.5,W*.0017);ctx.beginPath();ctx.moveTo(x,7);ctx.quadraticCurveTo(x+sway*.3,cord*.5,x+sway,cord);ctx.stroke();
+  ctx.save();ctx.translate(x+sway,cord);ctx.rotate((sway*.018)+Math.sin(performance.now()*.002+index)*.025);
+  const size=Math.max(17,Math.min(W,H)*(.032+p.sail*.003)),c=colorOf(p);ctx.shadowColor=c;ctx.shadowBlur=state.mode==="test"?12:8;
+  ctx.fillStyle=c;ctx.strokeStyle="rgba(255,255,255,.72)";ctx.lineWidth=2;ctx.globalAlpha=.9;
+  if(p.shape==="disc"){ctx.beginPath();ctx.arc(0,0,size*.72,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle="rgba(5,20,29,.38)";ctx.beginPath();ctx.arc(size*.18,-size*.15,size*.38,0,TAU);ctx.fill()}
+  else if(p.shape==="leaf"){ctx.beginPath();ctx.moveTo(0,-size);ctx.bezierCurveTo(size*.8,-size*.35,size*.75,size*.55,0,size);ctx.bezierCurveTo(-size*.7,size*.55,-size*.8,-size*.35,0,-size);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,-size*.7);ctx.lineTo(0,size*.72);ctx.stroke()}
+  else if(p.shape==="drop"){ctx.beginPath();ctx.moveTo(0,-size);ctx.bezierCurveTo(size*.75,-size*.25,size*.75,size*.55,0,size);ctx.bezierCurveTo(-size*.75,size*.55,-size*.75,-size*.25,0,-size);ctx.fill();ctx.stroke()}
+  else if(p.shape==="diamond"){ctx.beginPath();ctx.moveTo(0,-size);ctx.lineTo(size*.72,0);ctx.lineTo(0,size);ctx.lineTo(-size*.72,0);ctx.closePath();ctx.fill();ctx.stroke()}
+  else if(p.shape==="fan"){ctx.beginPath();ctx.moveTo(0,size*.75);ctx.arc(0,size*.75,size*1.05,Math.PI*1.08,Math.PI*1.92);ctx.closePath();ctx.fill();ctx.stroke();for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(0,size*.7);ctx.lineTo(i*size*.32,-size*.1-Math.abs(i)*size*.18);ctx.stroke()}}
+  else{ctx.beginPath();ctx.moveTo(-size*.72,-size*.45);ctx.quadraticCurveTo(0,-size,size*.72,-size*.45);ctx.lineTo(size*.52,size*.58);ctx.quadraticCurveTo(0,size*.95,-size*.52,size*.58);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#fff2b2";ctx.beginPath();ctx.arc(0,size*.55,size*.11,0,TAU);ctx.fill()}
+  ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.fillStyle="#07131c";ctx.font=`900 ${Math.max(10,size*.43)}px system-ui`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p.weight,0,1);ctx.restore();
+}
+function drawCounterweight(g){
+  const x=state.trim*g.unit;ctx.save();ctx.translate(x,-2);ctx.fillStyle="#e8bb68";ctx.strokeStyle="#fff0b4";ctx.lineWidth=2;
+  roundRect(-18,-18,36,32,6);ctx.fill();ctx.stroke();ctx.fillStyle="#6d482d";ctx.beginPath();ctx.arc(0,-3,6,0,TAU);ctx.fill();ctx.restore();
+}
+function drawGauge(){
+  if(state.mode!=="test"&&state.mode!=="paused")return;
+  const w=Math.min(W*.52,520),x=(W-w)/2,y=H*.81;
+  ctx.fillStyle="rgba(4,12,20,.78)";roundRect(x-12,y-24,w+24,62,12);ctx.fill();
+  ctx.strokeStyle="rgba(255,255,255,.15)";ctx.lineWidth=1;roundRect(x-12,y-24,w+24,62,12);ctx.stroke();
+  const grad=ctx.createLinearGradient(x,0,x+w,0);grad.addColorStop(0,"#ff7180");grad.addColorStop(.39,"#e9bc69");grad.addColorStop(.5,"#8cdda1");grad.addColorStop(.61,"#e9bc69");grad.addColorStop(1,"#ff7180");
+  ctx.fillStyle=grad;roundRect(x,y,w,11,6);ctx.fill();const marker=x+w*.5+clamp(state.angle/.5,-1,1)*w*.5;
+  ctx.fillStyle="#fff";ctx.shadowColor="#72e4db";ctx.shadowBlur=10;ctx.beginPath();ctx.moveTo(marker,y-8);ctx.lineTo(marker-7,y-20);ctx.lineTo(marker+7,y-20);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle="#dce9e7";ctx.font=`800 ${Math.max(11,W*.012)}px system-ui`;ctx.textAlign="center";ctx.fillText("KEEP THE PIVOT INSIDE THE GREEN BAND",W/2,y+30);
+}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+
+function burstAtSlot(slotIndex,color,count){
+  const q=slotPoint(slotIndex);for(let i=0;i<count;i++){const a=Math.random()*TAU,sp=25+Math.random()*90;state.particles.push({x:q.x,y:q.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:.35+Math.random()*.45,max:.8,size:1.5+Math.random()*3,color})}
+}
+function burstPivot(color,count){
+  const g=beamGeometry();for(let i=0;i<count;i++){const a=Math.random()*TAU,sp=25+Math.random()*80;state.particles.push({x:g.cx,y:g.cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:.25+Math.random()*.35,max:.6,size:1+Math.random()*2.5,color})}
+}
+function updateParticles(dt){
+  for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=20*dt;p.vx*=.98}state.particles=state.particles.filter(p=>p.life>0);
+}
+function drawParticles(){
+  ctx.save();ctx.globalCompositeOperation="lighter";for(const p of state.particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill()}ctx.restore();
+}
+function confetti(){for(let i=0;i<70;i++){const g=beamGeometry(),colors=Object.values(shapeColors);state.particles.push({x:g.cx+(Math.random()-.5)*W*.34,y:g.cy,vx:(Math.random()-.5)*260,vy:-70-Math.random()*210,life:1.2+Math.random(),max:2.2,size:2+Math.random()*4,color:colors[i%colors.length]})}}
+function formatSigned(v){return(v>0?"+":"")+v.toFixed(1)}
+function formatLever(v){return v===0?"center":v<0?`${Math.abs(v)} left`:`${v} right`}
+
+function updateHud(force=false){
+  const t=torque(),bias=windBias(),count=placedCount(),liveTest=state.mode==="test"||state.mode==="paused";
+  const equilibrium=liveTest?Math.max(0,100-Math.abs(state.angle)/.5*100):count===stage().pieces.length?Math.max(0,100-Math.abs(t)*14):count/stage().pieces.length*44;
+  $("stageHud").textContent=`${state.stage+1} / ${stages.length}`;$("phaseHud").textContent=modeName();$("scoreHud").textContent=state.score.toLocaleString();
+  $("timeHud").textContent=state.mode==="test"?Math.ceil(state.time)+"s":"--";$("scoreStat").textContent=state.score.toLocaleString();$("bestStat").textContent=state.best.toLocaleString();
+  $("torqueStat").textContent=formatSigned(t);$("biasStat").textContent=formatSigned(bias);$("balanceBar").style.width=equilibrium+"%";
+  $("balanceText").textContent=liveTest?(Math.abs(state.angle)<.015?"Level":`${Math.round(Math.abs(state.angle)*180/Math.PI)}° ${state.angle<0?"left":"right"}`):count<stage().pieces.length?`${count}/${stage().pieces.length} placed`:ready()?"Balanced":`${formatSigned(t)} torque`;
+  $("stabilityBar").style.width=state.stability+"%";$("stabilityText").textContent=Math.round(state.stability)+"%";
+  $("windBar").style.width=(50+clamp(state.wind/(stage().gust||1.3),-1,1)*50)+"%";$("windText").textContent=Math.abs(state.wind)<.12?"Still":state.wind<0?"Gusting left":"Gusting right";
+  $("commissionName").textContent=stage().name;$("commissionBrief").textContent=stage().brief;$("placedStat").textContent=`${count} / ${stage().pieces.length}`;$("durationStat").textContent=stage().duration+" seconds";
+  $("hintBtn").textContent=`Draft Hint (${state.hints})`;$("hintBtn").disabled=state.hints<=0||state.mode!=="build";$("resetBtn").disabled=state.mode!=="build";
+  $("testBtn").disabled=state.mode!=="build"||count<stage().pieces.length;$("testBtn").textContent=ready()?"Begin Wind Test":count<stage().pieces.length?"Place Every Ornament":"Balance the Beam";
+  $("benchTitle").textContent=state.mode==="build"?(state.selected?pieceById(state.selected).name+" selected":"Select an ornament"):state.mode==="test"?"Wind test in progress":"Atelier workbench";
+  $("benchHint").textContent=state.mode==="build"?"Choose a piece, then tap a glowing hook. Tap a hanging piece to retrieve it.":state.mode==="test"?"Use left/right trim to oppose the beam's tilt.":"Open the atelier to begin a commission.";
+  $("pauseBtn").textContent=state.mode==="paused"?"Resume":"Pause";$("muteBtn").textContent=state.muted?"Sound Off":"Sound On";
+  if(force)renderPieces();
+}
+
+const audio={
+  ctx:null,master:null,music:null,next:0,step:0,
+  start(){if(!this.ctx){try{this.ctx=new(AudioContext||webkitAudioContext)();this.master=this.ctx.createGain();this.master.gain.value=state.muted?0:.23;this.master.connect(this.ctx.destination);this.music=this.ctx.createGain();this.music.gain.value=.15;this.music.connect(this.master)}catch(e){return}}if(this.ctx.state==="suspended")this.ctx.resume()},
+  setMuted(v){if(this.master)this.master.gain.setTargetAtTime(v?0:.23,this.ctx.currentTime,.04)},
+  tone(f,d=.13,type="sine",g=.08,end=null,delay=0,bus=null){if(!this.ctx||state.muted)return;const t=this.ctx.currentTime+delay,o=this.ctx.createOscillator(),gain=this.ctx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(end)o.frequency.exponentialRampToValueAtTime(Math.max(30,end),t+d);gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(g,t+.012);gain.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(gain);gain.connect(bus||this.master);o.start(t);o.stop(t+d+.04)},
+  place(w){this.tone(300+w*75,.16,"triangle",.09);this.tone(520+w*60,.24,"sine",.04,null,.05)},remove(){this.tone(310,.15,"triangle",.06,170)},ready(){[392,523,659].forEach((f,i)=>this.tone(f,.22,"sine",.075,null,i*.06))},
+  hint(){this.tone(880,.15,"sine",.07,1250);this.tone(660,.22,"triangle",.05,null,.07)},warn(){this.tone(190,.2,"sawtooth",.08,120)},
+  launch(){this.tone(110,.6,"sine",.1,420);[330,495,660].forEach((f,i)=>this.tone(f,.25,"triangle",.05,null,.2+i*.08))},
+  gust(v){this.tone(100+v*35,.28,"sine",.025,180+v*50)},strain(){this.tone(145,.13,"square",.035,98)},pause(){this.tone(330,.12,"triangle",.04,240)},
+  fail(){[220,165,110].forEach((f,i)=>this.tone(f,.32,"sawtooth",.08,null,i*.1))},clear(){[330,440,554,659,880].forEach((f,i)=>this.tone(f,.33,"triangle",.075,null,i*.075))},
+  tick(){if(!this.ctx||state.muted||state.mode!=="test")return;if(this.next<this.ctx.currentTime)this.next=this.ctx.currentTime+.03;while(this.next<this.ctx.currentTime+.12){const roots=[110,130.8,98,146.8,123.5],root=roots[state.stage];if(this.step%4===0)this.tone(root,.5,"sine",.014,null,this.next-this.ctx.currentTime,this.music);if(this.step%8===3&&Math.abs(state.angle)<.18)this.tone(root*4,.11,"triangle",.012,null,this.next-this.ctx.currentTime,this.music);this.step++;this.next+=.34}}
+};
+
+canvas.addEventListener("pointerdown",e=>{
+  audio.start();if(state.mode!=="build")return;
+  const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+  let best=-1,dist=Infinity;for(let i=0;i<stage().slots.length;i++){const p=slotPoint(i);const d=Math.hypot(x-p.x,y-p.y);if(d<dist){dist=d;best=i}}
+  if(best>=0&&dist<Math.max(38,W*.055)){state.focusSlot=best;placeAt(best)}
+});
+window.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();if(["arrowleft","arrowright"," ","enter","backspace","delete","a","d","p","escape","m","r"].includes(k))e.preventDefault();
+  if((k==="enter"||k===" ")&&state.mode==="title"){beginRun(false);return}
+  if((k==="p"||k==="escape")&&["build","test","paused"].includes(state.mode)){togglePause();return}
+  if(k==="m"){audio.start();setMute(!state.muted);return}if(k==="r"){restartRun();return}
+  if(state.mode==="build"){
+    if(/^[1-7]$/.test(k)){const p=stage().pieces[+k-1];if(p)selectPiece(p.id);return}
+    if(k==="arrowleft"||k==="a"){state.focusSlot=(state.focusSlot-1+stage().slots.length)%stage().slots.length;updateHud(false);return}
+    if(k==="arrowright"||k==="d"){state.focusSlot=(state.focusSlot+1)%stage().slots.length;updateHud(false);return}
+    if(k==="enter"||k===" "){placeAt(state.focusSlot);return}
+    if(k==="backspace"||k==="delete"){const id=state.placements.get(state.focusSlot);if(id){state.selected=null;placeAt(state.focusSlot)}return}
+  }
+  if(state.mode==="test"&&(k==="arrowleft"||k==="a"))nudgeTrim(-1);
+  if(state.mode==="test"&&(k==="arrowright"||k==="d"))nudgeTrim(1);
+  state.keys.add(k);
+});
+window.addEventListener("keyup",e=>state.keys.delete(e.key.toLowerCase()));
+function bindHold(id,dir){
+  const b=$(id),set=v=>{state.touch[dir]=v;b.classList.toggle("active",v)};
+  b.addEventListener("pointerdown",e=>{e.preventDefault();audio.start();nudgeTrim(dir==="left"?-1:1);set(true);try{b.setPointerCapture(e.pointerId)}catch(err){}});
+  b.addEventListener("pointerup",()=>set(false));b.addEventListener("pointercancel",()=>set(false));b.addEventListener("pointerleave",()=>set(false));
+}
+bindHold("trimLeft","left");bindHold("trimRight","right");
+$("startBtn").addEventListener("click",()=>beginRun(false));$("guidedBtn").addEventListener("click",()=>beginRun(true));
+$("hintBtn").addEventListener("click",useHint);$("resetBtn").addEventListener("click",resetLayout);$("testBtn").addEventListener("click",launchTest);
+$("pauseBtn").addEventListener("click",togglePause);$("muteBtn").addEventListener("click",()=>{audio.start();setMute(!state.muted)});
+$("restartBtn").addEventListener("click",restartRun);$("titleBtn").addEventListener("click",toTitle);
+$("titleArt").addEventListener("load",()=>$("loading").hidden=true);
+$("titleArt").addEventListener("error",()=>{$("loading").textContent="Key art unavailable. The live atelier is ready.";setTimeout(()=>$("loading").hidden=true,1800)});
+if($("titleArt").complete&&$("titleArt").naturalWidth)$("loading").hidden=true;
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&["build","test"].includes(state.mode))togglePause()});
+new ResizeObserver(resize).observe($("canvasWrap"));window.addEventListener("resize",resize);
+
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();audio.tick();hudClock+=dt;if(hudClock>.1){updateHud(false);hudClock=0}requestAnimationFrame(frame);
+}
+if(!ctx){$("loading").textContent="This browser could not open the drawing canvas.";for(const id of["startBtn","guidedBtn"])$(id).disabled=true}
+else{resize();state.mode="title";state.time=stage().duration;updateHud(true);requestAnimationFrame(frame)}
+
+const testApi={
+  start:(guided=false)=>beginRun(guided),
+  autoBalance:()=>{state.placements.clear();stage().pieces.forEach(p=>state.placements.set(stage().slots.indexOf(p.solution),p.id));state.selected=null;renderPieces();updateHud(true)},
+  launch:launchTest,
+  step:(seconds=1/60)=>{const n=Math.max(1,Math.ceil(seconds/.05));for(let i=0;i<n;i++)update(Math.min(.05,seconds/n));draw();updateHud(true)},
+  setTrim:v=>{state.trim=clamp(v,-3.25,3.25)},
+  setWind:v=>{state.wind=state.targetWind=clamp(v,-2,2)},
+  finish:()=>{if(state.mode==="test"){state.time=.001;update(.01)}},
+  fail:()=>{if(state.mode==="test"){state.stability=0;update(.01)}},
+  next:nextStage,
+  getState:()=>({mode:state.mode,guided:state.guided,stage:state.stage,name:stage().name,score:state.score,best:state.best,hints:state.hints,placed:placedCount(),pieces:stage().pieces.length,torque:torque(),windBias:windBias(),ready:ready(),time:state.time,stability:state.stability,angle:state.angle,trim:state.trim,wind:state.wind,attempts:state.attempts})
+};
+try{globalThis.__GALEWEAVE_ATELIER__=testApi}catch(e){}
+</script>
+</body>
+</html>

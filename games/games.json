@@ -1,6 +1,18 @@
 {
-  "gameOfTheDay": "silkshade-caper",
+  "gameOfTheDay": "galeweave-atelier",
   "games": [
+    {
+      "slug": "galeweave-atelier",
+      "title": "Galeweave Atelier",
+      "description": "An original kinetic-sculpture balance game. Arrange weighted glass ornaments by torque, reduce their wind bias, then trim a sliding brass counterweight through five increasingly fierce gale tests.",
+      "tags": [
+        "physics",
+        "puzzle",
+        "strategy"
+      ],
+      "emoji": "⚖️",
+      "added": "2026-06-19"
+    },
     {
       "slug": "silkshade-caper",
       "title": "Silkshade Caper",
